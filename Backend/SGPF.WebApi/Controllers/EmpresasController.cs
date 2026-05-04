@@ -1,0 +1,51 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using SGPF.Domain.Entities;
+using SGPF.Domain.Interfaces;
+
+namespace SGPF.WebApi.Controllers;
+
+[ApiController]
+[Route("api/v1/[controller]")]
+[Authorize(Roles = "Admin,Gestor")] // Por padrão, só Admin e Gestor gerenciam empresas
+public class EmpresasController : ControllerBase
+{
+    private readonly IRepository<Empresa> _repository;
+
+    public EmpresasController(IRepository<Empresa> repository)
+    {
+        _repository = repository;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll() => Ok(await _repository.GetAllAsync());
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var empresa = await _repository.GetByIdAsync(id);
+        return empresa == null ? NotFound() : Ok(empresa);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create([FromBody] Empresa empresa)
+    {
+        await _repository.AddAsync(empresa);
+        return CreatedAtAction(nameof(GetById), new { id = empresa.Id }, empresa);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] Empresa empresa)
+    {
+        if (id != empresa.Id) return BadRequest();
+        await _repository.UpdateAsync(empresa);
+        return NoContent();
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        await _repository.DeleteAsync(id);
+        return NoContent();
+    }
+}
