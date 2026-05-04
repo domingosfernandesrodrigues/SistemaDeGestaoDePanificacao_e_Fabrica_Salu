@@ -1,0 +1,69 @@
+# Segurança e Autenticação
+
+## Tecnologia
+- **Mecanismo:** JSON Web Token (JWT).
+- **Algoritmo:** HMAC SHA256.
+
+## Níveis de Acesso (Roles)
+- **Admin:** Acesso total ao sistema.
+- **Gestor_Producao:** Acesso à Fábrica e Estoque.
+- **Gestor_RH:** Acesso à Folha e Funcionários.
+- **Operador:** Acesso a Vendas e Entregas.
+- **Cliente:** Acesso restrito apenas aos seus próprios dados e pedidos.
+
+## Políticas
+- Refresh Token para manter sessões seguras.
+- Criptografia de senhas usando BCrypt ou Argon2.
+
+## Políticas de Isolamento (Multi-tenancy Lite)
+- Todo endpoint de cliente deve validar se o `ClienteId` do recurso solicitado pertence ao `UsuarioId` autenticado no token JWT.
+
+# Módulo: Gestão de Estoque e Auditoria
+
+## 1. Regras de Entrada (Recebimento)
+- Ao receber matéria-prima ou produto, o sistema deve registrar a entrada no estoque.
+- **Validação:** O fornecedor deve estar cadastrado e ativo.
+- O item recebido deve ser inspecionado (Físico ou Químico) conforme padrões de qualidade.
+
+## 2. Regras de Saída (Consumo/Venda)
+- A saída de itens deve ser justificada (OP de produção ou Venda);
+- Para produtos químicos, o sistema deve alertar sobre a necessidade de Equipamento de Proteção Individual (EPI).
+
+## 3. Auditoria (Logs)
+- Todas as movimentações de estoque (Entrada, Saída, Transferência, Ajuste) devem ser registradas em uma tabela de log com:
+  - Data/Hora
+  - Usuário Responsável
+  - Item
+  - Quantidade
+  - Tipo de Movimentação
+
+## 4. Controle de Estoque e Validade
+- **Controle de Lote:** Todos os produtos de fabricação interna devem ter controle de lote e validade.
+- **Regra de Validação:** O sistema deve impedir a saída (baixa) de produtos vencidos, permitindo apenas ajustes manuais justificados pelo gestor.
+- **Notificação:** Alertar sobre produtos próximos ao vencimento (ex: vencimento em menos de 7 dias).
+
+# Módulo: Controle de Acesso
+
+## Hierarquia de Permissões (Ordem de Prioridade)
+O sistema deve respeitar a seguinte ordem de prioridade ao conceder acesso: `Cliente` > `Funcionário` > `Gestor` > `Admin`.
+
+### 1. Cliente
+- **Origem:** Tabela `Clientes` (FK em `Usuarios.ClienteId`).
+- **Acesso:** **Visual/Apenas Consulta**.
+- **Regra de Ouro:** Um usuário com perfil `Cliente` **NÃO PODE** visualizar ou editar dados de outros clientes. O `ClienteId` no token deve ser o único filtro de isolamento.
+- **Exceção (Pedido de Troca):** Clientes podem criar registros de `Devolucao` ou `Troca`, mas a ação final (aprovação e saída de produto) deve ser processada por um usuário `Funcionario` ou `Admin`.
+
+### 2. Funcionário
+- **Origem:** Tabela `Funcionarios`.
+- **Acesso:** **Operacional**.
+- Pode executar tarefas de produção, estoque e logística (incluindo aprovação de pedidos de troca).    
+
+### 3. Gestor (Produção / RH / Logística)
+- **Origem:** Tabela `Funcionarios` ( FK `GestorId` apontando para si mesmo ou tabela `Gestores`).
+- **Acesso:** **Gerencial**.
+- Pode aprovar Ordens de Produção, acessar relatórios financeiros (DRE), gerenciar frota e visualizar todas as operações do seu respectivo departamento.
+
+### 4. Admin
+- **Origem:** Tabela `Usuarios` (Coluna `IsAdmin = true`).
+- **Acesso:** **Total**.
+- Pode gerenciar usuários, alterar permissões e acessar todos os módulos do sistema.      
