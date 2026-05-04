@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="SGPF.Application/SGPF.Application.csproj" />
+  <Project Path="SGPF.Domain/SGPF.Domain.csproj" />
+  <Project Path="SGPF.Infrastructure/SGPF.Infrastructure.csproj" />
+  <Project Path="SGPF.WebApi/SGPF.WebApi.csproj" />
+</Solution>

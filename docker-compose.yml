@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # Banco de Dados SQL Server
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_Strong_Password_123!"
+    ports:
+      - "1433:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql
+
+  # Backend (.NET 10 Web API)
+  api:
+    build:
+      context: ./Backend
+      dockerfile: Dockerfile
+    environment:
+      - ConnectionStrings__DefaultConnection=Server=db;Database=SGPF_DB;User Id=sa;Password=Your_Strong_Password_123!;TrustServerCertificate=True;
+      - JwtSettings__Secret=MySuperSecretKey_SGPF_2026_Minimum32Chars!!
+    ports:
+      - "5137:80"
+    depends_on:
+      - db
+
+  # Frontend (Vite + React + Nginx)
+  web:
+    build:
+      context: ./Frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:80"
+    depends_on:
+      - api
+
+volumes:
+  mssql-data:

@@ -1,0 +1,24 @@
+# .NET Backend
+Backend/bin/
+Backend/obj/
+Backend/**/bin/
+Backend/**/obj/
+*.user
+*.suo
+*.log
+appsettings.Development.json
+
+# Node.js Frontend
+Frontend/node_modules/
+Frontend/dist/
+Frontend/.env.local
+Frontend/.env.*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# General/OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
