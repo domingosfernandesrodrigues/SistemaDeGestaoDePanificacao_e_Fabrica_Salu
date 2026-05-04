@@ -1,0 +1,12 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: var(--color-blue-600);
+  --color-success: var(--color-green-500);
+  --color-error: var(--color-red-500);
+  --color-foreground: var(--color-slate-900);
+}
+
+body {
+  @apply bg-slate-50 text-foreground;
+}
