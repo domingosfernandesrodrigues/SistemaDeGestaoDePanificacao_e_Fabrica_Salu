@@ -14,8 +14,9 @@
 - `MovimentacoesEstoque`: Id, ProdutoId, Quantidade, Tipo (Entrada/Saída/Avaria), DataMovimentacao, Origem.
 
 ## Módulo: RH e Folha (Fase 3)
-- `RegistroPonto`: Id, FuncionarioId, Data, HoraEntrada, HoraSaida, Tipo.
-- `FolhaPagamento`: Id, FuncionarioId, MesReferencia, AnoReferencia, SalarioBase, TotalProventos, TotalDescontos, ValorLiquido.
+- `RegistrosPonto`: Id, FuncionarioId, DataHoraEntrada, DataHoraSaida, TotalHorasTrabalhadas, TotalHorasExtras, Observacao.
+- `FolhaPagamento`: Id, FuncionarioId, MesReferencia, AnoReferencia, SalarioBaseCalculado, TotalHorasExtras50, ValorHorasExtras50, TotalHorasExtras100, ValorHorasExtras100, ValorAdicionalNoturno, TotalDescontos, SalarioLiquido, Status (Aberta, Fechada).
+- `AgendaEventos`: Id, Titulo, Data, Tipo (Feriado, Lembrete, Aviso), Descricao.
 
 ## Módulo: Operacional, Vendas e Logística (Fase 4)
 - `PedidosVenda`: Id, ClienteId, DataPedido, ValorTotal, Status (AguardandoAprovacao, Aprovado, Entregue, Cancelado).

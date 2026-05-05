@@ -40,12 +40,12 @@ Este documento é o mapa mestre do Sistema de Gestão de Panificação e Fábric
 ## 7. Gestão Estratégica (`/7-gestao`)
 - [Valor de Venda (Valuation)](7-gestao/valor-venda-sistema.md) - Precificação e Mercado.
 
-## 📌 Status Atual do Sistema (26/04/2026)
-O sistema SGP-F encontra-se em estado de **Prontidão Operacional**.
+## 📌 Status Atual do Sistema (05/05/2026)
+O sistema SGP-F encontra-se em estado de **Prontidão Operacional Avançada**.
 - **Núcleo de Fábrica:** Ficha técnica com cálculo de custo e OPs totalmente funcionais.
 - **Gestão de Cadastro:** Clientes e Produtos com validações de integridade e inativação de segurança.
-- **RH e Financeiro:** Módulos integrados com geração de folha e contas a pagar.
-- **Logística e CRM:** Monitoramento de reuniões e frota estabilizado.
+- **RH Inteligente:** Motor de folha CLT v2 integrado com a Agenda, calculando HE 50/100% e Adicional Noturno automaticamente.
+- **CRM e Logística:** Agenda interativa de eventos com proteção de feriados e monitoramento de frota.
 
 ---
 ## 🚀 Execução do Projeto

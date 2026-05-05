@@ -59,11 +59,10 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 - **Última Atualização:** 04/05/2026
 
 ### 🛠️ Refinamentos Recentes (Maio/2026):
-- **Controle de Ponto Profissional:** Implementado limite diário de 2 entradas e 2 saídas por funcionário para garantir integridade da jornada e evitar fragmentação excessiva.
-- **Motor de Horas Extras:** Refatorado motor de cálculo de ponto e folha de pagamento para considerar o total acumulado do dia (acima de 8h diárias), garantindo precisão absoluta em turnos com pausas.
-- **Afastamentos & UX:** Redesenho completo da interface de afastamentos no Controle de Ponto com layout em cards modernos, responsividade mobile (iPhone 14) e filtros de gestão por colaborador.
-- **Segurança e Conformidade:** Implementado bloqueio de acesso para usuários inativos com mensagens de erro seguras e reforço na autorização de documentos privados (Contracheques).
-- **Self-Service de RH:** Lançamento da aba "Meus Contracheques" com visual premium, remoção de assinaturas manuais e inclusão de autenticação digital por hash único.
-- **Estabilidade de API:** Correção de bugs críticos em seletores de dados nulos e otimização de consultas agrupadas para dashboards de ponto.
+- **Agenda Comercial Inteligente (CRM):** Transformação do módulo de reuniões em uma agenda interativa completa com persistência em banco de dados, suporte a feriados nacionais e lembretes personalizados.
+- **Motor de Folha CLT v2:** Integração nativa entre a Agenda de Feriados e o processamento de salários. O sistema agora identifica automaticamente feriados para aplicação de HE 100% e calcula o Adicional Noturno (22h-05h) com precisão.
+- **UX de Folha de Pagamento:** Redesenho da interface de listagem de contracheques com suporte a responsividade mobile (layouts adaptáveis), botões de ação em alto contraste e legenda técnica de metodologia de cálculo.
+- **Integridade de Dados (Ponto):** Refinamento da lógica de turnos para garantir que o adicional noturno e as horas extras sejam calculados corretamente mesmo em jornadas que cruzam a meia-noite.
+- **Segurança da Agenda:** Implementada proteção de escrita para feriados nacionais, garantindo que o calendário base do ERP permaneça íntegro para cálculos fiscais e trabalhistas.
 
 **Instrução para IA:** Manter foco em testes de usabilidade e suporte aos refinamentos solicitados pelo usuário.

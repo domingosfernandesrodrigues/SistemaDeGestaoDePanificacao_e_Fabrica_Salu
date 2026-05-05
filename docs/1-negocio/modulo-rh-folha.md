@@ -5,9 +5,11 @@
 - Configuração de Horas Extras: 50%, 100% ou customizado por cargo.
 
 ## 2. Processamento de Folha
-- Cálculo mensal de proventos (salário base + extras).
-- Descontos obrigatórios (INSS, FGTS - simulação).
-- Geração de holerite em PDF.
+- **Cálculo de Proventos**: Salário base (divisor 220h) + Horas Extras.
+- **Regras CLT de Horas Extras**: 50% (dias úteis e sábados) e 100% (Domingos e Feriados integrados com a Agenda CRM).
+- **Adicional Noturno**: Acréscimo de 20% para jornadas entre 22:00 e 05:00.
+- **Descontos obrigatórios**: INSS (8%) e descontos de afastamentos não remunerados.
+- **Geração de Documentos**: Holerite em PDF com discriminativo detalhado de rubricas.
 
 ## 3. Gestão de Afastamentos
 - Solicitação de afastamentos pelo colaborador (Licenças, Férias, Atestados).
