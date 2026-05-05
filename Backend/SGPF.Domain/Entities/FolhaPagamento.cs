@@ -18,11 +18,16 @@ public class FolhaPagamento
     public int AnoReferencia { get; set; }
     
     public decimal SalarioBaseCalculado { get; set; }
-    public decimal TotalHorasExtras { get; set; }
-    public decimal ValorHorasExtras { get; set; }
     
-    public decimal TotalDescontos { get; set; } // Ex: INSS, FGTS simulado
+    public decimal TotalHorasExtras50 { get; set; }
+    public decimal ValorHorasExtras50 { get; set; }
     
+    public decimal TotalHorasExtras100 { get; set; }
+    public decimal ValorHorasExtras100 { get; set; }
+    
+    public decimal ValorAdicionalNoturno { get; set; }
+    
+    public decimal TotalDescontos { get; set; } 
     public decimal SalarioLiquido { get; set; }
     
     public StatusFolha Status { get; set; } = StatusFolha.Aberta;

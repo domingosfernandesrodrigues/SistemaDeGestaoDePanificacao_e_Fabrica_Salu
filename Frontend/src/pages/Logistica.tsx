@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
+import { Textarea } from '../components/ui/Textarea';
+import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { Settings, Droplet, ArrowRightLeft, Loader2, Save, Car, Truck, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
@@ -230,12 +232,12 @@ export function Frota() {
 
       <Modal isOpen={isAbastModalOpen} onClose={() => setIsAbastModalOpen(false)} title={`Abastecer: ${selectedVeiculo?.modelo}`}>
         <form onSubmit={handleA((data) => mutationAbast.mutate(data))} className="space-y-4">
-          <Input label="Quilometragem (Km)" type="number" {...regA('quilometragemRegistrada')} error={errA.quilometragemRegistrada?.message as string} />
           <div className="grid grid-cols-2 gap-4">
+            <Input label="Quilometragem Atual (Km)" type="number" {...regA('quilometragemRegistrada')} error={errA.quilometragemRegistrada?.message as string} />
             <Input label="Litros" type="number" step="0.01" {...regA('litros')} error={errA.litros?.message as string} />
-            <Input label="Valor Total (R$)" type="number" step="0.01" {...regA('valorTotal')} error={errA.valorTotal?.message as string} />
           </div>
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 flex justify-center gap-2" disabled={mutationAbast.isPending}>
+          <Input label="Valor Total (R$)" type="number" step="0.01" {...regA('valorTotal')} error={errA.valorTotal?.message as string} />
+          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 flex justify-center gap-2 shadow-md" disabled={mutationAbast.isPending}>
             {mutationAbast.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Registrar Abastecimento
           </Button>
         </form>
@@ -249,11 +251,22 @@ export function Frota() {
               <option value="0">Preventiva</option>
               <option value="1">Corretiva</option>
             </select>
+            <div className="flex gap-3 mt-2 p-2 bg-slate-50 rounded border border-slate-100 text-[10px] leading-relaxed">
+              <div className="flex-1">
+                <span className="font-bold text-blue-600 block mb-0.5">PREVENTIVA:</span>
+                <p className="text-slate-500 italic">Planejada para evitar falhas (ex: óleo, filtros, revisões).</p>
+              </div>
+              <div className="w-px bg-slate-200"></div>
+              <div className="flex-1">
+                <span className="font-bold text-amber-600 block mb-0.5">CORRETIVA:</span>
+                <p className="text-slate-500 italic">Reparo de algo que já quebrou ou falhou.</p>
+              </div>
+            </div>
           </div>
-          <Input label="Descrição" placeholder="Ex: Troca de óleo e filtros" {...regM('descricao')} error={errM.descricao?.message as string} />
+          <Textarea label="Descrição Detalhada" placeholder="Descreva os serviços realizados, peças trocadas, etc." {...regM('descricao')} error={errM.descricao?.message as string} />
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Custo (R$)" type="number" step="0.01" {...regM('custoTotal')} error={errM.custoTotal?.message as string} />
             <Input label="Km na Manutenção" type="number" {...regM('quilometragemRegistrada')} error={errM.quilometragemRegistrada?.message as string} />
+            <Input label="Custo (R$)" type="number" step="0.01" {...regM('custoTotal')} error={errM.custoTotal?.message as string} />
           </div>
           <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 flex justify-center gap-2" disabled={mutationManu.isPending}>
             {mutationManu.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Registrar Manutenção
@@ -312,6 +325,7 @@ export function Frota() {
                   <th className="px-6 py-4 font-medium">Data</th>
                   <th className="px-6 py-4 font-medium">Veículo</th>
                   <th className="px-6 py-4 font-medium">Tipo</th>
+                  <th className="px-6 py-4 font-medium text-center">Km</th>
                   <th className="px-6 py-4 font-medium">Detalhes</th>
                   <th className="px-6 py-4 font-medium text-right">Valor</th>
                 </tr>
@@ -344,9 +358,12 @@ export function Frota() {
                             {isAbast ? 'Abastecimento' : 'Manutenção'}
                           </span>
                         </td>
+                        <td className="px-6 py-4 text-center font-mono text-xs font-bold text-slate-700">
+                          {event.quilometragemRegistrada}
+                        </td>
                         <td className="px-6 py-4 text-slate-600">
                           {isAbast 
-                            ? `${event.litros}L em ${event.quilometragemRegistrada} Km` 
+                            ? `${event.litros}L registrados` 
                             : `${event.descricao} (${event.tipo === 0 ? 'Prev.' : 'Corr.'})`
                           }
                         </td>
@@ -374,11 +391,21 @@ export function Frota() {
 
 export function Trocas() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalType, setModalType] = useState<'troca' | 'avaria'>('troca');
   const queryClient = useQueryClient();
   
-  const { register, handleSubmit, reset, formState: { errors } } = useForm({
+  const { register, handleSubmit, reset, setValue, control, formState: { errors } } = useForm({
     resolver: zodResolver(trocaSchema)
   });
+
+  const openModal = (type: 'troca' | 'avaria') => {
+    setModalType(type);
+    setIsModalOpen(true);
+    reset();
+    if (type === 'avaria') {
+      setValue('motivo', 'Avaria');
+    }
+  };
 
   const { data: trocas, isLoading } = useQuery<any[]>({
     queryKey: ['trocas'],
@@ -407,12 +434,17 @@ export function Trocas() {
     <div className="space-y-6 mt-12">
       <div className="flex items-center justify-between border-t border-slate-200 pt-10">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Logística Reversa (Trocas)</h2>
-          <p className="text-slate-500">Registre avarias e faça a reposição imediata sem cobrar o cliente novamente.</p>
+          <h2 className="text-2xl font-bold text-slate-800">Logística Reversa (Trocas & Avarias)</h2>
+          <p className="text-slate-500">Registre trocas por erro de pedido ou avarias para reposição imediata.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-red-600 hover:bg-red-700">
-          <ArrowRightLeft size={18} /> Registrar Avaria
-        </Button>
+        <div className="flex gap-3">
+          <Button onClick={() => openModal('troca')} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100">
+            <ArrowRightLeft size={18} /> Registrar Troca
+          </Button>
+          <Button onClick={() => openModal('avaria')} variant="outline" className="flex items-center gap-2 border-slate-200 text-slate-700 hover:bg-slate-50">
+            <Trash2 size={18} /> Registrar Avaria
+          </Button>
+        </div>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
@@ -439,26 +471,43 @@ export function Trocas() {
         </table>
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Registrar Troca/Avaria">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalType === 'troca' ? "Registrar Troca de Produto" : "Registrar Avaria de Produto"}>
         <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Cliente</label>
-            <select {...register('clienteId')} className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm">
-              <option value="">Selecione...</option>
-              {clientes?.map(c => <option key={c.id} value={c.id}>{c.nomeFantasia}</option>)}
-            </select>
-          </div>
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Produto</label>
-            <select {...register('produtoId')} className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm">
-              <option value="">Selecione...</option>
-              {produtos?.map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
-            </select>
-          </div>
+          <Controller
+            control={control}
+            name="clienteId"
+            render={({ field }) => (
+              <SearchableSelect
+                label="Cliente"
+                placeholder="Pesquise o cliente..."
+                options={clientes?.map(c => ({ value: c.id, label: c.nomeFantasia })) || []}
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.clienteId?.message as string}
+              />
+            )}
+          />
+
+          <Controller
+            control={control}
+            name="produtoId"
+            render={({ field }) => (
+              <SearchableSelect
+                label="Produto"
+                placeholder="Pesquise o produto..."
+                options={produtos?.map(p => ({ value: p.id, label: p.nome })) || []}
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.produtoId?.message as string}
+              />
+            )}
+          />
+          
           <Input label="Quantidade" type="number" {...register('quantidade')} error={errors.quantidade?.message as string} />
-          <Input label="Motivo (Avaria, Vencimento, etc)" {...register('motivo')} error={errors.motivo?.message as string} />
-          <Button type="submit" className="w-full bg-red-600 hover:bg-red-700 flex justify-center gap-2" disabled={mutation.isPending}>
-            {mutation.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Registrar Troca
+          <Input label="Motivo" placeholder={modalType === 'troca' ? "Ex: Erro no pedido, Vencimento" : "Ex: Embalagem violada, Produto quebrado"} {...register('motivo')} error={errors.motivo?.message as string} />
+          <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 flex justify-center gap-2 shadow-md mt-4" disabled={mutation.isPending}>
+            {mutation.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} 
+            {modalType === 'troca' ? 'Confirmar Registro de Troca' : 'Registrar Avaria'}
           </Button>
         </form>
       </Modal>

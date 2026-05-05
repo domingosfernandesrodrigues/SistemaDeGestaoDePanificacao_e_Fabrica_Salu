@@ -27,6 +27,7 @@ export default function Despesas() {
   const [filtroCategoria, setFiltroCategoria] = useState('');
   const [filtroVencimentoInicio, setFiltroVencimentoInicio] = useState('');
   const [filtroVencimentoFim, setFiltroVencimentoFim] = useState('');
+  const [filtroMesReferencia, setFiltroMesReferencia] = useState('');
   
   // Paginação
   const [paginaAtual, setPaginaAtual] = useState(1);
@@ -78,12 +79,16 @@ export default function Despesas() {
   // Reset da página ao alterar os filtros
   useEffect(() => {
     setPaginaAtual(1);
-  }, [filtroCategoria, filtroVencimentoInicio, filtroVencimentoFim]);
+  }, [filtroCategoria, filtroVencimentoInicio, filtroVencimentoFim, filtroMesReferencia]);
 
   // Aplicação dos filtros
   const despesasFiltradas = despesas?.filter(d => {
+    // Ocultar registros de Folha de Pagamento nesta tela para centralizar no módulo de RH
+    if (d.categoria === 'Folha de Pagamento') return false;
+
     const dataVenc = d.dataVencimento?.split('T')[0] || '';
     if (filtroCategoria && d.categoria !== filtroCategoria) return false;
+    if (filtroMesReferencia && !d.mesReferencia?.toLowerCase().includes(filtroMesReferencia.toLowerCase())) return false;
     if (filtroVencimentoInicio && dataVenc < filtroVencimentoInicio) return false;
     if (filtroVencimentoFim && dataVenc > filtroVencimentoFim) return false;
     return true;
@@ -97,108 +102,154 @@ export default function Despesas() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Controle de Despesas</h2>
-          <p className="text-slate-500">Registre gastos com energia, água, aluguel e outras despesas operacionais.</p>
+          <p className="text-slate-500">Registre gastos operacionais da sua panificadora.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700">
+        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 h-11 px-6 shadow-md shadow-indigo-100">
           <Plus size={18} /> Nova Despesa
         </Button>
       </div>
 
-      {/* Painel de Filtros */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-600 flex items-center gap-1"><Filter size={14} /> Categoria</label>
-          <select 
-            value={filtroCategoria} 
-            onChange={e => setFiltroCategoria(e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="">Todas as categorias</option>
-            <option value="Operacional">Operacional</option>
-            <option value="Administrativa">Administrativa</option>
-            <option value="Utilidades">Utilidades (Energia/Água)</option>
-            <option value="Manutenção">Manutenção</option>
-            <option value="Folha de Pagamento">Folha de Pagamento</option>
-            <option value="Outros">Outros</option>
-          </select>
+      {/* Painel de Filtros Otimizado */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col xl:flex-row gap-4 items-end">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 flex-1 w-full">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1"><Filter size={12} /> Categoria</label>
+            <select 
+              value={filtroCategoria} 
+              onChange={e => setFiltroCategoria(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            >
+              <option value="">Todas as categorias</option>
+              <option value="Operacional">Operacional</option>
+              <option value="Administrativa">Administrativa</option>
+              <option value="Utilidades">Utilidades (Energia/Água)</option>
+              <option value="Manutenção">Manutenção</option>
+              <option value="Outros">Outros</option>
+            </select>
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1"><Tag size={12} /> Mês Referência</label>
+            <input 
+              type="text" 
+              placeholder="Ex: Março/2026"
+              value={filtroMesReferencia} 
+              onChange={e => setFiltroMesReferencia(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            />
+          </div>
         </div>
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-600 flex items-center gap-1"><Calendar size={14} /> Venc. Início</label>
-          <input 
-            type="date" 
-            value={filtroVencimentoInicio} 
-            onChange={e => setFiltroVencimentoInicio(e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
+        <div className="grid grid-cols-2 gap-4 w-full xl:w-80">
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1"><Calendar size={12} /> Venc. Início</label>
+            <input 
+              type="date" 
+              value={filtroVencimentoInicio} 
+              onChange={e => setFiltroVencimentoInicio(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1"><Calendar size={12} /> Venc. Fim</label>
+            <input 
+              type="date" 
+              value={filtroVencimentoFim} 
+              onChange={e => setFiltroVencimentoFim(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+            />
+          </div>
         </div>
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-600 flex items-center gap-1"><Calendar size={14} /> Venc. Fim</label>
-          <input 
-            type="date" 
-            value={filtroVencimentoFim} 
-            onChange={e => setFiltroVencimentoFim(e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          />
-        </div>
-        <div className="flex gap-2 h-10">
-          <Button variant="secondary" className="w-full" onClick={() => { setFiltroCategoria(''); setFiltroVencimentoInicio(''); setFiltroVencimentoFim(''); }}>
-            Limpar Filtros
-          </Button>
-        </div>
+        <Button variant="secondary" className="h-10 px-4 w-full xl:w-auto" onClick={() => { setFiltroCategoria(''); setFiltroVencimentoInicio(''); setFiltroVencimentoFim(''); setFiltroMesReferencia(''); }}>
+          Limpar
+        </Button>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-4 font-medium">Descrição</th>
-              <th className="px-6 py-4 font-medium">Referência</th>
-              <th className="px-6 py-4 font-medium">Categoria</th>
-              <th className="px-6 py-4 font-medium">Vencimento</th>
-              <th className="px-6 py-4 font-medium text-right">Valor</th>
-              <th className="px-6 py-4 font-medium text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {despesasPaginadas.map((d) => (
-              <tr key={d.id} className="hover:bg-slate-50">
-                <td className="px-6 py-4 font-medium text-slate-900">{d.descricao}</td>
-                <td className="px-6 py-4">
-                   <span className="text-xs font-bold text-slate-500 uppercase">{d.mesReferencia || '-'}</span>
-                </td>
-                <td className="px-6 py-4">
-                  <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider">
-                    {d.categoria || 'Geral'}
-                  </span>
-                </td>
-                <td className="px-6 py-4 text-slate-500">
-                  {d.dataVencimento ? new Date(d.dataVencimento).toLocaleDateString() : 'Não inf.'}
-                </td>
-                <td className="px-6 py-4 text-right font-bold text-slate-900">
-                  {Number(d.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                </td>
-                <td className="px-6 py-4">
-                  <div className="flex justify-center gap-2">
-                    <button onClick={() => handleEdit(d)} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-md">
-                      <Edit2 size={16} />
-                    </button>
-                    <button onClick={() => confirm('Excluir despesa?') && mutationDelete.mutate(d.id)} className="p-1.5 text-slate-400 hover:text-red-600 rounded-md">
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {despesasPaginadas.length === 0 && (
+        {/* View Desktop (Tabela) */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
               <tr>
-                <td colSpan={5} className="px-6 py-10 text-center text-slate-400 italic">Nenhuma despesa encontrada.</td>
+                <th className="px-6 py-4 font-medium">Descrição</th>
+                <th className="px-6 py-4 font-medium text-center">Referência</th>
+                <th className="px-6 py-4 font-medium">Categoria</th>
+                <th className="px-6 py-4 font-medium">Vencimento</th>
+                <th className="px-6 py-4 font-medium text-right">Valor</th>
+                <th className="px-6 py-4 font-medium text-center">Ações</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {despesasPaginadas.map((d) => (
+                <tr key={d.id} className="hover:bg-slate-50 transition-colors">
+                  <td className="px-6 py-4 font-medium text-slate-900">{d.descricao}</td>
+                  <td className="px-6 py-4 text-center">
+                    <span className="text-xs font-bold text-slate-500 uppercase">{d.mesReferencia || '-'}</span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold uppercase tracking-wider">
+                      {d.categoria || 'Geral'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-slate-500 whitespace-nowrap">
+                    {d.dataVencimento ? new Date(d.dataVencimento).toLocaleDateString() : 'Não inf.'}
+                  </td>
+                  <td className="px-6 py-4 text-right font-bold text-slate-900 whitespace-nowrap">
+                    {Number(d.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex justify-center gap-2">
+                      <button onClick={() => handleEdit(d)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors">
+                        <Edit2 size={16} />
+                      </button>
+                      <button onClick={() => confirm('Excluir despesa?') && mutationDelete.mutate(d.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+              {despesasPaginadas.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center text-slate-400 italic">Nenhuma despesa encontrada com estes filtros.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* View Mobile (Cards) */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {despesasPaginadas.length === 0 && <p className="p-8 text-center text-slate-400 italic">Nenhuma despesa encontrada.</p>}
+          {despesasPaginadas.map((d) => (
+            <div key={d.id} className="p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h4 className="font-bold text-slate-800 text-base">{d.descricao}</h4>
+                  <div className="flex gap-2 mt-1">
+                    <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black uppercase">{d.categoria}</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase">{d.mesReferencia}</span>
+                  </div>
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => handleEdit(d)} className="p-2 text-indigo-600 bg-indigo-50 rounded-lg"><Edit2 size={18} /></button>
+                  <button onClick={() => confirm('Excluir despesa?') && mutationDelete.mutate(d.id)} className="p-2 text-red-600 bg-red-50 rounded-lg"><Trash2 size={18} /></button>
+                </div>
+              </div>
+              <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg">
+                <div>
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Vencimento</p>
+                  <p className="text-xs font-bold text-slate-700">{d.dataVencimento ? new Date(d.dataVencimento).toLocaleDateString() : 'Não inf.'}</p>
+                </div>
+                <div className="text-right">
+                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Valor</p>
+                  <p className="text-lg font-black text-indigo-600">{Number(d.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
         
         {/* Controles de Paginação */}
         {totalPaginas > 1 && (

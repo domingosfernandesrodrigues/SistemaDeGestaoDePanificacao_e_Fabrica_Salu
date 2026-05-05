@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
+import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { Play, CheckCircle, Loader2, Factory, Save, AlertTriangle, Edit2, Trash2 } from 'lucide-react';
 import api from '../services/api';
 
@@ -42,7 +43,7 @@ export function OrdensProducao() {
   const [editId, setEditId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<OpForm>({
+  const { register, handleSubmit, reset, setValue, control, formState: { errors } } = useForm<OpForm>({
     resolver: zodResolver(opSchema)
   });
 
@@ -310,19 +311,20 @@ export function OrdensProducao() {
         title={editId ? "Editar Planejamento da OP" : "Abrir Ordem de Produção"}
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Produto a Fabricar</label>
-            <select 
-              {...register('produtoId')}
-              className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-            >
-              <option value="">Selecione o produto...</option>
-              {produtos?.filter(p => p.tipo === 1).map(p => (
-                <option key={p.id} value={p.id}>{p.nome}</option>
-              ))}
-            </select>
-            {errors.produtoId && <p className="text-xs text-red-500">{errors.produtoId.message}</p>}
-          </div>
+          <Controller
+            control={control}
+            name="produtoId"
+            render={({ field }) => (
+              <SearchableSelect
+                label="Produto a Fabricar"
+                placeholder="Pesquise o produto..."
+                options={produtos?.filter(p => p.tipo === 1).map(p => ({ value: p.id, label: p.nome })) || []}
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.produtoId?.message}
+              />
+            )}
+          />
 
           <Input 
             label="Quantidade Planejada (Un)" 

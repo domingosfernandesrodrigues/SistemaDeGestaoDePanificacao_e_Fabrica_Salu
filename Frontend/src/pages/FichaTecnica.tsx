@@ -5,6 +5,7 @@ import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { ChefHat, Plus, Trash2, Save, Loader2, Scale, Percent, Info, TrendingUp } from 'lucide-react';
 import api from '../services/api';
+import { SearchableSelect } from '../components/ui/SearchableSelect';
 
 interface InsumoItem {
   insumoId: string;
@@ -182,18 +183,16 @@ export function FichaTecnica() {
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium text-slate-700">Produto Final</label>
-              <select 
-                value={selectedProdutoId} 
-                onChange={(e) => setSelectedProdutoId(e.target.value)}
-                disabled={editMode}
-                className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-              >
-                <option value="">Selecione o produto...</option>
-                {produtosFabricados.map(p => (
-                  <option key={p.id || p.Id} value={p.id || p.Id}>{p.nome || p.Nome} ({p.unidadeMedida || p.UnidadeMedida})</option>
-                ))}
-              </select>
+              <SearchableSelect
+                label="Produto Final"
+                placeholder="Pesquise o produto..."
+                options={produtosFabricados.map(p => ({ 
+                  value: p.id || p.Id, 
+                  label: `${p.nome || p.Nome} (${p.unidadeMedida || p.UnidadeMedida})` 
+                }))}
+                value={selectedProdutoId}
+                onChange={(val) => !editMode && setSelectedProdutoId(val)}
+              />
             </div>
             <div className="space-y-1">
               <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
@@ -224,17 +223,16 @@ export function FichaTecnica() {
               {items.map((item, index) => (
                 <div key={index} className="grid grid-cols-12 gap-2 p-3 bg-slate-50 rounded-lg border border-slate-100 items-end">
                   <div className="col-span-12 sm:col-span-5 space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Insumo</label>
-                    <select 
-                      value={item.insumoId} 
-                      onChange={(e) => updateItem(index, 'insumoId', e.target.value)}
-                      className="w-full h-9 px-2 rounded-md border border-slate-200 bg-white text-xs"
-                    >
-                      <option value="">Selecione...</option>
-                      {insumosDisponiveis.map(i => (
-                        <option key={i.id || i.Id} value={i.id || i.Id}>{i.nome || i.Nome} ({i.unidadeMedida || i.UnidadeMedida})</option>
-                      ))}
-                    </select>
+                    <SearchableSelect
+                      label="Insumo"
+                      placeholder="Pesquise o insumo..."
+                      options={insumosDisponiveis.map(i => ({ 
+                        value: i.id || i.Id, 
+                        label: `${i.nome || i.Nome} (${i.unidadeMedida || i.UnidadeMedida})` 
+                      }))}
+                      value={item.insumoId}
+                      onChange={(val) => updateItem(index, 'insumoId', val)}
+                    />
                   </div>
                   <div className="col-span-5 sm:col-span-3 space-y-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase">Qtd</label>

@@ -9,6 +9,9 @@ export function FolhaPagamento() {
   const currentMonth = new Date().getMonth() + 1;
   const currentYear = new Date().getFullYear();
 
+  // Abas
+  const [abaAtiva, setAbaAtiva] = useState<'abertas' | 'fechadas'>('abertas');
+
   // Filtros
   const [filtroFuncionario, setFiltroFuncionario] = useState('');
   const [filtroMes, setFiltroMes] = useState('');
@@ -66,13 +69,16 @@ export function FolhaPagamento() {
   // Aplicação de filtros e ordenação decrescente
   const folhasFiltradas = (folhas || [])
     .filter(f => {
+      // Filtro por Aba (Suporta número ou string vinda do DTO)
+      const statusAlvo = abaAtiva === 'abertas' ? [0, 'Aberta'] : [1, 'Fechada'];
+      if (!statusAlvo.includes(f.status)) return false;
+
       if (filtroFuncionario && f.funcionarioNome !== filtroFuncionario) return false;
       if (filtroMes && f.mesReferencia !== parseInt(filtroMes)) return false;
       if (filtroAno && f.anoReferencia !== parseInt(filtroAno)) return false;
       return true;
     })
     .sort((a, b) => {
-      // Ordenação decrescente por Ano e depois Mês
       if (b.anoReferencia !== a.anoReferencia) return b.anoReferencia - a.anoReferencia;
       return b.mesReferencia - a.mesReferencia;
     });
@@ -84,29 +90,57 @@ export function FolhaPagamento() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Folha de Pagamento</h2>
           <p className="text-slate-500">Gestão de salários, horas extras e contracheques.</p>
         </div>
-        <Button 
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 h-12 px-6"
-          onClick={() => mutationProcess.mutate()}
-          disabled={mutationProcess.isPending}
-        >
-          {mutationProcess.isPending ? <Loader2 className="animate-spin" size={20} /> : <Calculator size={20} />}
-          Processar Mês Atual ({currentMonth}/{currentYear})
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button 
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 h-11 px-6 shadow-md shadow-indigo-100"
+            onClick={() => mutationProcess.mutate()}
+            disabled={mutationProcess.isPending}
+          >
+            {mutationProcess.isPending ? <Loader2 className="animate-spin" size={18} /> : <Calculator size={18} />}
+            Processar Mês Atual ({currentMonth}/{currentYear})
+          </Button>
+        </div>
       </div>
 
-      {/* Painel de Filtros */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-600 flex items-center gap-1"><User size={14} /> Funcionário</label>
+      {/* Navegação por Abas Responsiva */}
+      <div className="grid grid-cols-2 sm:flex border-b border-slate-200">
+        <button 
+          onClick={() => setAbaAtiva('abertas')}
+          className={`px-2 sm:px-6 py-3 text-xs sm:text-sm font-bold transition-all border-b-2 ${
+            abaAtiva === 'abertas' 
+            ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50' 
+            : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+          }`}
+        >
+          <span className="hidden sm:inline">Folhas em Aberto</span>
+          <span className="sm:hidden">Em Aberto</span>
+        </button>
+        <button 
+          onClick={() => setAbaAtiva('fechadas')}
+          className={`px-2 sm:px-6 py-3 text-xs sm:text-sm font-bold transition-all border-b-2 ${
+            abaAtiva === 'fechadas' 
+            ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50' 
+            : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
+          }`}
+        >
+          <span className="hidden sm:inline">Histórico de Fechadas</span>
+          <span className="sm:hidden">Histórico</span>
+        </button>
+      </div>
+
+      {/* Painel de Filtros Otimizado */}
+      <div className="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col lg:flex-row gap-5 items-end">
+        <div className="flex-1 w-full space-y-1.5">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><User size={12} /> Funcionário</label>
           <select 
             value={filtroFuncionario} 
             onChange={e => setFiltroFuncionario(e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
           >
             <option value="">Todos os funcionários</option>
             {funcionários?.map(f => (
@@ -114,91 +148,103 @@ export function FolhaPagamento() {
             ))}
           </select>
         </div>
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-600 flex items-center gap-1"><Calendar size={14} /> Mês</label>
-          <select 
-            value={filtroMes} 
-            onChange={e => setFiltroMes(e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="">Todos os meses</option>
-            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-              <option key={m} value={m}>{m.toString().padStart(2, '0')}</option>
-            ))}
-          </select>
+        <div className="grid grid-cols-2 gap-4 w-full lg:w-80">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Calendar size={12} /> Mês</label>
+            <select 
+              value={filtroMes} 
+              onChange={e => setFiltroMes(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+            >
+              <option value="">Todos</option>
+              {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                <option key={m} value={m}>{m.toString().padStart(2, '0')}</option>
+              ))}
+            </select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Calendar size={12} /> Ano</label>
+            <select 
+              value={filtroAno} 
+              onChange={e => setFiltroAno(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+            >
+              <option value="">Todos</option>
+              {[currentYear, currentYear - 1, currentYear - 2].map(y => (
+                <option key={y} value={y}>{y}</option>
+              ))}
+            </select>
+          </div>
         </div>
-        <div className="space-y-1">
-          <label className="text-sm font-medium text-slate-600 flex items-center gap-1"><Calendar size={14} /> Ano</label>
-          <select 
-            value={filtroAno} 
-            onChange={e => setFiltroAno(e.target.value)}
-            className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="">Todos os anos</option>
-            {[currentYear, currentYear - 1].map(y => (
-              <option key={y} value={y}>{y}</option>
-            ))}
-          </select>
-        </div>
-        <div className="flex gap-2 h-10">
-          <Button variant="secondary" className="w-full" onClick={() => { setFiltroFuncionario(''); setFiltroMes(''); setFiltroAno(''); }}>
-            Limpar Filtros
-          </Button>
-        </div>
+        <Button variant="secondary" className="h-11 px-5 font-bold w-full lg:w-auto rounded-xl border-slate-200" onClick={() => { setFiltroFuncionario(''); setFiltroMes(''); setFiltroAno(''); }}>
+          Limpar
+        </Button>
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        {/* View para Desktop (Tabela) */}
-        <div className="hidden md:block overflow-x-auto">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+        {/* View para Desktop e Notebooks Grandes (Tabela Compacta) */}
+        <div className="hidden lg:block overflow-x-auto">
+          <table className="w-full text-left text-[13px]">
+            <thead className="bg-slate-50 text-slate-500 border-b border-slate-200 uppercase text-[10px] font-black tracking-wider">
               <tr>
-                <th className="px-6 py-4 font-medium">Funcionário</th>
-                <th className="px-6 py-4 font-medium">Ref.</th>
-                <th className="px-6 py-4 font-medium">Horas Extras</th>
-                <th className="px-6 py-4 font-medium">Descontos</th>
-                <th className="px-6 py-4 font-medium">Salário Líquido</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium text-right">Ações</th>
+                <th className="px-4 py-4">Funcionário</th>
+                <th className="px-3 py-4">Ref.</th>
+                <th className="px-3 py-4 text-center">H. Extras (50/100%)</th>
+                <th className="px-3 py-4 text-center">Adic. Noturno</th>
+                <th className="px-3 py-4 text-center">Descontos</th>
+                <th className="px-4 py-4 text-right">Salário Líquido</th>
+                <th className="px-4 py-4 text-center">Status</th>
+                <th className="px-4 py-4 text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {folhasPaginadas.length === 0 && <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-400">Nenhuma folha encontrada com os filtros atuais.</td></tr>}
+              {folhasPaginadas.length === 0 && <tr><td colSpan={8} className="px-6 py-8 text-center text-slate-400 font-medium">Nenhuma folha encontrada.</td></tr>}
               {folhasPaginadas.map((folha) => (
-                <tr key={folha.id} className="hover:bg-slate-50">
-                  <td className="px-6 py-4 font-medium text-slate-900">{folha.funcionarioNome}</td>
-                  <td className="px-6 py-4 text-slate-500 font-bold">{folha.mesReferencia.toString().padStart(2, '0')}/{folha.anoReferencia}</td>
-                  <td className="px-6 py-4 text-slate-600">{folha.totalHorasExtras}h ({new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorHorasExtras)})</td>
-                  <td className="px-6 py-4 text-red-500">- {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.totalDescontos)}</td>
-                  <td className="px-6 py-4 font-bold text-green-600">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.salarioLiquido)}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      folha.status === 0 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'
+                <tr key={folha.id} className="hover:bg-slate-50/80 transition-colors">
+                  <td className="px-4 py-3 font-bold text-slate-800">{folha.funcionarioNome}</td>
+                  <td className="px-3 py-3 text-slate-500 font-black">{folha.mesReferencia.toString().padStart(2, '0')}/{folha.anoReferencia}</td>
+                  <td className="px-3 py-3">
+                    <div className="flex flex-col items-center leading-tight">
+                      <span className="text-slate-500 text-[10px]">50%: {folha.totalHorasExtras50}h</span>
+                      <span className="text-amber-600 font-bold text-[10px]">100%: {folha.totalHorasExtras100}h</span>
+                    </div>
+                  </td>
+                  <td className="px-3 py-3 text-center text-indigo-600 font-bold">
+                    {folha.valorAdicionalNoturno > 0 ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorAdicionalNoturno) : '-'}
+                  </td>
+                  <td className="px-3 py-3 text-center text-red-500 font-bold">
+                    - {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.totalDescontos)}
+                  </td>
+                  <td className="px-4 py-3 font-black text-green-600 text-right text-base">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.salarioLiquido)}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter ${
+                      folha.status === 0 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
                     }`}>
                       {folha.status === 0 ? 'Aberta' : 'Fechada'}
                     </span>
                   </td>
-                  <td className="px-6 py-4 text-right space-x-2">
-                    <Button 
-                      variant="secondary" 
-                      size="sm" 
-                      className="text-xs bg-slate-100" 
-                      title="Baixar Contracheque"
-                      onClick={() => downloadContracheque(folha.id)}
-                    >
-                      <Download size={14} />
-                    </Button>
-                    {folha.status === 0 && (
-                      <Button 
-                        size="sm" 
-                        className="text-xs bg-blue-600" 
-                        title="Fechar Folha (Gera Contas a Pagar)"
-                        onClick={() => mutationClose.mutate(folha.id)}
-                        disabled={mutationClose.isPending}
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex items-center justify-end gap-2">
+                      <button 
+                        className="h-9 w-9 flex items-center justify-center bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 rounded-lg shadow-sm transition-all" 
+                        title="Baixar Contracheque"
+                        onClick={() => downloadContracheque(folha.id)}
                       >
-                        {mutationClose.isPending ? <Loader2 className="animate-spin" /> : <CheckCircle size={14} className="mr-1" />} Fechar
-                      </Button>
-                    )}
+                        <Download size={20} />
+                      </button>
+                      {folha.status === 0 && (
+                        <button 
+                          className="h-9 w-9 flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 rounded-lg shadow-sm transition-all disabled:opacity-50" 
+                          title="Fechar Folha (Gera Contas a Pagar)"
+                          onClick={() => mutationClose.mutate(folha.id)}
+                          disabled={mutationClose.isPending}
+                        >
+                          {mutationClose.isPending ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle size={20} />}
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -206,8 +252,8 @@ export function FolhaPagamento() {
           </table>
         </div>
 
-        {/* View para Mobile (Cards) */}
-        <div className="md:hidden divide-y divide-slate-100">
+        {/* View para Tablets e Mobile (Cards) */}
+        <div className="lg:hidden divide-y divide-slate-100">
           {folhasPaginadas.length === 0 && <p className="p-8 text-center text-slate-400">Nenhuma folha encontrada.</p>}
           {folhasPaginadas.map((folha) => (
             <div key={folha.id} className="p-4 space-y-4">
@@ -230,31 +276,44 @@ export function FolhaPagamento() {
               </div>
               
               <div className="grid grid-cols-2 gap-4 py-3 border-y border-slate-50">
-                <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold">H. Extras</p>
-                  <p className="text-sm text-slate-700 font-medium">{folha.totalHorasExtras}h ({new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorHorasExtras)})</p>
+                <div className="col-span-2 space-y-2">
+                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Detalhamento CLT</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                      <p className="text-[10px] text-slate-500 font-bold">HE 50%</p>
+                      <p className="text-sm font-black text-slate-700">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorHorasExtras50)}</p>
+                    </div>
+                    <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-100">
+                      <p className="text-[10px] text-amber-600 font-bold">HE 100%</p>
+                      <p className="text-sm font-black text-amber-700">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorHorasExtras100)}</p>
+                    </div>
+                    <div className="bg-indigo-50 p-2.5 rounded-xl border border-indigo-100">
+                      <p className="text-[10px] text-indigo-600 font-bold">Noturno</p>
+                      <p className="text-sm font-black text-indigo-700">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorAdicionalNoturno)}</p>
+                    </div>
+                  </div>
                 </div>
                 <div>
-                  <p className="text-[10px] text-slate-400 uppercase font-bold text-right">Descontos</p>
-                  <p className="text-sm text-red-500 font-medium text-right">- {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.totalDescontos)}</p>
+                  <p className="text-[10px] text-slate-400 uppercase font-bold">Descontos</p>
+                  <p className="text-sm text-red-500 font-medium">- {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.totalDescontos)}</p>
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col sm:flex-row gap-2">
                 <Button 
                   variant="secondary" 
-                  className="flex-1 h-10 bg-slate-100 text-slate-700 flex items-center justify-center gap-2"
+                  className="flex-1 h-10 border border-slate-200 flex items-center justify-center gap-2 text-xs font-bold shadow-sm"
                   onClick={() => downloadContracheque(folha.id)}
                 >
-                  <Download size={16} /> Contracheque PDF
+                  <Download size={18} className="text-slate-700" /> Contracheque
                 </Button>
                 {folha.status === 0 && (
                   <Button 
-                    className="flex-[1.5] h-10 bg-blue-600 text-white flex items-center justify-center gap-2"
+                    className="flex-1 h-10 bg-blue-600 text-white flex items-center justify-center gap-2 text-xs"
                     onClick={() => mutationClose.mutate(folha.id)}
                     disabled={mutationClose.isPending}
                   >
-                    {mutationClose.isPending ? <Loader2 className="animate-spin" /> : <CheckCircle size={16} />}
+                    {mutationClose.isPending ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle size={16} />}
                     Fechar Folha
                   </Button>
                 )}
@@ -294,9 +353,39 @@ export function FolhaPagamento() {
         )}
       </div>
       
-      <div className="p-4 bg-indigo-50 text-indigo-800 rounded-lg border border-indigo-100 text-sm">
-        <strong>Integração Financeira:</strong> Ao "Fechar" a folha de um funcionário, o sistema criará automaticamente um registro no módulo <strong>Contas a Pagar</strong>.
+      {/* Legenda de Cálculos (Metodologia CLT) */}
+      <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
+        <h3 className="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
+          <Calculator size={16} className="text-indigo-600" /> Metodologia de Cálculo (CLT + SGP-F)
+        </h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="space-y-1">
+            <p className="text-[11px] font-bold text-slate-500 uppercase">Horas Extras 50%</p>
+            <p className="text-xs text-slate-600 leading-relaxed">Aplicadas sobre horas que excedem a jornada de 8h em dias úteis e sábados.</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[11px] font-bold text-amber-600 uppercase">Horas Extras 100%</p>
+            <p className="text-xs text-slate-600 leading-relaxed">Aplicadas integralmente em Domingos e **Feriados** (conforme cadastrado na Agenda CRM).</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[11px] font-bold text-indigo-600 uppercase">Adicional Noturno</p>
+            <p className="text-xs text-slate-600 leading-relaxed">Acréscimo de 20% sobre o valor da hora para trabalhos realizados entre **22:00 e 05:00**.</p>
+          </div>
+          <div className="space-y-1">
+            <p className="text-[11px] font-bold text-slate-500 uppercase">Base e Descontos</p>
+            <p className="text-xs text-slate-600 leading-relaxed">Base de 220h mensais. Descontos incluem INSS (8%) e afastamentos não remunerados.</p>
+          </div>
+        </div>
       </div>
+
+      {abaAtiva === 'abertas' && (
+        <div className="p-4 bg-indigo-50 text-indigo-800 rounded-lg border border-indigo-100 text-xs flex items-start gap-3">
+          <Filter size={16} className="mt-0.5 shrink-0" />
+          <p>
+            As folhas listadas acima estão em processamento. Ao clicar em <strong>"Fechar"</strong>, o status mudará para fechada e você poderá consultá-la permanentemente na aba de <strong>Histórico</strong>.
+          </p>
+        </div>
+      )}
     </div>
   );
 }

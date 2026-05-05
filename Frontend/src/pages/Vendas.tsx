@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm, useFieldArray } from 'react-hook-form';
+import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
+import { SearchableSelect } from '../components/ui/SearchableSelect';
 import { ShoppingCart, Truck, CheckCircle, Loader2, Plus, Trash2, Save } from 'lucide-react';
 import api from '../services/api';
 
@@ -168,19 +169,20 @@ export function Vendas() {
         title="Novo Pedido de Venda"
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Cliente</label>
-            <select 
-              {...register('clienteId')}
-              className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
-            >
-              <option value="">Selecione um cliente...</option>
-              {clientes?.map(c => (
-                <option key={c.id} value={c.id}>{c.nomeFantasia}</option>
-              ))}
-            </select>
-            {errors.clienteId && <p className="text-xs text-red-500">{errors.clienteId.message}</p>}
-          </div>
+          <Controller
+            control={control}
+            name="clienteId"
+            render={({ field }) => (
+              <SearchableSelect
+                label="Cliente"
+                placeholder="Pesquise o cliente..."
+                options={clientes?.map(c => ({ value: c.id, label: c.nomeFantasia })) || []}
+                value={field.value}
+                onChange={field.onChange}
+                error={errors.clienteId?.message}
+              />
+            )}
+          />
 
           <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -200,16 +202,20 @@ export function Vendas() {
               {fields.map((field, index) => (
                 <div key={field.id} className="flex gap-3 items-end bg-slate-50 p-3 rounded-lg border border-slate-100">
                   <div className="flex-1 space-y-1">
-                    <label className="text-xs font-medium text-slate-500">Produto</label>
-                    <select 
-                      {...register(`itens.${index}.produtoId`)}
-                      className="w-full h-9 px-2 rounded border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                    >
-                      <option value="">Selecione...</option>
-                      {produtos?.filter(p => p.tipo !== 0).map(p => (
-                        <option key={p.id} value={p.id}>{p.nome}</option>
-                      ))}
-                    </select>
+                    <Controller
+                      control={control}
+                      name={`itens.${index}.produtoId`}
+                      render={({ field }) => (
+                        <SearchableSelect
+                          label="Produto"
+                          placeholder="Pesquise..."
+                          options={produtos?.filter(p => p.tipo !== 0).map(p => ({ value: p.id, label: p.nome })) || []}
+                          value={field.value}
+                          onChange={field.onChange}
+                          error={errors.itens?.[index]?.produtoId?.message}
+                        />
+                      )}
+                    />
                   </div>
                   <div className="w-24 space-y-1">
                     <Input 

@@ -39,6 +39,7 @@ public class AppDbContext : DbContext
 
     // Fase 4b - CRM
     public DbSet<Reuniao> Reunioes { get; set; }
+    public DbSet<AgendaEvento> AgendaEventos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -88,8 +89,11 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<RegistroPonto>().Property(r => r.TotalHorasExtras).HasPrecision(18, 2);
         
         modelBuilder.Entity<FolhaPagamento>().Property(f => f.SalarioBaseCalculado).HasPrecision(18, 2);
-        modelBuilder.Entity<FolhaPagamento>().Property(f => f.TotalHorasExtras).HasPrecision(18, 2);
-        modelBuilder.Entity<FolhaPagamento>().Property(f => f.ValorHorasExtras).HasPrecision(18, 2);
+        modelBuilder.Entity<FolhaPagamento>().Property(f => f.TotalHorasExtras50).HasPrecision(18, 2);
+        modelBuilder.Entity<FolhaPagamento>().Property(f => f.ValorHorasExtras50).HasPrecision(18, 2);
+        modelBuilder.Entity<FolhaPagamento>().Property(f => f.TotalHorasExtras100).HasPrecision(18, 2);
+        modelBuilder.Entity<FolhaPagamento>().Property(f => f.ValorHorasExtras100).HasPrecision(18, 2);
+        modelBuilder.Entity<FolhaPagamento>().Property(f => f.ValorAdicionalNoturno).HasPrecision(18, 2);
         modelBuilder.Entity<FolhaPagamento>().Property(f => f.TotalDescontos).HasPrecision(18, 2);
         modelBuilder.Entity<FolhaPagamento>().Property(f => f.SalarioLiquido).HasPrecision(18, 2);
         

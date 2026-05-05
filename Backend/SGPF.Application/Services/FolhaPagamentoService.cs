@@ -14,19 +14,22 @@ public class FolhaPagamentoService : IFolhaPagamentoService
     private readonly IRepository<RegistroPonto> _pontoRepo;
     private readonly IRepository<ContaPagar> _contaPagarRepo;
     private readonly IRepository<Afastamento> _afastamentoRepo;
+    private readonly IRepository<AgendaEvento> _agendaRepo;
 
     public FolhaPagamentoService(
         IRepository<FolhaPagamento> folhaRepo,
         IRepository<Funcionario> funcRepo,
         IRepository<RegistroPonto> pontoRepo,
         IRepository<ContaPagar> contaPagarRepo,
-        IRepository<Afastamento> afastamentoRepo)
+        IRepository<Afastamento> afastamentoRepo,
+        IRepository<AgendaEvento> agendaRepo)
     {
         _folhaRepo = folhaRepo;
         _funcRepo = funcRepo;
         _pontoRepo = pontoRepo;
         _contaPagarRepo = contaPagarRepo;
         _afastamentoRepo = afastamentoRepo;
+        _agendaRepo = agendaRepo;
     }
 
     public async Task<List<FolhaPagamento>> ProcessarFolhaAsync(int mes, int ano)
@@ -52,18 +55,44 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                 p.DataHoraEntrada.Year == ano &&
                 p.DataHoraSaida != null);
 
-            // Calcular horas extras agrupando por DIA para maior precisão
-            decimal totalHorasExtras = registros
-                .GroupBy(r => r.DataHoraEntrada.Date)
-                .Select(g => {
-                    var totalDia = g.Sum(r => r.TotalHorasTrabalhadas);
-                    return totalDia > 8 ? totalDia - 8 : 0;
-                })
-                .Sum();
+            var feriados = (await _agendaRepo.GetAllAsync())
+                .Where(f => f.Data.Month == mes && f.Data.Year == ano && f.Tipo == "Feriado")
+                .ToList();
+
+            decimal totalHE50 = 0;
+            decimal totalHE100 = 0;
+            decimal totalHorasNoturnas = 0;
+
+            foreach (var g in registros.GroupBy(r => r.DataHoraEntrada.Date))
+            {
+                var data = g.Key;
+                var totalDia = g.Sum(r => r.TotalHorasTrabalhadas);
+                
+                bool ehFeriado = feriados.Any(f => f.Data.Date == data.Date) || 
+                                 data.DayOfWeek == DayOfWeek.Sunday ||
+                                 EhFeriadoNacional(data);
+
+                if (ehFeriado)
+                {
+                    totalHE100 += totalDia;
+                }
+                else
+                {
+                    var heDia = totalDia > 8 ? totalDia - 8 : 0;
+                    totalHE50 += heDia;
+                }
+
+                // Cálculo Adicional Noturno (22h às 05h)
+                foreach (var reg in g)
+                {
+                    totalHorasNoturnas += CalcularHorasNoturnas(reg.DataHoraEntrada, reg.DataHoraSaida ?? reg.DataHoraEntrada);
+                }
+            }
             
-            // Simulação de cálculo financeiro:
             decimal valorHora = func.SalarioBase / 220m; 
-            decimal valorHorasExtras = totalHorasExtras * (valorHora * 1.5m); 
+            decimal valorHE50 = totalHE50 * (valorHora * 1.5m);
+            decimal valorHE100 = totalHE100 * (valorHora * 2.0m);
+            decimal valorAdicionalNoturno = totalHorasNoturnas * (valorHora * 0.20m);
             
             var primeiroDiaMes = new DateTime(ano, mes, 1);
             var ultimoDiaMes = primeiroDiaMes.AddMonths(1).AddDays(-1);
@@ -95,16 +124,18 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                 }
             }
 
-            decimal proventos = func.SalarioBase + valorHorasExtras;
+            decimal proventos = func.SalarioBase + valorHE50 + valorHE100 + valorAdicionalNoturno;
             decimal descontos = (proventos * 0.08m) + valorDescontoAfastamentos; 
             decimal liquido = proventos - descontos;
 
             if (folhaExistente != null)
             {
-                // Atualizar folha aberta existente
                 folhaExistente.SalarioBaseCalculado = func.SalarioBase;
-                folhaExistente.TotalHorasExtras = totalHorasExtras;
-                folhaExistente.ValorHorasExtras = valorHorasExtras;
+                folhaExistente.TotalHorasExtras50 = totalHE50;
+                folhaExistente.ValorHorasExtras50 = valorHE50;
+                folhaExistente.TotalHorasExtras100 = totalHE100;
+                folhaExistente.ValorHorasExtras100 = valorHE100;
+                folhaExistente.ValorAdicionalNoturno = valorAdicionalNoturno;
                 folhaExistente.TotalDescontos = descontos;
                 folhaExistente.SalarioLiquido = liquido;
                 
@@ -113,15 +144,17 @@ public class FolhaPagamentoService : IFolhaPagamentoService
             }
             else
             {
-                // Criar nova folha
                 var folha = new FolhaPagamento
                 {
                     FuncionarioId = func.Id,
                     MesReferencia = mes,
                     AnoReferencia = ano,
                     SalarioBaseCalculado = func.SalarioBase,
-                    TotalHorasExtras = totalHorasExtras,
-                    ValorHorasExtras = valorHorasExtras,
+                    TotalHorasExtras50 = totalHE50,
+                    ValorHorasExtras50 = valorHE50,
+                    TotalHorasExtras100 = totalHE100,
+                    ValorHorasExtras100 = valorHE100,
+                    ValorAdicionalNoturno = valorAdicionalNoturno,
                     TotalDescontos = descontos,
                     SalarioLiquido = liquido,
                     Status = StatusFolha.Aberta
@@ -143,7 +176,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
 
         var func = await _funcRepo.GetByIdAsync(folha.FuncionarioId);
 
-        // Integração Financeira: Gerar Conta a Pagar
+        /* Integração Financeira Removida conforme solicitação do usuário
         var contaPagar = new ContaPagar
         {
             Descricao = $"Folha Pagamento {folha.MesReferencia:D2}/{folha.AnoReferencia} - {func?.Nome}",
@@ -152,6 +185,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
             Categoria = "Folha de Pagamento"
         };
         await _contaPagarRepo.AddAsync(contaPagar);
+        */
 
         folha.Status = StatusFolha.Fechada;
         await _folhaRepo.UpdateAsync(folha);
@@ -175,150 +209,220 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                 page.PageColor(Colors.White);
                 page.DefaultTextStyle(x => x.FontSize(9).FontFamily("Helvetica"));
 
-                // Cabeçalho Moderno
-                page.Header().Row(row =>
+                // Borda externa decorativa
+                page.Content().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(20).Column(col =>
                 {
-                    row.RelativeItem().Column(col =>
-                    {
-                        col.Item().Text("SGP-FÁBRICA").FontSize(20).ExtraBold().FontColor(Colors.Indigo.Medium);
-                        col.Item().Text("Sistema de Gestão de Panificação").FontSize(9).SemiBold().FontColor(Colors.Grey.Medium);
-                    });
+                    col.Spacing(10);
 
-                    row.ConstantItem(120).Background(Colors.Indigo.Lighten5).Padding(10).Column(col =>
-                    {
-                        col.Item().AlignCenter().Text("COMPROVANTE").FontSize(8).Bold().FontColor(Colors.Indigo.Medium);
-                        col.Item().AlignCenter().Text($"{folha.MesReferencia:D2}/{folha.AnoReferencia}").FontSize(16).Black();
-                    });
-                });
-
-                page.Content().PaddingVertical(20).Column(col =>
-                {
-                    col.Spacing(15);
-
-                    // Título do Documento
-                    col.Item().AlignCenter().Text("RECIBO DE PAGAMENTO DE SALÁRIO").FontSize(14).ExtraBold().Underline();
-
-                    // Informações do Funcionário em Grid
+                    // Cabeçalho Principal
                     col.Item().Row(row =>
                     {
-                        row.RelativeItem(2).Column(c =>
-                        {
-                            c.Item().Text("FUNCIONÁRIO").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
-                            c.Item().Text(func?.Nome ?? "-").FontSize(12).Bold();
-                        });
                         row.RelativeItem().Column(c =>
                         {
-                            c.Item().Text("CARGO").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
-                            c.Item().Text(func?.Cargo ?? "-").FontSize(10).Medium();
+                            c.Item().Text("SGP-FÁBRICA LTDA").FontSize(16).ExtraBold().FontColor(Colors.Indigo.Medium);
+                            c.Item().Text("CNPJ: 00.000.000/0001-00").FontSize(8).FontColor(Colors.Grey.Medium);
+                            c.Item().Text("Rua da Indústria, 123 - Polo Industrial").FontSize(8).FontColor(Colors.Grey.Medium);
                         });
-                        row.RelativeItem().Column(c =>
+
+                        row.ConstantItem(150).Background(Colors.Indigo.Lighten5).Padding(10).Column(c =>
                         {
-                            c.Item().Text("CPF").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
-                            c.Item().Text(func?.CPF ?? "-").FontSize(10);
+                            c.Item().AlignCenter().Text("RECIBO DE PAGAMENTO").FontSize(8).Bold().FontColor(Colors.Indigo.Medium);
+                            c.Item().AlignCenter().Text($"{folha.MesReferencia:D2}/{folha.AnoReferencia}").FontSize(18).ExtraBold();
                         });
                     });
 
-                    // Tabela Principal com Design Clean
+                    col.Item().PaddingVertical(5).LineHorizontal(1).LineColor(Colors.Grey.Lighten3);
+
+                    // Dados do Funcionário
+                    col.Item().Row(row =>
+                    {
+                        row.RelativeItem(3).Column(c =>
+                        {
+                            c.Item().Text("FUNCIONÁRIO").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
+                            c.Item().Text(func?.Nome?.ToUpper() ?? "NÃO INFORMADO").FontSize(11).Bold();
+                        });
+                        row.RelativeItem(2).Column(c =>
+                        {
+                            c.Item().Text("CARGO").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
+                            c.Item().Text(func?.Cargo ?? "NÃO INFORMADO").FontSize(9);
+                        });
+                        row.RelativeItem(2).Column(c =>
+                        {
+                            c.Item().Text("CPF").FontSize(7).Bold().FontColor(Colors.Grey.Medium);
+                            c.Item().Text(func?.CPF ?? "000.000.000-00").FontSize(9);
+                        });
+                    });
+
+                    col.Item().PaddingVertical(10);
+
+                    // Tabela de Itens
                     col.Item().Table(table =>
                     {
                         table.ColumnsDefinition(columns =>
                         {
-                            columns.ConstantColumn(35);  // Cód.
-                            columns.RelativeColumn(3);  // Descrição
-                            columns.RelativeColumn();    // Referência
-                            columns.RelativeColumn();    // Proventos
-                            columns.RelativeColumn();    // Descontos
+                            columns.ConstantColumn(40);
+                            columns.RelativeColumn(4);
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
+                            columns.RelativeColumn();
                         });
 
                         table.Header(header =>
                         {
-                            header.Cell().Element(HeaderStyle).Text("CÓD.");
-                            header.Cell().Element(HeaderStyle).Text("DESCRIÇÃO");
-                            header.Cell().Element(HeaderStyle).AlignCenter().Text("REF.");
-                            header.Cell().Element(HeaderStyle).AlignRight().Text("VENCIMENTOS");
-                            header.Cell().Element(HeaderStyle).AlignRight().Text("DESCONTOS");
+                            header.Cell().Element(CellStyle).Text("CÓD").Bold();
+                            header.Cell().Element(CellStyle).Text("DESCRIÇÃO").Bold();
+                            header.Cell().Element(CellStyle).AlignCenter().Text("REF").Bold();
+                            header.Cell().Element(CellStyle).AlignRight().Text("VENCIMENTOS").Bold();
+                            header.Cell().Element(CellStyle).AlignRight().Text("DESCONTOS").Bold();
 
-                            static IContainer HeaderStyle(IContainer container)
+                            static IContainer CellStyle(IContainer container)
                             {
-                                return container.DefaultTextStyle(x => x.SemiBold().FontColor(Colors.White))
-                                    .PaddingVertical(6)
-                                    .Background(Colors.Indigo.Medium)
-                                    .PaddingHorizontal(5);
+                                return container.DefaultTextStyle(x => x.FontColor(Colors.White).FontSize(8))
+                                                .Background(Colors.Indigo.Medium)
+                                                .PaddingVertical(5)
+                                                .PaddingHorizontal(5);
                             }
                         });
 
-                        // Itens
+                        // Linha: Salário Base
                         table.Cell().Element(ItemStyle).Text("001");
-                        table.Cell().Element(ItemStyle).Text("Salário Base");
+                        table.Cell().Element(ItemStyle).Text("Salário Mensal");
                         table.Cell().Element(ItemStyle).AlignCenter().Text("30 Dias");
                         table.Cell().Element(ItemStyle).AlignRight().Text(folha.SalarioBaseCalculado.ToString("N2"));
                         table.Cell().Element(ItemStyle).Text("");
 
-                        if (folha.TotalHorasExtras > 0)
+                        // Linha: Horas Extras 50%
+                        if (folha.TotalHorasExtras50 > 0)
                         {
                             table.Cell().Element(ItemStyle).Text("050");
                             table.Cell().Element(ItemStyle).Text("Horas Extras (50%)");
-                            table.Cell().Element(ItemStyle).AlignCenter().Text($"{folha.TotalHorasExtras}h");
-                            table.Cell().Element(ItemStyle).AlignRight().Text(folha.ValorHorasExtras.ToString("N2"));
+                            table.Cell().Element(ItemStyle).AlignCenter().Text($"{folha.TotalHorasExtras50:N1}h");
+                            table.Cell().Element(ItemStyle).AlignRight().Text(folha.ValorHorasExtras50.ToString("N2"));
                             table.Cell().Element(ItemStyle).Text("");
                         }
 
+                        // Linha: Horas Extras 100%
+                        if (folha.TotalHorasExtras100 > 0)
+                        {
+                            table.Cell().Element(ItemStyle).Text("100");
+                            table.Cell().Element(ItemStyle).Text("Horas Extras (100% - Feriado/Dom)");
+                            table.Cell().Element(ItemStyle).AlignCenter().Text($"{folha.TotalHorasExtras100:N1}h");
+                            table.Cell().Element(ItemStyle).AlignRight().Text(folha.ValorHorasExtras100.ToString("N2"));
+                            table.Cell().Element(ItemStyle).Text("");
+                        }
+
+                        // Linha: Adicional Noturno
+                        if (folha.ValorAdicionalNoturno > 0)
+                        {
+                            table.Cell().Element(ItemStyle).Text("060");
+                            table.Cell().Element(ItemStyle).Text("Adicional Noturno (20%)");
+                            table.Cell().Element(ItemStyle).AlignCenter().Text("-");
+                            table.Cell().Element(ItemStyle).AlignRight().Text(folha.ValorAdicionalNoturno.ToString("N2"));
+                            table.Cell().Element(ItemStyle).Text("");
+                        }
+
+                        // Linha: INSS (Simulado)
                         table.Cell().Element(ItemStyle).Text("900");
-                        table.Cell().Element(ItemStyle).Text("INSS / Contribuição");
+                        table.Cell().Element(ItemStyle).Text("INSS / Previdência Social");
                         table.Cell().Element(ItemStyle).AlignCenter().Text("8.00%");
                         table.Cell().Element(ItemStyle).Text("");
                         table.Cell().Element(ItemStyle).AlignRight().Text(folha.TotalDescontos.ToString("N2"));
 
                         static IContainer ItemStyle(IContainer container)
                         {
-                            return container.PaddingVertical(8).PaddingHorizontal(5).BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten3);
+                            return container.BorderBottom(0.5f).BorderColor(Colors.Grey.Lighten4).PaddingVertical(6).PaddingHorizontal(5);
                         }
                     });
 
-                    // Resumo Financeiro
-                    col.Item().PaddingTop(10).Row(row =>
+                    // Totais e Líquido
+                    col.Item().PaddingTop(15).Row(row =>
                     {
-                        row.RelativeItem(); // Espaço à esquerda
-                        row.ConstantItem(250).Column(c =>
+                        row.RelativeItem(2);
+                        row.RelativeItem(3).Column(c =>
                         {
-                            c.Spacing(2);
                             c.Item().Row(r =>
                             {
-                                r.RelativeItem().Text("Total de Vencimentos").FontSize(8).SemiBold();
-                                r.ConstantItem(80).AlignRight().Text($"R$ {(folha.SalarioBaseCalculado + folha.ValorHorasExtras):N2}").FontSize(8);
+                                r.RelativeItem().Text("Total de Vencimentos").FontSize(8).Bold();
+                                r.ConstantItem(80).AlignRight().Text($"R$ {(folha.SalarioBaseCalculado + folha.ValorHorasExtras50 + folha.ValorHorasExtras100 + folha.ValorAdicionalNoturno):N2}").FontSize(8);
                             });
                             c.Item().Row(r =>
                             {
-                                r.RelativeItem().Text("Total de Descontos").FontSize(8).SemiBold().FontColor(Colors.Red.Medium);
+                                r.RelativeItem().Text("Total de Descontos").FontSize(8).Bold().FontColor(Colors.Red.Medium);
                                 r.ConstantItem(80).AlignRight().Text($"R$ {folha.TotalDescontos:N2}").FontSize(8).FontColor(Colors.Red.Medium);
                             });
-                            
-                            c.Item().PaddingTop(5).Background(Colors.Indigo.Lighten5).Padding(8).Row(r =>
+
+                            c.Item().PaddingTop(10).Background(Colors.Indigo.Lighten5).Padding(10).Row(r =>
                             {
-                                r.RelativeItem().Text("LÍQUIDO A RECEBER").FontSize(11).ExtraBold().FontColor(Colors.Indigo.Medium);
-                                r.ConstantItem(100).AlignRight().Text($"R$ {folha.SalarioLiquido:N2}").FontSize(11).ExtraBold().FontColor(Colors.Indigo.Medium);
+                                r.RelativeItem().Text("VALOR LÍQUIDO").FontSize(12).ExtraBold().FontColor(Colors.Indigo.Medium);
+                                r.ConstantItem(100).AlignRight().Text($"R$ {folha.SalarioLiquido:N2}").FontSize(12).ExtraBold().FontColor(Colors.Indigo.Medium);
                             });
                         });
                     });
 
-                    // Rodapé Informativo (Sem Assinatura)
-                    col.Item().PaddingTop(40).Column(c =>
+                    col.Item().PaddingTop(30).Column(c =>
                     {
-                        c.Item().AlignCenter().Text("ESTE DOCUMENTO É APENAS PARA FINS INFORMATIVOS.").FontSize(7).Italic().FontColor(Colors.Grey.Medium);
-                        c.Item().AlignCenter().Text("DECLARO TER RECEBIDO A IMPORTÂNCIA LÍQUIDA DISCRIMINADA NESTE RECIBO.").FontSize(8).SemiBold();
+                        c.Spacing(20);
+                        c.Item().AlignCenter().Text("Declaro ter recebido a importância líquida discriminada neste recibo.").FontSize(8).Italic();
+                        
+                        c.Item().Row(row =>
+                        {
+                            row.RelativeItem().PaddingHorizontal(20).Column(colAssinatura =>
+                            {
+                                colAssinatura.Item().PaddingTop(20).LineHorizontal(0.5f).LineColor(Colors.Black);
+                                colAssinatura.Item().AlignCenter().Text("Assinatura do Funcionário").FontSize(7).Bold();
+                                colAssinatura.Item().AlignCenter().Text(DateTime.Now.ToString("dd/MM/yyyy")).FontSize(6);
+                            });
+                            row.RelativeItem().PaddingHorizontal(20).Column(colAssinatura =>
+                            {
+                                colAssinatura.Item().PaddingTop(20).LineHorizontal(0.5f).LineColor(Colors.Black);
+                                colAssinatura.Item().AlignCenter().Text("Responsável pela Empresa").FontSize(7).Bold();
+                                colAssinatura.Item().AlignCenter().Text("SGP-FÁBRICA ERP").FontSize(6);
+                            });
+                        });
                     });
                 });
 
                 page.Footer().AlignCenter().Text(x =>
                 {
-                    x.Span("Autenticação Digital: ").FontSize(7).FontColor(Colors.Grey.Medium);
-                    x.Span(Guid.NewGuid().ToString().ToUpper()).FontSize(7).FontColor(Colors.Grey.Medium);
-                    x.Span(" | Emitido em ").FontSize(7).FontColor(Colors.Grey.Medium);
-                    x.Span(DateTime.Now.ToString("dd/MM/yyyy HH:mm")).FontSize(7).FontColor(Colors.Grey.Medium);
+                    x.Span("Autenticação: ").FontSize(6).FontColor(Colors.Grey.Medium);
+                    x.Span(Guid.NewGuid().ToString().ToUpper()).FontSize(6).FontColor(Colors.Grey.Medium);
+                    x.Span(" | Gerado via Sistema SGP-F ERP").FontSize(6).FontColor(Colors.Grey.Medium);
                 });
             });
         });
 
         return document.GeneratePdf();
+    }
+
+    private bool EhFeriadoNacional(DateTime data)
+    {
+        var feriados = new List<(int mes, int dia)>
+        {
+            (1, 1),   // Ano Novo
+            (4, 21),  // Tiradentes
+            (5, 1),   // Dia do Trabalho
+            (9, 7),   // Independência
+            (10, 12), // Nossa Sra Aparecida
+            (11, 2),  // Finados
+            (11, 15), // Proclamação República
+            (12, 25)  // Natal
+        };
+        return feriados.Any(f => f.mes == data.Month && f.dia == data.Day);
+    }
+
+    private decimal CalcularHorasNoturnas(DateTime entrada, DateTime saida)
+    {
+        // Faixa noturna: 22h às 05h do dia seguinte
+        var inicioNoturno = entrada.Date.AddHours(22);
+        var fimNoturno = entrada.Date.AddDays(1).AddHours(5);
+
+        if (saida <= inicioNoturno) return 0;
+        
+        var start = entrada > inicioNoturno ? entrada : inicioNoturno;
+        var end = saida < fimNoturno ? saida : fimNoturno;
+
+        if (end <= start) return 0;
+
+        return (decimal)(end - start).TotalHours;
     }
 }
