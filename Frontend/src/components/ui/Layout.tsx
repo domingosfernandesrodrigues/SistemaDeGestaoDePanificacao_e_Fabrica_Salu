@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Package, ChefHat, Factory, LayoutDashboard, LogOut, Clock, FileText, ShoppingCart, Truck, ArrowRightLeft, Users, Menu, X, KeyRound, Loader2, Save, Lock, Eye, EyeOff } from 'lucide-react';
+import { Package, ChefHat, Factory, LayoutDashboard, LogOut, Clock, FileText, ShoppingCart, Truck, ArrowRightLeft, Users, Menu, X, KeyRound, Loader2, Save, Lock, Eye, EyeOff, FlaskConical } from 'lucide-react';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Input } from './Input';
@@ -54,6 +54,8 @@ export function Layout() {
     { name: 'Portal do Cliente', path: '/portal-cliente', icon: ShoppingCart, roles: ['Cliente'] },
     { name: 'CRM & Reuniões', path: '/crm', icon: Users, roles: ['Admin', 'Gestor'] },
     { name: 'Vendas (B2B)', path: '/vendas', icon: ShoppingCart, roles: ['Admin', 'Gestor'] },
+    { name: 'Compras e Entradas', path: '/compras', icon: Package, roles: ['Admin', 'Gestor'] },
+    { name: 'Entrada de Insumos', path: '/entrada-insumos', icon: FlaskConical, roles: ['Admin', 'Gestor'] },
     { name: 'Gestão de Clientes', path: '/clientes', icon: Users, roles: ['Admin', 'Gestor'] },
     { name: 'Ordens de Produção', path: '/ordens-producao', icon: Factory, roles: ['Admin', 'Gestor', 'Operador'] },
     { name: 'Produtos e Insumos', path: '/produtos', icon: Package, roles: ['Admin', 'Gestor', 'Operador'] },

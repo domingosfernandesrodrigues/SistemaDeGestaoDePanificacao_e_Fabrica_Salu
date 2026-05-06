@@ -54,14 +54,23 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 ---
 
 ## 📊 Status de Progresso Geral
-- **Fase Atual:** Refinamento e Estabilização Operacional ✅
-- **Progresso Total:** 100% (Funcionalidades principais e refinamentos de integridade concluídos)
-- **Última Atualização:** 04/05/2026
+- **Fase Atual:** Refinamento e Expansão Operacional ✅
+- **Progresso Total:** 100% (Funcionalidades principais, refinamentos e módulos de compras concluídos)
+- **Última Atualização:** 05/05/2026
 
-### 🛠️ Refinamentos Recentes (Maio/2026):
+### 🛠️ Refinamentos Recentes (Maio/2026 - Sessão de Compras):
+- **Módulo de Compras e Entradas (Mercadoria):** Implementação completa do CRUD de compras de produtos acabados e revenda. Inclui fluxo de Rascunho → Confirmada, que atualiza automaticamente o estoque e gera conta a pagar.
+- **Entrada de Insumos (Matéria-Prima):** Criação de formulário exclusivo para registrar a compra de insumos (Farinha, Ovos, etc.), separado do módulo de mercadorias para maior clareza operacional.
+- **Categorização de Compras:** Adição do campo `Categoria` (`Mercadoria` / `Insumo`) na entidade de compra, permitindo filtragem e segmentação por tipo de entrada.
+- **Interface de Listagem Avançada:** Tabela de compras com linhas expansíveis (Master-Detail) mostrando os itens detalhados (produto, quantidade, preço unitário e subtotal). Layout responsivo com Cards para mobile (iPhone 14 Pro Max).
+- **Filtros Multicritério:** Filtros por fornecedor, produto, data e status com limpeza rápida em ambos os módulos.
+- **Paginação:** Sistema de paginação com 10 registros por página e reset automático ao aplicar filtros.
+- **Formatação de Quantidades:** Exibição inteligente de quantidades sem zeros desnecessários (ex: `12` ao invés de `12,0000`).
+
+### 🛠️ Refinamentos Anteriores (Abril-Maio/2026):
 - **Agenda Comercial Inteligente (CRM):** Transformação do módulo de reuniões em uma agenda interativa completa com persistência em banco de dados, suporte a feriados nacionais e lembretes personalizados.
 - **Motor de Folha CLT v2:** Integração nativa entre a Agenda de Feriados e o processamento de salários. O sistema agora identifica automaticamente feriados para aplicação de HE 100% e calcula o Adicional Noturno (22h-05h) com precisão.
-- **UX de Folha de Pagamento:** Redesenho da interface de listagem de contracheques com suporte a responsividade mobile (layouts adaptáveis), botões de ação em alto contraste e legenda técnica de metodologia de cálculo.
+- **UX de Folha de Pagamento:** Redesenho da interface de listagem de contracheques com suporte a responsividade mobile, botões de ação em alto contraste e legenda técnica de metodologia de cálculo.
 - **Integridade de Dados (Ponto):** Refinamento da lógica de turnos para garantir que o adicional noturno e as horas extras sejam calculados corretamente mesmo em jornadas que cruzam a meia-noite.
 - **Segurança da Agenda:** Implementada proteção de escrita para feriados nacionais, garantindo que o calendário base do ERP permaneça íntegro para cálculos fiscais e trabalhistas.
 

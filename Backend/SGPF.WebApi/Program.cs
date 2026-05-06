@@ -42,6 +42,7 @@ builder.Services.AddScoped<SGPF.Application.Interfaces.IVendaService, SGPF.Appli
 builder.Services.AddScoped<SGPF.Application.Services.FrotaService>();
 builder.Services.AddScoped<SGPF.Application.Services.TrocaService>();
 builder.Services.AddScoped<SGPF.Application.Services.IFinanceiroService, SGPF.Application.Services.FinanceiroService>();
+builder.Services.AddScoped<SGPF.Application.Services.ICompraService, SGPF.Application.Services.CompraService>();
 builder.Services.AddScoped<SGPF.Application.Services.ReuniaoService>();
 
 // Configure JWT Authentication
@@ -162,6 +163,8 @@ using (var scope = app.Services.CreateScope())
         }
 
         try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'MesReferencia') BEGIN ALTER TABLE ContasPagar ADD MesReferencia NVARCHAR(MAX) NULL; END"); } catch {}
+        try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'FornecedorId') BEGIN ALTER TABLE ContasPagar ADD FornecedorId UNIQUEIDENTIFIER NULL; END"); } catch {}
+        try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'DataEmissao') BEGIN ALTER TABLE ContasPagar ADD DataEmissao DATETIME2 NOT NULL DEFAULT GETDATE(); END"); } catch {}
         try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'DataVencimento' AND is_nullable = 0) BEGIN ALTER TABLE ContasPagar ALTER COLUMN DataVencimento DATETIME2 NULL; END"); } catch {}
 
         try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Usuarios') AND name = 'PrecisaTrocarSenha') BEGIN ALTER TABLE Usuarios ADD PrecisaTrocarSenha BIT NOT NULL DEFAULT 1; END"); } catch {}
@@ -185,6 +188,36 @@ using (var scope = app.Services.CreateScope())
                     [Descricao] [nvarchar](max) NULL,
                  CONSTRAINT [PK_AgendaEventos] PRIMARY KEY CLUSTERED ([Id] ASC)
                 ) ON [PRIMARY]
+            END
+        "); } catch {}
+
+        // Patches Compras
+        try { await context.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Compras]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[Compras](
+                    [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                    [FornecedorId] [uniqueidentifier] NOT NULL,
+                    [DataCompra] [datetime2](7) NOT NULL,
+                    [ValorTotal] [decimal](18,2) NOT NULL,
+                    [Status] [int] NOT NULL,
+                    [Observacao] [nvarchar](max) NULL
+                )
+            END
+        "); } catch {}
+
+        try { await context.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CompraItems]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[CompraItems](
+                    [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                    [CompraId] [uniqueidentifier] NOT NULL,
+                    [ProdutoId] [uniqueidentifier] NOT NULL,
+                    [Quantidade] [decimal](18,4) NOT NULL,
+                    [PrecoUnitario] [decimal](18,4) NOT NULL,
+                    CONSTRAINT [FK_CompraItems_Compras] FOREIGN KEY([CompraId]) REFERENCES [dbo].[Compras] ([Id]) ON DELETE CASCADE,
+                    CONSTRAINT [FK_CompraItems_Produtos] FOREIGN KEY([ProdutoId]) REFERENCES [dbo].[Produtos] ([Id])
+                )
             END
         "); } catch {}
     } catch (Exception ex) { 

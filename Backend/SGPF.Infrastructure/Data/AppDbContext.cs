@@ -41,6 +41,10 @@ public class AppDbContext : DbContext
     public DbSet<Reuniao> Reunioes { get; set; }
     public DbSet<AgendaEvento> AgendaEventos { get; set; }
 
+    // Fase Complementar - Compras
+    public DbSet<Compra> Compras { get; set; }
+    public DbSet<CompraItem> CompraItems { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -140,6 +144,17 @@ public class AppDbContext : DbContext
             .HasOne(o => o.UsuarioFinalizou)
             .WithMany()
             .HasForeignKey(o => o.UsuarioFinalizouId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        // Configurações Compras
+        modelBuilder.Entity<Compra>().Property(c => c.ValorTotal).HasPrecision(18, 2);
+        modelBuilder.Entity<CompraItem>().Property(c => c.Quantidade).HasPrecision(18, 4);
+        modelBuilder.Entity<CompraItem>().Property(c => c.PrecoUnitario).HasPrecision(18, 4);
+        
+        modelBuilder.Entity<CompraItem>()
+            .HasOne(ci => ci.Produto)
+            .WithMany()
+            .HasForeignKey(ci => ci.ProdutoId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

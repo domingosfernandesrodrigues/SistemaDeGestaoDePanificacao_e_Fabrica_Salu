@@ -11,6 +11,8 @@ import { FolhaPagamento } from './pages/FolhaPagamento';
 import { MeusContracheques } from './pages/MeusContracheques';
 import { Vendas } from './pages/Vendas';
 import { Frota, Trocas } from './pages/Logistica';
+import { Compras } from './pages/Compras';
+import { EntradaInsumos } from './pages/EntradaInsumos';
 import { PortalCliente } from './pages/PortalCliente';
 import { CrmReunioes } from './pages/CrmReunioes';
 import { Clientes } from './pages/Clientes';
@@ -37,6 +39,8 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/crm" element={<CrmReunioes />} />
             <Route path="/vendas" element={<Vendas />} />
+            <Route path="/compras" element={<Compras />} />
+            <Route path="/entrada-insumos" element={<EntradaInsumos />} />
             <Route path="/clientes" element={<Clientes />} />
             <Route path="/produtos" element={<Produtos />} />
             <Route path="/fichas-tecnicas" element={<FichaTecnica />} />
