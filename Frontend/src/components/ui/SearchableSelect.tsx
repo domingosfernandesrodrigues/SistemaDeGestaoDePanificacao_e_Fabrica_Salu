@@ -54,12 +54,12 @@ export function SearchableSelect({
           error ? 'border-red-500' : 'border-slate-200'
         } ${isOpen ? 'ring-2 ring-indigo-500 border-indigo-500' : ''}`}
       >
-        <span className={selectedOption ? 'text-slate-900' : 'text-slate-400'}>
+        <span className={`${selectedOption ? 'text-slate-900 font-medium' : 'text-slate-400'} text-left flex-1 break-words line-clamp-2 leading-tight`}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <ChevronDown 
-          size={16} 
-          className={`text-slate-400 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} 
+          size={18} 
+          className={`text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-indigo-500' : ''}`} 
         />
       </button>
 
@@ -86,14 +86,14 @@ export function SearchableSelect({
                     setIsOpen(false);
                     setSearch("");
                   }}
-                  className={`w-full text-left px-3 py-2 rounded-md text-sm flex items-center justify-between transition-colors ${
+                   className={`w-full text-left px-3 py-2.5 rounded-md text-sm flex items-start justify-between transition-all ${
                     value === opt.value 
-                      ? 'bg-indigo-50 text-indigo-700 font-medium' 
-                      : 'text-slate-700 hover:bg-slate-50'
+                      ? 'bg-indigo-600 text-white shadow-md' 
+                      : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-700'
                   }`}
                 >
-                  <span className="truncate">{opt.label}</span>
-                  {value === opt.value && <Check size={14} className="flex-shrink-0 ml-2" />}
+                   <span className="flex-1 break-words leading-relaxed">{opt.label}</span>
+                  {value === opt.value && <Check size={16} className="flex-shrink-0 ml-2 mt-0.5" />}
                 </button>
               ))
             ) : (

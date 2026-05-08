@@ -26,6 +26,14 @@ const formatPhone = (value: string = '') => {
   return nums.replace(/(\d{2})(\d{5})(\d{4})/g, '($1) $2-$3').substring(0, 15);
 };
 
+const formatIE = (val: string = '') => {
+  const clean = (val || '').replace(/\D/g, '').slice(0, 14);
+  if(clean.length > 9) return clean.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,})/, "$1.$2.$3.$4");
+  if(clean.length > 6) return clean.replace(/^(\d{3})(\d{3})(\d{1,})/, "$1.$2.$3");
+  if(clean.length > 3) return clean.replace(/^(\d{3})(\d{1,})/, "$1.$2");
+  return clean;
+};
+
 // Validações
 const validateCPF = (cpf: string) => {
   const nums = cpf.replace(/\D/g, '');
@@ -71,13 +79,15 @@ const validateCNPJ = (cnpj: string) => {
 };
 
 const clienteSchema = z.object({
-  nomeFantasia: z.string().min(3, 'Nome muito curto'),
+  nomeFantasia: z.string().min(2, 'Nome muito curto'),
+  razaoSocial: z.string().optional(),
   cnp_j_CPF: z.string().refine(val => {
     const nums = val.replace(/\D/g, '');
     if (nums.length === 11) return validateCPF(nums);
     if (nums.length === 14) return validateCNPJ(nums);
     return false;
   }, 'CPF ou CNPJ inválido (verifique os dígitos)'),
+  inscricaoEstadual: z.string().optional(),
   endereco: z.string().min(5, 'Endereço muito curto'),
   telefone: z.string().min(10, 'Telefone inválido'),
   ativo: z.boolean().optional().default(true),
@@ -96,7 +106,7 @@ export function Clientes() {
 
   const { register, handleSubmit, reset, control, setValue, formState: { errors } } = useForm<ClienteForm>({
     resolver: zodResolver(clienteSchema),
-    defaultValues: { nomeFantasia: '', cnp_j_CPF: '', telefone: '', endereco: '', ativo: true }
+    defaultValues: { nomeFantasia: '', razaoSocial: '', cnp_j_CPF: '', inscricaoEstadual: '', telefone: '', endereco: '', ativo: true }
   });
 
   const { data: clientes, isLoading, isError, error: queryError } = useQuery<any[]>({
@@ -138,6 +148,7 @@ export function Clientes() {
         ...data,
         cnp_j_CPF: data.cnp_j_CPF.replace(/\D/g, ''),
         telefone: data.telefone.replace(/\D/g, ''),
+        inscricaoEstadual: data.inscricaoEstadual?.replace(/\D/g, ''),
       };
       return editId ? api.put(`/Clientes/${editId}`, cleanData) : api.post('/Clientes', cleanData);
     },
@@ -166,7 +177,9 @@ export function Clientes() {
   const handleEdit = (cliente: any) => {
     setEditId(cliente.id);
     setValue('nomeFantasia', cliente.nomeFantasia);
+    setValue('razaoSocial', cliente.razaoSocial || '');
     setValue('cnp_j_CPF', formatDocument(cliente.cnp_j_CPF || cliente.cN_J_CPF || cliente.CNPJ_CPF));
+    setValue('inscricaoEstadual', formatIE(cliente.inscricaoEstadual || ''));
     setValue('telefone', formatPhone(cliente.telefone));
     setValue('endereco', cliente.endereco);
     setValue('ativo', cliente.ativo ?? cliente.Ativo ?? true);
@@ -365,10 +378,16 @@ export function Clientes() {
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editId ? 'Editar Cliente' : 'Novo Cliente'}>
         <form onSubmit={handleSubmit((data) => mutationSave.mutate(data))} className="space-y-4">
-          <Input label="Nome Fantasia / Razão Social" {...register('nomeFantasia')} error={errors.nomeFantasia?.message} />
-          <Controller name="cnp_j_CPF" control={control} render={({ field }) => (
-            <Input label="CNPJ ou CPF" placeholder="00.000.000/0000-00" {...field} onChange={(e) => field.onChange(formatDocument(e.target.value))} error={errors.cnp_j_CPF?.message} />
-          )} />
+          <Input label="Nome Fantasia" {...register('nomeFantasia')} error={errors.nomeFantasia?.message} />
+          <Input label="Razão Social" placeholder="Opcional" {...register('razaoSocial')} error={errors.razaoSocial?.message} />
+          <div className="grid grid-cols-2 gap-4">
+            <Controller name="cnp_j_CPF" control={control} render={({ field }) => (
+              <Input label="CNPJ ou CPF" placeholder="00.000.000/0000-00" {...field} onChange={(e) => field.onChange(formatDocument(e.target.value))} error={errors.cnp_j_CPF?.message} />
+            )} />
+            <Controller name="inscricaoEstadual" control={control} render={({ field }) => (
+              <Input label="Inscrição Estadual" placeholder="Opcional" {...field} onChange={(e) => field.onChange(formatIE(e.target.value))} error={errors.inscricaoEstadual?.message} />
+            )} />
+          </div>
           <Controller name="telefone" control={control} render={({ field }) => (
             <Input label="Telefone" placeholder="(00) 00000-0000" {...field} onChange={(e) => field.onChange(formatPhone(e.target.value))} error={errors.telefone?.message} />
           )} />

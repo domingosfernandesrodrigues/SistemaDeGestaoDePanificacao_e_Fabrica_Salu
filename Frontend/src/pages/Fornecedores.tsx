@@ -19,6 +19,8 @@ const fornecedorSchema = z.object({
   contato: z.string().min(2, 'Informe o nome do contato'),
   telefone: z.string().min(10, 'Informe um telefone válido'),
   email: z.string().min(1, 'Informe o e-mail').email('E-mail inválido'),
+  inscricaoEstadual: z.string().optional(),
+  endereco: z.string().optional(),
 });
 
 type FornecedorForm = z.infer<typeof fornecedorSchema>;
@@ -47,8 +49,17 @@ export default function Fornecedores() {
     return clean.replace(/^(\d{2})(\d{5})(\d{4})/, "($1) $2-$3");
   };
 
+  const formatIE = (val: string) => {
+    const clean = val.replace(/\D/g, '').slice(0, 14);
+    if(clean.length > 9) return clean.replace(/^(\d{3})(\d{3})(\d{3})(\d{1,})/, "$1.$2.$3.$4");
+    if(clean.length > 6) return clean.replace(/^(\d{3})(\d{3})(\d{1,})/, "$1.$2.$3");
+    if(clean.length > 3) return clean.replace(/^(\d{3})(\d{1,})/, "$1.$2");
+    return clean;
+  };
+
   const cnpjValue = watch('cnpj');
   const phoneValue = watch('telefone');
+  const ieValue = watch('inscricaoEstadual');
 
   const { data: fornecedores, isLoading } = useQuery<any[]>({
     queryKey: ['fornecedores'],
@@ -85,6 +96,8 @@ export default function Fornecedores() {
     setValue('contato', f.contato || '');
     setValue('telefone', f.telefone || '');
     setValue('email', f.email || '');
+    setValue('inscricaoEstadual', f.inscricaoEstadual || '');
+    setValue('endereco', f.endereco || '');
     setIsModalOpen(true);
   };
 
@@ -177,6 +190,10 @@ export default function Fornecedores() {
                 <FileText size={14} className="text-slate-400" />
                 <span className="truncate">Contato: {f.contato || 'N/A'}</span>
               </div>
+              <div className="pt-2 mt-2 border-t border-slate-100 text-xs text-slate-500">
+                <p className="truncate" title={f.endereco}>{f.endereco || 'Endereço não cadastrado'}</p>
+                {f.inscricaoEstadual && <p className="mt-0.5">IE: {f.inscricaoEstadual}</p>}
+              </div>
             </div>
           </div>
         ))}
@@ -205,7 +222,18 @@ export default function Fornecedores() {
             />
             <Input label="Pessoa de Contato" {...register('contato')} error={errors.contato?.message} />
           </div>
-          <Input label="E-mail" {...register('email')} error={errors.email?.message} />
+          <div className="grid grid-cols-2 gap-4">
+            <Input label="E-mail" {...register('email')} error={errors.email?.message} />
+            <Input 
+              label="Inscrição Estadual" 
+              placeholder="Opcional" 
+              {...register('inscricaoEstadual')} 
+              value={formatIE(ieValue || '')}
+              onChange={(e) => setValue('inscricaoEstadual', e.target.value.replace(/\D/g, ''))}
+              error={errors.inscricaoEstadual?.message} 
+            />
+          </div>
+          <Input label="Endereço Completo" placeholder="Rua, Número, Bairro, Cidade - UF" {...register('endereco')} error={errors.endereco?.message} />
           
           <div className="pt-4 flex gap-3">
             <Button type="button" variant="secondary" className="flex-1" onClick={handleCloseModal}>Cancelar</Button>

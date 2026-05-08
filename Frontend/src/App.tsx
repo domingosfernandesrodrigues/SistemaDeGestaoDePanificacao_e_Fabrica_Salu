@@ -21,6 +21,7 @@ import Fornecedores from './pages/Fornecedores';
 import Funcionarios from './pages/Funcionarios';
 import Usuarios from './pages/Usuarios';
 import Despesas from './pages/Despesas';
+import { ConfiguracoesEmpresa } from './pages/ConfiguracoesEmpresa';
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ function App() {
             <Route path="/financeiro/despesas" element={<Despesas />} />
             <Route path="/fornecedores" element={<Fornecedores />} />
             <Route path="/usuarios" element={<Usuarios />} />
+            <Route path="/configuracoes/empresa" element={<ConfiguracoesEmpresa />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/dashboard" replace />} />

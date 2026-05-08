@@ -15,6 +15,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
     private readonly IRepository<ContaPagar> _contaPagarRepo;
     private readonly IRepository<Afastamento> _afastamentoRepo;
     private readonly IRepository<AgendaEvento> _agendaRepo;
+    private readonly IRepository<Empresa> _empresaRepo;
 
     public FolhaPagamentoService(
         IRepository<FolhaPagamento> folhaRepo,
@@ -22,7 +23,8 @@ public class FolhaPagamentoService : IFolhaPagamentoService
         IRepository<RegistroPonto> pontoRepo,
         IRepository<ContaPagar> contaPagarRepo,
         IRepository<Afastamento> afastamentoRepo,
-        IRepository<AgendaEvento> agendaRepo)
+        IRepository<AgendaEvento> agendaRepo,
+        IRepository<Empresa> empresaRepo)
     {
         _folhaRepo = folhaRepo;
         _funcRepo = funcRepo;
@@ -30,6 +32,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
         _contaPagarRepo = contaPagarRepo;
         _afastamentoRepo = afastamentoRepo;
         _agendaRepo = agendaRepo;
+        _empresaRepo = empresaRepo;
     }
 
     public async Task<List<FolhaPagamento>> ProcessarFolhaAsync(int mes, int ano)
@@ -199,6 +202,51 @@ public class FolhaPagamentoService : IFolhaPagamentoService
         if (folha == null) throw new Exception("Folha não encontrada");
         
         var func = await _funcRepo.GetByIdAsync(folha.FuncionarioId);
+        
+        var empresaList = await _empresaRepo.GetAllAsync();
+        var empresa = empresaList.FirstOrDefault();
+        
+        string nomeEmpresa = !string.IsNullOrEmpty(empresa?.RazaoSocial) ? empresa.RazaoSocial : "SGP-FÁBRICA LTDA";
+        string cnpjEmpresa = !string.IsNullOrEmpty(empresa?.CNPJ) ? empresa.CNPJ : "00.000.000/0001-00";
+        string endEmpresa = !string.IsNullOrEmpty(empresa?.Endereco) ? empresa.Endereco : "Rua da Indústria, 123 - Polo Industrial";
+        
+        byte[]? logoBytes = null;
+        if (!string.IsNullOrEmpty(empresa?.LogoUrl))
+        {
+            if (empresa.LogoUrl.StartsWith("data:image"))
+            {
+                try
+                {
+                    var base64Data = empresa.LogoUrl.Substring(empresa.LogoUrl.IndexOf("base64,") + 7);
+                    logoBytes = Convert.FromBase64String(base64Data);
+                }
+                catch { }
+            }
+            else
+            {
+                try
+                {
+                    using var client = new System.Net.Http.HttpClient();
+                    client.Timeout = TimeSpan.FromSeconds(5);
+                    var response = await client.GetAsync(empresa.LogoUrl);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var content = await response.Content.ReadAsByteArrayAsync();
+                        if (content.Length > 4 && 
+                            ((content[0] == 0xFF && content[1] == 0xD8) || // JPG
+                             (content[0] == 0x89 && content[1] == 0x50 && content[2] == 0x4E && content[3] == 0x47) || // PNG
+                             (content[0] == 0x47 && content[1] == 0x49 && content[2] == 0x46))) // GIF
+                        {
+                            logoBytes = content;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Ignora erro se a URL da logo for inválida
+                }
+            }
+        }
 
         var document = Document.Create(container =>
         {
@@ -207,7 +255,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                 page.Size(PageSizes.A4);
                 page.Margin(1, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(9).FontFamily("Helvetica"));
+                page.DefaultTextStyle(x => x.FontSize(9));
 
                 // Borda externa decorativa
                 page.Content().Border(1).BorderColor(Colors.Grey.Lighten2).Padding(20).Column(col =>
@@ -217,11 +265,17 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                     // Cabeçalho Principal
                     col.Item().Row(row =>
                     {
+                        if (logoBytes != null)
+                        {
+                            row.ConstantItem(60).Height(50).Image(logoBytes).FitArea();
+                            row.ConstantItem(15);
+                        }
+
                         row.RelativeItem().Column(c =>
                         {
-                            c.Item().Text("SGP-FÁBRICA LTDA").FontSize(16).ExtraBold().FontColor(Colors.Indigo.Medium);
-                            c.Item().Text("CNPJ: 00.000.000/0001-00").FontSize(8).FontColor(Colors.Grey.Medium);
-                            c.Item().Text("Rua da Indústria, 123 - Polo Industrial").FontSize(8).FontColor(Colors.Grey.Medium);
+                            c.Item().Text(nomeEmpresa).FontSize(14).ExtraBold().FontColor(Colors.Indigo.Medium);
+                            c.Item().Text($"CNPJ: {cnpjEmpresa}").FontSize(8).FontColor(Colors.Grey.Medium);
+                            c.Item().Text(endEmpresa).FontSize(8).FontColor(Colors.Grey.Medium);
                         });
 
                         row.ConstantItem(150).Background(Colors.Indigo.Lighten5).Padding(10).Column(c =>
@@ -260,11 +314,11 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                     {
                         table.ColumnsDefinition(columns =>
                         {
-                            columns.ConstantColumn(40);
-                            columns.RelativeColumn(4);
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
-                            columns.RelativeColumn();
+                            columns.ConstantColumn(30);
+                            columns.RelativeColumn(1);
+                            columns.ConstantColumn(50);
+                            columns.ConstantColumn(75);
+                            columns.ConstantColumn(75);
                         });
 
                         table.Header(header =>
@@ -376,7 +430,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                             {
                                 colAssinatura.Item().PaddingTop(20).LineHorizontal(0.5f).LineColor(Colors.Black);
                                 colAssinatura.Item().AlignCenter().Text("Responsável pela Empresa").FontSize(7).Bold();
-                                colAssinatura.Item().AlignCenter().Text("SGP-FÁBRICA ERP").FontSize(6);
+                                colAssinatura.Item().AlignCenter().Text(!string.IsNullOrEmpty(empresa?.NomeFantasia) ? empresa.NomeFantasia : nomeEmpresa).FontSize(6);
                             });
                         });
                     });

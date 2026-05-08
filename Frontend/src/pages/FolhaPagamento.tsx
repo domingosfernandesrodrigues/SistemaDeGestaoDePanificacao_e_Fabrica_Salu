@@ -52,13 +52,27 @@ export function FolhaPagamento() {
   });
 
   const downloadContracheque = async (id: string) => {
-    const response = await api.get(`/folha-pagamento/${id}/contracheque`, { responseType: 'blob' });
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `contracheque_${id}.pdf`);
-    document.body.appendChild(link);
-    link.click();
+    try {
+      const response = await api.get(`/folha-pagamento/${id}/contracheque`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `contracheque_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+    } catch (err: any) {
+      if (err.response?.data instanceof Blob) {
+        const text = await err.response.data.text();
+        try {
+            const json = JSON.parse(text);
+            alert(json.message || 'Erro ao gerar contracheque');
+        } catch {
+            alert('Erro ao gerar contracheque');
+        }
+      } else {
+        alert('Erro de conexão ao gerar contracheque');
+      }
+    }
   };
 
   // Reset da página ao filtrar

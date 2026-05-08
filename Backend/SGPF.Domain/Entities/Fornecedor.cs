@@ -9,5 +9,7 @@ public class Fornecedor
     public string? Contato { get; set; }
     public string? Telefone { get; set; }
     public string? Email { get; set; }
+    public string? InscricaoEstadual { get; set; }
+    public string? Endereco { get; set; }
     public bool Ativo { get; set; } = true;
 }

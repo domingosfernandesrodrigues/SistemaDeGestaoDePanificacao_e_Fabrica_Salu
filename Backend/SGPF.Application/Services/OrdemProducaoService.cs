@@ -10,17 +10,20 @@ public class OrdemProducaoService : IOrdemProducaoService
     private readonly IRepository<FichaTecnica> _fichaRepository;
     private readonly IRepository<MovimentacaoEstoque> _estoqueRepository;
     private readonly IRepository<Produto> _produtoRepository;
+    private readonly IRepository<HistoricoPrecoProduto> _historicoRepository;
 
     public OrdemProducaoService(
         IRepository<OrdemProducao> opRepository,
         IRepository<FichaTecnica> fichaRepository,
         IRepository<MovimentacaoEstoque> estoqueRepository,
-        IRepository<Produto> produtoRepository)
+        IRepository<Produto> produtoRepository,
+        IRepository<HistoricoPrecoProduto> historicoRepository)
     {
         _opRepository = opRepository;
         _fichaRepository = fichaRepository;
         _estoqueRepository = estoqueRepository;
         _produtoRepository = produtoRepository;
+        _historicoRepository = historicoRepository;
     }
 
     public async Task<OrdemProducao> StartOPAsync(Guid opId, Guid usuarioId)
@@ -120,8 +123,24 @@ public class OrdemProducaoService : IOrdemProducaoService
         var prodAcabado = await _produtoRepository.GetByIdAsync(op.ProdutoId);
         if(prodAcabado != null) {
             prodAcabado.QuantidadeEstoque += op.QuantidadeRealizada;
+            
             // Atualiza preço de custo baseado no custo fabril (Custo Médio Simplificado)
-            prodAcabado.PrecoCusto = custoTotal / op.QuantidadeRealizada;
+            var novoCusto = custoTotal / op.QuantidadeRealizada;
+            
+            if (prodAcabado.PrecoCusto != novoCusto)
+            {
+                await _historicoRepository.AddAsync(new HistoricoPrecoProduto
+                {
+                    ProdutoId = prodAcabado.Id,
+                    PrecoAntigo = prodAcabado.PrecoCusto,
+                    PrecoNovo = novoCusto,
+                    Tipo = TipoPrecoHistorico.Custo,
+                    Origem = $"OP #{op.NumeroOP}"
+                });
+
+                prodAcabado.PrecoCusto = novoCusto;
+            }
+            
             await _produtoRepository.UpdateAsync(prodAcabado);
         }
 

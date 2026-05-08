@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -8,7 +8,7 @@ import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { Textarea } from '../components/ui/Textarea';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
-import { Settings, Droplet, ArrowRightLeft, Loader2, Save, Car, Truck, Trash2 } from 'lucide-react';
+import { Settings, Droplet, ArrowRightLeft, Loader2, Save, Car, Truck, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import api from '../services/api';
 
 const veiculoSchema = z.object({
@@ -428,47 +428,179 @@ export function Trocas() {
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao registrar troca')
   });
 
+  const [filterCliente, setFilterCliente] = useState('');
+  const [filterProduto, setFilterProduto] = useState('');
+  const [filterData, setFilterData] = useState('');
+  const [filterAno, setFilterAno] = useState('');
+  const [paginaAtual, setPaginaAtual] = useState(1);
+  const itensPorPagina = 10;
+
+  useEffect(() => {
+    setPaginaAtual(1);
+  }, [filterCliente, filterProduto, filterData, filterAno]);
+
   if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+
+  const trocasFiltradas = (trocas || [])
+    .filter(t => {
+      const matchesCliente = !filterCliente || t.clienteId === filterCliente;
+      const matchesProduto = !filterProduto || t.produtoId === filterProduto;
+      const matchesData = !filterData || new Date(t.dataTroca).toISOString().split('T')[0] === filterData;
+      const matchesAno = !filterAno || new Date(t.dataTroca).getFullYear().toString() === filterAno;
+      return matchesCliente && matchesProduto && matchesData && matchesAno;
+    })
+    .sort((a, b) => new Date(b.dataTroca).getTime() - new Date(a.dataTroca).getTime());
+
+  const totalPaginas = Math.ceil(trocasFiltradas.length / itensPorPagina) || 1;
+  const trocasPaginadas = trocasFiltradas.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina);
 
   return (
     <div className="space-y-6 mt-12">
-      <div className="flex items-center justify-between border-t border-slate-200 pt-10">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-t border-slate-200 pt-10">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Logística Reversa (Trocas & Avarias)</h2>
-          <p className="text-slate-500">Registre trocas por erro de pedido ou avarias para reposição imediata.</p>
+          <h2 className="text-xl md:text-2xl font-bold text-slate-800">Logística Reversa (Trocas & Avarias)</h2>
+          <p className="text-sm md:text-base text-slate-500 mt-1">Registre trocas por erro de pedido ou avarias para reposição imediata.</p>
         </div>
-        <div className="flex gap-3">
-          <Button onClick={() => openModal('troca')} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100">
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <Button onClick={() => openModal('troca')} className="w-full sm:w-auto flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100">
             <ArrowRightLeft size={18} /> Registrar Troca
           </Button>
-          <Button onClick={() => openModal('avaria')} variant="outline" className="flex items-center gap-2 border-slate-200 text-slate-700 hover:bg-slate-50">
+          <Button onClick={() => openModal('avaria')} variant="outline" className="w-full sm:w-auto flex justify-center items-center gap-2 border-slate-200 text-slate-700 hover:bg-slate-50">
             <Trash2 size={18} /> Registrar Avaria
           </Button>
         </div>
       </div>
 
+      {/* Barra de Filtros */}
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap gap-4 items-end">
+        <div className="flex-1 min-w-[120px]">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Ano</label>
+          <select 
+            value={filterAno}
+            onChange={e => setFilterAno(e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+          >
+            <option value="">Todos</option>
+            <option value="2027">2027</option>
+            <option value="2026">2026</option>
+            <option value="2025">2025</option>
+            <option value="2024">2024</option>
+          </select>
+        </div>
+        <div className="flex-1 min-w-[150px]">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Data Exata</label>
+          <input 
+            type="date" 
+            value={filterData}
+            onChange={e => setFilterData(e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+          />
+        </div>
+        <div className="flex-1 min-w-[200px]">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Cliente</label>
+          <select 
+            value={filterCliente}
+            onChange={e => setFilterCliente(e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+          >
+            <option value="">Todos os Clientes</option>
+            {clientes?.map(c => <option key={c.id} value={c.id}>{c.nomeFantasia}</option>)}
+          </select>
+        </div>
+        <div className="flex-1 min-w-[200px]">
+          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Produto</label>
+          <select 
+            value={filterProduto}
+            onChange={e => setFilterProduto(e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+          >
+            <option value="">Todos os Produtos</option>
+            {produtos?.filter(p => p.tipo !== 0).map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+          </select>
+        </div>
+        {(filterData || filterCliente || filterProduto || filterAno) && (
+          <div>
+            <Button variant="secondary" onClick={() => { setFilterData(''); setFilterCliente(''); setFilterProduto(''); setFilterAno(''); }} className="h-10 px-4 whitespace-nowrap">
+              Limpar Filtros
+            </Button>
+          </div>
+        )}
+      </div>
+
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-4 font-medium">Data</th>
-              <th className="px-6 py-4 font-medium">Cliente</th>
-              <th className="px-6 py-4 font-medium">Produto</th>
-              <th className="px-6 py-4 font-medium">Motivo</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {trocas?.length === 0 && <tr><td colSpan={4} className="px-6 py-8 text-center text-slate-400">Nenhuma troca registrada.</td></tr>}
-            {trocas?.map((t) => (
-              <tr key={t.id} className="hover:bg-slate-50">
-                <td className="px-6 py-4 text-slate-600">{new Date(t.dataTroca).toLocaleDateString()}</td>
-                <td className="px-6 py-4 font-medium text-slate-900">{clientes?.find(c => c.id === t.clienteId)?.nomeFantasia || 'Cliente'}</td>
-                <td className="px-6 py-4 text-slate-600">{produtos?.find(p => p.id === t.produtoId)?.nome || 'Produto'}</td>
-                <td className="px-6 py-4 text-slate-600">{t.motivo}</td>
+        {/* Desktop View */}
+        <div className="hidden md:block overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+              <tr>
+                <th className="px-6 py-4 font-medium">Data</th>
+                <th className="px-6 py-4 font-medium">Cliente</th>
+                <th className="px-6 py-4 font-medium">Produto</th>
+                <th className="px-6 py-4 font-medium text-center">Quantidade</th>
+                <th className="px-6 py-4 font-medium">Motivo</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {trocasPaginadas.length === 0 && <tr><td colSpan={5} className="px-6 py-8 text-center text-slate-400">Nenhum registro encontrado.</td></tr>}
+              {trocasPaginadas.map((t) => (
+                <tr key={t.id} className="hover:bg-slate-50">
+                  <td className="px-6 py-4 text-slate-600">{new Date(t.dataTroca).toLocaleDateString()}</td>
+                  <td className="px-6 py-4 font-medium text-slate-900">{clientes?.find(c => c.id === t.clienteId)?.nomeFantasia || 'Cliente'}</td>
+                  <td className="px-6 py-4 text-slate-600">{produtos?.find(p => p.id === t.produtoId)?.nome || 'Produto'}</td>
+                  <td className="px-6 py-4 text-center font-bold text-slate-700">{t.quantidade}</td>
+                  <td className="px-6 py-4 text-slate-600">
+                    <span className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider ${t.motivo === 'Avaria' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}>
+                      {t.motivo}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Mobile View */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {trocasPaginadas.length === 0 && <div className="p-8 text-center text-slate-400">Nenhum registro encontrado.</div>}
+          {trocasPaginadas.map((t) => {
+            const cliente = clientes?.find(c => c.id === t.clienteId);
+            const produto = produtos?.find(p => p.id === t.produtoId);
+            return (
+              <div key={t.id} className="p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <p className="font-bold text-slate-900 leading-tight">{cliente?.nomeFantasia || 'Cliente'}</p>
+                    <p className="text-xs text-slate-500 mt-1">{new Date(t.dataTroca).toLocaleDateString()}</p>
+                  </div>
+                  <span className={`px-2 py-1 rounded text-[10px] uppercase font-bold tracking-wider shrink-0 ml-2 ${t.motivo === 'Avaria' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'}`}>
+                    {t.motivo}
+                  </span>
+                </div>
+                <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex justify-between items-center gap-3">
+                  <span className="text-sm font-medium text-slate-700 line-clamp-2">{produto?.nome || 'Produto'}</span>
+                  <span className="text-sm font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100 shrink-0">{t.quantidade} un</span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Pagination */}
+        {totalPaginas > 1 && (
+          <div className="bg-slate-50 border-t border-slate-200 p-4 flex items-center justify-between">
+            <span className="text-xs font-medium text-slate-500">
+              Página {paginaAtual} de {totalPaginas}
+            </span>
+            <div className="flex gap-2">
+              <Button variant="secondary" size="sm" onClick={() => setPaginaAtual(p => Math.max(1, p - 1))} disabled={paginaAtual === 1} className="h-9 px-3">
+                <ChevronLeft size={16} />
+              </Button>
+              <Button variant="secondary" size="sm" onClick={() => setPaginaAtual(p => Math.min(totalPaginas, p + 1))} disabled={paginaAtual === totalPaginas} className="h-9 px-3">
+                <ChevronRight size={16} />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={modalType === 'troca' ? "Registrar Troca de Produto" : "Registrar Avaria de Produto"}>
@@ -495,7 +627,7 @@ export function Trocas() {
               <SearchableSelect
                 label="Produto"
                 placeholder="Pesquise o produto..."
-                options={produtos?.map(p => ({ value: p.id, label: p.nome })) || []}
+                options={produtos?.filter(p => p.tipo !== 0).map(p => ({ value: p.id, label: p.nome })) || []}
                 value={field.value}
                 onChange={field.onChange}
                 error={errors.produtoId?.message as string}

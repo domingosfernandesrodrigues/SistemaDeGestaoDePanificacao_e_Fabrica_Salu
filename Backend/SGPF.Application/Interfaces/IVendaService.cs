@@ -8,5 +8,10 @@ public interface IVendaService
     Task<PedidoVenda> CriarPedidoPortalAsync(PedidoVenda pedido); // Novo, pendente
     Task<PedidoVenda> AprovarPedidoAsync(Guid pedidoId); // Aprova o pedido do portal
     Task<PedidoVenda> EntregarPedidoAsync(Guid pedidoId);
+    Task<PedidoVenda> AtualizarStatusAsync(Guid id, StatusPedidoVenda novoStatus);
+    Task<PedidoVenda> CancelarPedidoAsync(Guid id);
+    Task ExcluirPedidoAsync(Guid id);
+    Task<PedidoVenda> AtualizarPedidoAsync(Guid id, PedidoVenda pedido);
+    Task<PedidoVenda?> GetByIdAsync(Guid id);
     Task<IEnumerable<PedidoVenda>> GetPedidosAsync();
 }

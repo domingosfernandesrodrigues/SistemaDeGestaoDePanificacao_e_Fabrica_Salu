@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using SGPF.Infrastructure.Data;
 
@@ -11,9 +12,11 @@ using SGPF.Infrastructure.Data;
 namespace SGPF.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260507230355_AddEmpresaExpandedFields")]
+    partial class AddEmpresaExpandedFields
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -143,14 +146,8 @@ namespace SGPF.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("InscricaoEstadual")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("NomeFantasia")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("RazaoSocial")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Telefone")
@@ -475,12 +472,6 @@ namespace SGPF.Infrastructure.Migrations
                     b.Property<string>("Email")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Endereco")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("InscricaoEstadual")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("NomeFantasia")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -539,43 +530,6 @@ namespace SGPF.Infrastructure.Migrations
                     b.HasIndex("EmpresaId");
 
                     b.ToTable("Funcionarios");
-                });
-
-            modelBuilder.Entity("SGPF.Domain.Entities.HistoricoPrecoProduto", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime>("DataAlteracao")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("Origem")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("PrecoAntigo")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal>("PrecoNovo")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<Guid>("ProdutoId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<int>("Tipo")
-                        .HasColumnType("int");
-
-                    b.Property<string>("UsuarioNome")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProdutoId");
-
-                    b.ToTable("HistoricoPrecos");
                 });
 
             modelBuilder.Entity("SGPF.Domain.Entities.ManutencaoVeiculo", b =>
@@ -777,10 +731,6 @@ namespace SGPF.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
-
-                    b.Property<decimal>("Desconto")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
 
                     b.Property<Guid>("PedidoVendaId")
                         .HasColumnType("uniqueidentifier");
@@ -1126,17 +1076,6 @@ namespace SGPF.Infrastructure.Migrations
                         .HasForeignKey("EmpresaId");
 
                     b.Navigation("Empresa");
-                });
-
-            modelBuilder.Entity("SGPF.Domain.Entities.HistoricoPrecoProduto", b =>
-                {
-                    b.HasOne("SGPF.Domain.Entities.Produto", "Produto")
-                        .WithMany()
-                        .HasForeignKey("ProdutoId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Produto");
                 });
 
             modelBuilder.Entity("SGPF.Domain.Entities.ManutencaoVeiculo", b =>

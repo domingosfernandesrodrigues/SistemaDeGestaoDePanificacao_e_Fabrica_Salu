@@ -23,6 +23,13 @@ public class VendasController : ControllerBase
         return Ok(await _vendaService.GetPedidosAsync());
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var pedido = await _vendaService.GetByIdAsync(id);
+        return pedido == null ? NotFound() : Ok(pedido);
+    }
+
     [HttpPost]
     public async Task<IActionResult> CriarPedido([FromBody] PedidoVenda pedido)
     {
@@ -37,17 +44,38 @@ public class VendasController : ControllerBase
         }
     }
 
-    [HttpPost("{id}/entregar")]
-    public async Task<IActionResult> Entregar(Guid id)
+    [HttpPut("{id}")]
+    public async Task<IActionResult> AtualizarPedido(Guid id, [FromBody] PedidoVenda pedido)
     {
         try
         {
-            var p = await _vendaService.EntregarPedidoAsync(id);
+            var p = await _vendaService.AtualizarPedidoAsync(id, pedido);
             return Ok(p);
         }
         catch (Exception ex)
         {
             return BadRequest(new { message = ex.Message });
         }
+    }
+
+    [HttpPatch("{id}/status")]
+    public async Task<IActionResult> AtualizarStatus(Guid id, [FromBody] StatusPedidoVenda novoStatus)
+    {
+        try { return Ok(await _vendaService.AtualizarStatusAsync(id, novoStatus)); }
+        catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
+    }
+
+    [HttpPost("{id}/cancelar")]
+    public async Task<IActionResult> Cancelar(Guid id)
+    {
+        try { return Ok(await _vendaService.CancelarPedidoAsync(id)); }
+        catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Excluir(Guid id)
+    {
+        try { await _vendaService.ExcluirPedidoAsync(id); return NoContent(); }
+        catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
 }

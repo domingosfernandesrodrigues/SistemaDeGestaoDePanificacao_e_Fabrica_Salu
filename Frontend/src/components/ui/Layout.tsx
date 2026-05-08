@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Package, ChefHat, Factory, LayoutDashboard, LogOut, Clock, FileText, ShoppingCart, Truck, ArrowRightLeft, Users, Menu, X, KeyRound, Loader2, Save, Lock, Eye, EyeOff, FlaskConical } from 'lucide-react';
 import { Modal } from './Modal';
@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import api from '../../services/api';
+import { empresaService } from '../../services/empresaService';
 
 const trocarSenhaSchema = z.object({
   novaSenha: z.string()
@@ -34,6 +35,15 @@ export function Layout() {
 
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [nomeEmpresa, setNomeEmpresa] = useState<string>('');
+
+  useEffect(() => {
+    empresaService.getConfig().then(config => {
+      if (config && config.nomeFantasia) {
+        setNomeEmpresa(config.nomeFantasia);
+      }
+    }).catch(err => console.error('Erro ao buscar nome da empresa', err));
+  }, []);
 
   const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting } } = useForm<TrocarSenhaForm>({
     resolver: zodResolver(trocarSenhaSchema)
@@ -70,6 +80,7 @@ export function Layout() {
     { name: 'Meus Contracheques', path: '/rh/meus-contracheques', icon: FileText, roles: ['Admin', 'Gestor', 'Operador', 'Funcionario'] },
     { name: 'Despesas Gerais', path: '/financeiro/despesas', icon: FileText, roles: ['Admin', 'Gestor'] },
     { name: 'Usuários do Sistema', path: '/usuarios', icon: Users, roles: ['Admin', 'Gestor'] },
+    { name: 'Dados da Empresa', path: '/configuracoes/empresa', icon: Factory, roles: ['Admin', 'Gestor'] },
   ];
 
   const filteredNavItems = navItems.filter(item => item.roles.includes(userRole));
@@ -112,10 +123,17 @@ export function Layout() {
         fixed inset-0 z-40 md:relative md:flex md:w-64 bg-slate-900 text-white flex-col transition-transform duration-300 ease-in-out
         ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
-        <div className="hidden md:block p-6">
+        <div className="hidden md:block p-6 pb-2">
           <div className="flex items-center gap-3 text-xl font-bold">
-            <div className="bg-blue-600 text-white w-8 h-8 rounded-lg flex items-center justify-center">S</div>
-            SGP-Fábrica
+            <div className="bg-blue-600 text-white w-8 h-8 rounded-lg flex items-center justify-center shrink-0">S</div>
+            <div className="flex flex-col">
+              <span>SGP-Fábrica</span>
+              {nomeEmpresa && (
+                <span className="text-xs text-slate-400 font-medium truncate max-w-[160px]" title={nomeEmpresa}>
+                  {nomeEmpresa}
+                </span>
+              )}
+            </div>
           </div>
         </div>
 

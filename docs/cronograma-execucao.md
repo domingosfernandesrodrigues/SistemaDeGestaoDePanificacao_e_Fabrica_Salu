@@ -56,9 +56,16 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 ## 📊 Status de Progresso Geral
 - **Fase Atual:** Refinamento e Expansão Operacional ✅
 - **Progresso Total:** 100% (Funcionalidades principais, refinamentos e módulos de compras concluídos)
-- **Última Atualização:** 05/05/2026
+- **Última Atualização:** 08/05/2026
 
-### 🛠️ Refinamentos Recentes (Maio/2026 - Sessão de Compras):
+### 🛠️ Refinamentos Recentes (Maio/2026 - Gestão de Vendas B2B):
+- **Painel Kanban de Vendas:** Implementação de dashboard interativo com colunas de status (Aprovação, Separação, Rota, Entregue). Suporte completo a **Drag-and-Drop** para movimentação de pedidos entre etapas.
+- **Automação Logística & Estoque:** Integração do fluxo de status com o inventário. Mover para "Separação" reserva o estoque; mover para "Entregue" efetiva a saída e gera automaticamente o **Contas a Receber**.
+- **Gestão de Pedidos (Ações Críticas):** Implementação de lógica de **Cancelamento com Reversão**, que devolve produtos ao estoque e estorna o financeiro. Edição de pedidos permitida em fases iniciais com recalculo automático de reservas.
+- **UX Mobile Pro Max:** Interface otimizada para iPhone 14 Pro Max, com botões de ação (Editar, Excluir, Cancelar) sempre visíveis em dispositivos touch e cartões detalhados com indicadores visuais de tempo e valor.
+- **Estabilidade de API:** Refatoração do `VendaService` para arquitetura desacoplada (Repositórios), garantindo 100% de integridade em operações complexas de banco de dados.
+
+### 🛠️ Refinamentos Anteriores (Maio/2026 - Sessão de Compras):
 - **Módulo de Compras e Entradas (Mercadoria):** Implementação completa do CRUD de compras de produtos acabados e revenda. Inclui fluxo de Rascunho → Confirmada, que atualiza automaticamente o estoque e gera conta a pagar.
 - **Entrada de Insumos (Matéria-Prima):** Criação de formulário exclusivo para registrar a compra de insumos (Farinha, Ovos, etc.), separado do módulo de mercadorias para maior clareza operacional.
 - **Categorização de Compras:** Adição do campo `Categoria` (`Mercadoria` / `Insumo`) na entidade de compra, permitindo filtragem e segmentação por tipo de entrada.

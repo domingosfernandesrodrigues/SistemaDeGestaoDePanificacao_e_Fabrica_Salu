@@ -43,5 +43,6 @@ public class PedidoVendaItem
     
     public decimal Quantidade { get; set; }
     public decimal PrecoUnitario { get; set; }
-    public decimal Subtotal => Quantidade * PrecoUnitario;
+    public decimal Desconto { get; set; }
+    public decimal Subtotal => (Quantidade * PrecoUnitario) - Desconto;
 }

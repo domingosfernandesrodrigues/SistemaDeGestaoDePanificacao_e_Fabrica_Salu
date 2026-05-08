@@ -77,8 +77,6 @@ public class PontoController : ControllerBase
             .OrderByDescending(r => r.DataHoraEntrada);
 
         return Ok(result);
-
-        return Ok(result);
     }
 
     [HttpPost("registrar")]
@@ -183,8 +181,6 @@ public class PontoController : ControllerBase
                 });
             })
             .OrderByDescending(r => r.DataHoraEntrada);
-
-        return Ok(result);
 
         return Ok(result);
     }

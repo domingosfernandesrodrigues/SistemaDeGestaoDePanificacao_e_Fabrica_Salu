@@ -88,7 +88,7 @@ public class UsuariosController : ControllerBase
             await _repository.DeleteAsync(id);
             return NoContent();
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             // Fallback para qualquer restrição de integridade do banco de dados (Foreign Keys)
             return BadRequest(new { message = "Não foi possível excluir o usuário devido a restrições de integridade no banco de dados. Recomendamos inativar o usuário em vez de excluí-lo." });

@@ -15,7 +15,8 @@ const afastamentoSchema = z.object({
   motivo: z.string().min(1, 'Selecione o motivo'),
   observacao: z.string().optional(),
   anexoNome: z.string().optional().nullable(),
-  anexoBase64: z.string().optional().nullable()
+  anexoBase64: z.string().optional().nullable(),
+  funcionarioId: z.string().optional()
 });
 
 type AfastamentoForm = z.infer<typeof afastamentoSchema>;
@@ -83,7 +84,13 @@ export function Ponto() {
   });
 
   const mutationAfastamento = useMutation({
-    mutationFn: (data: AfastamentoForm) => api.post('/Afastamentos', data),
+    mutationFn: (data: AfastamentoForm) => {
+      const payload = { ...data };
+      if (isAdminOrGestor && selectedFuncId) {
+        payload.funcionarioId = selectedFuncId;
+      }
+      return api.post('/Afastamentos', payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['afastamentos-view'] });
       setIsModalOpen(false);
@@ -137,7 +144,7 @@ export function Ponto() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit">
+      <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit mx-auto">
         <button
           onClick={() => setTab('ponto')}
           className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'ponto' ? 'bg-white shadow text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
@@ -368,7 +375,13 @@ export function Ponto() {
                 </div>
               )}
             </div>
-            <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-indigo-600 h-12 px-6">
+            <Button onClick={() => {
+              if (isAdminOrGestor && !selectedFuncId) {
+                alert("Por favor, selecione um funcionário no filtro acima antes de lançar o afastamento/falta.");
+                return;
+              }
+              setIsModalOpen(true);
+            }} className="flex items-center gap-2 bg-indigo-600 h-12 px-6">
               <Plus size={16} /> Solicitar Novo Afastamento
             </Button>
           </div>

@@ -60,15 +60,26 @@ public class AfastamentosController : ControllerBase
     {
         try 
         {
-            var funcionario = await GetFuncionarioDoUsuario();
-            if (funcionario == null)
-                return BadRequest(new { message = "Seu usuário não está vinculado a um cadastro de funcionário." });
+            var isGestorOrAdmin = User.IsInRole("Admin") || User.IsInRole("Gestor");
+
+            // Se for gestor/admin e enviou o FuncionarioId, usa o enviado.
+            if (isGestorOrAdmin && afastamento.FuncionarioId != Guid.Empty)
+            {
+                afastamento.Status = "Aprovado"; // Lançamento de gestor já entra aprovado (ex: Falta não justificada)
+            }
+            else
+            {
+                var funcionario = await GetFuncionarioDoUsuario();
+                if (funcionario == null)
+                    return BadRequest(new { message = "Seu usuário não está vinculado a um cadastro de funcionário." });
+                
+                afastamento.FuncionarioId = funcionario.Id;
+                afastamento.Status = "Pendente";
+            }
 
             if (afastamento.DataInicio > afastamento.DataFim)
                 return BadRequest(new { message = "Data de Início não pode ser maior que a Data Fim." });
 
-            afastamento.FuncionarioId = funcionario.Id;
-            afastamento.Status = "Pendente";
             afastamento.DataCriacao = DateTime.Now;
 
             await _repository.AddAsync(afastamento);
@@ -91,7 +102,7 @@ public class AfastamentosController : ControllerBase
             {
                 a.Id,
                 a.FuncionarioId,
-                NomeFuncionario = a.Funcionario.Nome,
+                NomeFuncionario = a.Funcionario != null ? a.Funcionario.Nome : "N/A",
                 a.DataInicio,
                 a.DataFim,
                 a.Motivo,

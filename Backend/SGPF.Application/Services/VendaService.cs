@@ -10,17 +10,38 @@ public class VendaService : IVendaService
     private readonly IRepository<Produto> _produtoRepo;
     private readonly IRepository<MovimentacaoEstoque> _estoqueRepo;
     private readonly IRepository<ContaReceber> _contaReceberRepo;
+    private readonly IRepository<PedidoVendaItem> _itemRepo;
+    private readonly IRepository<Cliente> _clienteRepo;
 
     public VendaService(
         IRepository<PedidoVenda> pedidoRepo,
         IRepository<Produto> produtoRepo,
         IRepository<MovimentacaoEstoque> estoqueRepo,
-        IRepository<ContaReceber> contaReceberRepo)
+        IRepository<ContaReceber> contaReceberRepo,
+        IRepository<PedidoVendaItem> itemRepo,
+        IRepository<Cliente> clienteRepo)
     {
         _pedidoRepo = pedidoRepo;
         _produtoRepo = produtoRepo;
         _estoqueRepo = estoqueRepo;
         _contaReceberRepo = contaReceberRepo;
+        _itemRepo = itemRepo;
+        _clienteRepo = clienteRepo;
+    }
+
+    public async Task<PedidoVenda?> GetByIdAsync(Guid id)
+    {
+        var pedido = await _pedidoRepo.GetByIdAsync(id);
+        if (pedido != null)
+        {
+            pedido.Itens = (await _itemRepo.FindAsync(i => i.PedidoVendaId == id)).ToList();
+            foreach (var item in pedido.Itens)
+            {
+                item.Produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
+            }
+            pedido.Cliente = await _clienteRepo.GetByIdAsync(pedido.ClienteId);
+        }
+        return pedido;
     }
 
     public async Task<PedidoVenda> CriarPedidoAsync(PedidoVenda pedido)
@@ -78,16 +99,32 @@ public class VendaService : IVendaService
 
     public async Task<PedidoVenda> AprovarPedidoAsync(Guid pedidoId)
     {
-        var pedido = await _pedidoRepo.GetByIdAsync(pedidoId);
+        var pedido = await GetByIdAsync(pedidoId);
         if (pedido == null || pedido.Status != StatusPedidoVenda.Novo)
             throw new Exception("Pedido não pode ser aprovado.");
 
-        // O pedido existe, agora fazemos a reserva de estoque de fato.
-        // Simulando carregamento dos itens do pedido:
-        // Obs: O IRepository base criado anteriormente pode não ter .Include nativo sem expor IQueryable.
-        // Vamos buscar os itens manualmente pela origem ou garantir que eles vieram preenchidos.
-        // Para fins deste protótipo, assumimos que no Approval faremos o débito/reserva.
-        
+        foreach (var item in pedido.Itens)
+        {
+            var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
+            if (produto != null)
+            {
+                if (produto.QuantidadeEstoque < item.Quantidade)
+                    throw new Exception($"Estoque insuficiente para o produto {produto.Nome}. Disponível: {produto.QuantidadeEstoque}");
+
+                produto.QuantidadeEstoque -= item.Quantidade;
+                await _produtoRepo.UpdateAsync(produto);
+
+                await _estoqueRepo.AddAsync(new MovimentacaoEstoque
+                {
+                    ProdutoId = produto.Id,
+                    Tipo = TipoMovimentacao.Reserva,
+                    Quantidade = item.Quantidade,
+                    Origem = pedido.NumeroPedido,
+                    Observacao = "Reserva (Aprovação de Venda)"
+                });
+            }
+        }
+
         pedido.Status = StatusPedidoVenda.Separacao;
         await _pedidoRepo.UpdateAsync(pedido);
         return pedido;
@@ -95,36 +132,32 @@ public class VendaService : IVendaService
 
     public async Task<PedidoVenda> EntregarPedidoAsync(Guid pedidoId)
     {
-        var pedido = await _pedidoRepo.GetByIdAsync(pedidoId);
+        var pedido = await GetByIdAsync(pedidoId);
         if (pedido == null || pedido.Status == StatusPedidoVenda.Entregue)
             throw new Exception("Pedido inválido ou já entregue.");
 
-        // Para cada item, converte a Reserva em Saída real
-        // Na prática, como já reduzimos o Saldo, apenas documentamos a Saída real no Kardex.
         foreach (var item in pedido.Itens)
         {
-            var mov = new MovimentacaoEstoque
+            await _estoqueRepo.AddAsync(new MovimentacaoEstoque
             {
                 ProdutoId = item.ProdutoId,
                 Tipo = TipoMovimentacao.Saida,
                 Quantidade = item.Quantidade,
                 Origem = pedido.NumeroPedido,
                 Observacao = "Venda Concluída"
-            };
-            await _estoqueRepo.AddAsync(mov);
+            });
         }
 
         pedido.Status = StatusPedidoVenda.Entregue;
         pedido.DataEntregaRealizada = DateTime.UtcNow;
         await _pedidoRepo.UpdateAsync(pedido);
 
-        // Integração Financeira: Gera a Conta a Receber
         var conta = new ContaReceber
         {
             ClienteId = pedido.ClienteId,
             Descricao = $"Fatura Ref. Pedido {pedido.NumeroPedido}",
             Valor = pedido.ValorTotal,
-            DataVencimento = DateTime.UtcNow.AddDays(15), // Exemplo: 15 dias de prazo
+            DataVencimento = DateTime.UtcNow.AddDays(15),
             PedidoVendaId = pedido.Id
         };
         await _contaReceberRepo.AddAsync(conta);
@@ -132,8 +165,139 @@ public class VendaService : IVendaService
         return pedido;
     }
 
+    public async Task<PedidoVenda> AtualizarStatusAsync(Guid id, StatusPedidoVenda novoStatus)
+    {
+        var pedido = await _pedidoRepo.GetByIdAsync(id);
+        if (pedido == null) throw new Exception("Pedido não encontrado.");
+
+        if (novoStatus == StatusPedidoVenda.Entregue) return await EntregarPedidoAsync(id);
+        if (novoStatus == StatusPedidoVenda.Separacao && pedido.Status == StatusPedidoVenda.Novo) return await AprovarPedidoAsync(id);
+
+        pedido.Status = novoStatus;
+        await _pedidoRepo.UpdateAsync(pedido);
+        return pedido;
+    }
+
+    public async Task<PedidoVenda> CancelarPedidoAsync(Guid id)
+    {
+        var pedido = await GetByIdAsync(id);
+        if (pedido == null) throw new Exception("Pedido não encontrado.");
+        if (pedido.Status == StatusPedidoVenda.Cancelado) return pedido;
+
+        // Reverter Logística
+        if (pedido.Status != StatusPedidoVenda.Novo && pedido.Status != StatusPedidoVenda.Cancelado)
+        {
+            foreach (var item in pedido.Itens)
+            {
+                var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
+                if (produto != null)
+                {
+                    produto.QuantidadeEstoque += item.Quantidade;
+                    await _produtoRepo.UpdateAsync(produto);
+
+                    await _estoqueRepo.AddAsync(new MovimentacaoEstoque
+                    {
+                        ProdutoId = item.ProdutoId,
+                        Tipo = TipoMovimentacao.Entrada,
+                        Quantidade = item.Quantidade,
+                        Origem = pedido.NumeroPedido,
+                        Observacao = $"Estorno de Cancelamento ({pedido.Status})"
+                    });
+                }
+            }
+        }
+
+        // Reverter Financeiro
+        if (pedido.Status == StatusPedidoVenda.Entregue)
+        {
+            var contas = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedido.Id);
+            foreach (var conta in contas)
+            {
+                await _contaReceberRepo.DeleteAsync(conta.Id);
+            }
+        }
+
+        pedido.Status = StatusPedidoVenda.Cancelado;
+        await _pedidoRepo.UpdateAsync(pedido);
+        return pedido;
+    }
+
+    public async Task<PedidoVenda> AtualizarPedidoAsync(Guid id, PedidoVenda pedidoAtualizado)
+    {
+        var pedidoExistente = await GetByIdAsync(id);
+        if (pedidoExistente == null) throw new Exception("Pedido não encontrado.");
+        
+        if (pedidoExistente.Status > StatusPedidoVenda.Separacao)
+            throw new Exception("Somente pedidos em Aprovação ou Separação podem ser editados.");
+
+        // 1. Reverter estoque atual (Reservas)
+        if (pedidoExistente.Status == StatusPedidoVenda.Separacao)
+        {
+            foreach (var item in pedidoExistente.Itens)
+            {
+                var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
+                if (produto != null)
+                {
+                    produto.QuantidadeEstoque += item.Quantidade;
+                    await _produtoRepo.UpdateAsync(produto);
+                }
+            }
+        }
+
+        // 2. Limpar itens antigos
+        var itensAntigos = await _itemRepo.FindAsync(i => i.PedidoVendaId == id);
+        foreach (var item in itensAntigos)
+        {
+            await _itemRepo.DeleteAsync(item.Id);
+        }
+
+        // 3. Processar novos itens
+        pedidoExistente.ClienteId = pedidoAtualizado.ClienteId;
+        pedidoExistente.ValorTotal = 0;
+
+        foreach (var item in pedidoAtualizado.Itens)
+        {
+            var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
+            if (produto == null) throw new Exception("Produto não encontrado.");
+
+            if (pedidoExistente.Status == StatusPedidoVenda.Separacao && produto.QuantidadeEstoque < item.Quantidade)
+                throw new Exception($"Estoque insuficiente para {produto.Nome}");
+
+            item.PedidoVendaId = pedidoExistente.Id;
+            item.PrecoUnitario = produto.PrecoVenda;
+            pedidoExistente.ValorTotal += item.Subtotal;
+            
+            await _itemRepo.AddAsync(item);
+
+            if (pedidoExistente.Status == StatusPedidoVenda.Separacao)
+            {
+                produto.QuantidadeEstoque -= item.Quantidade;
+                await _produtoRepo.UpdateAsync(produto);
+            }
+        }
+
+        await _pedidoRepo.UpdateAsync(pedidoExistente);
+        return pedidoExistente;
+    }
+
+    public async Task ExcluirPedidoAsync(Guid id)
+    {
+        var pedido = await _pedidoRepo.GetByIdAsync(id);
+        if (pedido == null) return;
+
+        if (pedido.Status != StatusPedidoVenda.Novo && pedido.Status != StatusPedidoVenda.Cancelado)
+            throw new Exception("Somente pedidos Novos ou Cancelados podem ser excluídos permanentemente.");
+
+        await _pedidoRepo.DeleteAsync(id);
+    }
+
     public async Task<IEnumerable<PedidoVenda>> GetPedidosAsync()
     {
-        return await _pedidoRepo.GetAllAsync();
+        var pedidos = await _pedidoRepo.GetAllAsync();
+        foreach (var p in pedidos)
+        {
+            p.Cliente = await _clienteRepo.GetByIdAsync(p.ClienteId);
+        }
+        return pedidos.OrderByDescending(p => p.DataPedido);
     }
 }

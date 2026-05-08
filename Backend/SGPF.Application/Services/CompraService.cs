@@ -21,19 +21,22 @@ public class CompraService : ICompraService
     private readonly IRepository<Produto> _produtoRepo;
     private readonly IRepository<MovimentacaoEstoque> _movimentacaoRepo;
     private readonly IRepository<ContaPagar> _pagarRepo;
+    private readonly IRepository<HistoricoPrecoProduto> _historicoRepo;
 
     public CompraService(
         IRepository<Compra> compraRepo,
         IRepository<CompraItem> itemRepo,
         IRepository<Produto> produtoRepo,
         IRepository<MovimentacaoEstoque> movimentacaoRepo,
-        IRepository<ContaPagar> pagarRepo)
+        IRepository<ContaPagar> pagarRepo,
+        IRepository<HistoricoPrecoProduto> historicoRepo)
     {
         _compraRepo = compraRepo;
         _itemRepo = itemRepo;
         _produtoRepo = produtoRepo;
         _movimentacaoRepo = movimentacaoRepo;
         _pagarRepo = pagarRepo;
+        _historicoRepo = historicoRepo;
     }
 
     public async Task<Compra> CriarRascunhoAsync(CompraDto dto)
@@ -81,7 +84,19 @@ public class CompraService : ICompraService
                 produto.QuantidadeEstoque += item.Quantidade;
                 
                 // 2. Atualizar Preço de Custo (Regra: Último preço de compra)
-                produto.PrecoCusto = item.PrecoUnitario;
+                if (produto.PrecoCusto != item.PrecoUnitario)
+                {
+                    await _historicoRepo.AddAsync(new HistoricoPrecoProduto
+                    {
+                        ProdutoId = produto.Id,
+                        PrecoAntigo = produto.PrecoCusto,
+                        PrecoNovo = item.PrecoUnitario,
+                        Tipo = TipoPrecoHistorico.Custo,
+                        Origem = $"Compra #{compra.Id.ToString().Substring(0, 8)}"
+                    });
+                    
+                    produto.PrecoCusto = item.PrecoUnitario;
+                }
                 
                 await _produtoRepo.UpdateAsync(produto);
 

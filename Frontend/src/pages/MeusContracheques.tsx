@@ -18,8 +18,18 @@ export function MeusContracheques() {
       link.setAttribute('download', `contracheque_${ref.replace('/', '_')}.pdf`);
       document.body.appendChild(link);
       link.click();
-    } catch (err) {
-      alert('Erro ao baixar contracheque. Tente novamente.');
+    } catch (err: any) {
+      if (err.response?.data instanceof Blob) {
+        const text = await err.response.data.text();
+        try {
+            const json = JSON.parse(text);
+            alert(json.message || 'Erro ao gerar contracheque');
+        } catch {
+            alert('Erro ao gerar contracheque');
+        }
+      } else {
+        alert('Erro de conexão ao baixar contracheque. Tente novamente.');
+      }
     }
   };
 

@@ -44,6 +44,7 @@ public class AppDbContext : DbContext
     // Fase Complementar - Compras
     public DbSet<Compra> Compras { get; set; }
     public DbSet<CompraItem> CompraItems { get; set; }
+    public DbSet<HistoricoPrecoProduto> HistoricoPrecos { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -114,6 +115,7 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<PedidoVenda>().Property(p => p.ValorTotal).HasPrecision(18, 2);
         modelBuilder.Entity<PedidoVendaItem>().Property(p => p.Quantidade).HasPrecision(18, 4);
         modelBuilder.Entity<PedidoVendaItem>().Property(p => p.PrecoUnitario).HasPrecision(18, 2);
+        modelBuilder.Entity<PedidoVendaItem>().Property(p => p.Desconto).HasPrecision(18, 2);
         
         modelBuilder.Entity<Veiculo>().Property(v => v.CapacidadeCargaKg).HasPrecision(18, 2);
         modelBuilder.Entity<Veiculo>().Property(v => v.QuilometragemAtual).HasPrecision(18, 2);
@@ -156,5 +158,8 @@ public class AppDbContext : DbContext
             .WithMany()
             .HasForeignKey(ci => ci.ProdutoId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<HistoricoPrecoProduto>().Property(h => h.PrecoAntigo).HasPrecision(18, 4);
+        modelBuilder.Entity<HistoricoPrecoProduto>().Property(h => h.PrecoNovo).HasPrecision(18, 4);
     }
 }

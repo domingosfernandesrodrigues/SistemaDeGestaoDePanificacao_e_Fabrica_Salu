@@ -47,6 +47,33 @@ public class ProdutosController : ControllerBase
         var existing = await _context.Produtos.FindAsync(id);
         if (existing == null) return NotFound();
 
+        // Verificar mudanças de preço para histórico
+        if (existing.PrecoCusto != produto.PrecoCusto)
+        {
+            _context.HistoricoPrecos.Add(new HistoricoPrecoProduto
+            {
+                ProdutoId = existing.Id,
+                PrecoAntigo = existing.PrecoCusto,
+                PrecoNovo = produto.PrecoCusto,
+                Tipo = TipoPrecoHistorico.Custo,
+                Origem = "Alteração Manual",
+                UsuarioNome = User.Identity?.Name
+            });
+        }
+
+        if (existing.PrecoVenda != produto.PrecoVenda)
+        {
+            _context.HistoricoPrecos.Add(new HistoricoPrecoProduto
+            {
+                ProdutoId = existing.Id,
+                PrecoAntigo = existing.PrecoVenda,
+                PrecoNovo = produto.PrecoVenda,
+                Tipo = TipoPrecoHistorico.Venda,
+                Origem = "Alteração Manual",
+                UsuarioNome = User.Identity?.Name
+            });
+        }
+
         // Atualizar campos permitidos
         existing.Nome = produto.Nome;
         existing.Tipo = produto.Tipo;
@@ -54,11 +81,20 @@ public class ProdutosController : ControllerBase
         existing.PrecoCusto = produto.PrecoCusto;
         existing.PrecoVenda = produto.PrecoVenda;
         existing.Ativo = produto.Ativo;
-        // QuantidadeEstoque geralmente é atualizada via movimentações, mas permitimos ajuste manual no cadastro se necessário
         existing.QuantidadeEstoque = produto.QuantidadeEstoque;
 
         await _context.SaveChangesAsync();
         return NoContent();
+    }
+
+    [HttpGet("{id}/historico-precos")]
+    public async Task<IActionResult> GetHistory(Guid id)
+    {
+        var historico = await _context.HistoricoPrecos
+            .Where(h => h.ProdutoId == id)
+            .OrderByDescending(h => h.DataAlteracao)
+            .ToListAsync();
+        return Ok(historico);
     }
 
     [HttpPatch("{id}/toggle-status")]
