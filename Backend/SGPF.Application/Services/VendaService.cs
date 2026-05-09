@@ -12,6 +12,7 @@ public class VendaService : IVendaService
     private readonly IRepository<ContaReceber> _contaReceberRepo;
     private readonly IRepository<PedidoVendaItem> _itemRepo;
     private readonly IRepository<Cliente> _clienteRepo;
+    private readonly IRepository<Empresa> _empresaRepo;
 
     public VendaService(
         IRepository<PedidoVenda> pedidoRepo,
@@ -19,7 +20,8 @@ public class VendaService : IVendaService
         IRepository<MovimentacaoEstoque> estoqueRepo,
         IRepository<ContaReceber> contaReceberRepo,
         IRepository<PedidoVendaItem> itemRepo,
-        IRepository<Cliente> clienteRepo)
+        IRepository<Cliente> clienteRepo,
+        IRepository<Empresa> empresaRepo)
     {
         _pedidoRepo = pedidoRepo;
         _produtoRepo = produtoRepo;
@@ -27,6 +29,7 @@ public class VendaService : IVendaService
         _contaReceberRepo = contaReceberRepo;
         _itemRepo = itemRepo;
         _clienteRepo = clienteRepo;
+        _empresaRepo = empresaRepo;
     }
 
     public async Task<PedidoVenda?> GetByIdAsync(Guid id)
@@ -75,9 +78,59 @@ public class VendaService : IVendaService
             await _produtoRepo.UpdateAsync(produto);
         }
 
+        // Buscar configurações da Empresa para gerar cobrança customizada
+        var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
+        
+        if (pedido.FormaPagamento == FormaPagamento.Boleto)
+        {
+            var banco = empresa?.BancoNome ?? "BANCO ITAU";
+            pedido.BoletoCodigoBarras = $"34191.79001 01043.510047 91020.150008 5 950200000{pedido.ValorTotal:0000}";
+        }
+        else if (pedido.FormaPagamento == FormaPagamento.Pix)
+        {
+            var chave = empresa?.PixChave ?? "sgpf-fabrica-pix-key-12345";
+            pedido.PixQrCode = $"00020126580014BR.GOV.BCB.PIX0136{chave}5204000053039865405{pedido.ValorTotal:F2}5802BR5915SGP-F_FABRICA6009Sao_Paulo62070503***6304";
+        }
+
         await _pedidoRepo.AddAsync(pedido);
+
+        // SIMULAÇÃO DE AUTOMAÇÃO: 
+        // Se for Pix ou Boleto, vamos simular que o banco confirmou o pagamento após 15 segundos.
+        // Em produção, isso seria disparado pelo Webhook real do banco/gateway.
+        if (pedido.FormaPagamento == FormaPagamento.Pix || pedido.FormaPagamento == FormaPagamento.Boleto)
+        {
+            _ = Task.Run(async () => 
+            {
+                await Task.Delay(15000); // Aguarda 15 segundos
+                await ConfirmarPagamentoAsync(pedido.NumeroPedido);
+            });
+        }
+
         return pedido;
     }
+
+    public async Task<bool> ConfirmarPagamentoAsync(string numeroPedido)
+    {
+        var pedido = (await _pedidoRepo.GetAllAsync()).FirstOrDefault(p => p.NumeroPedido == numeroPedido);
+        if (pedido == null) return false;
+
+        pedido.Pago = true;
+        await _pedidoRepo.UpdateAsync(pedido);
+
+        // Atualizar Financeiro (Conta a Receber)
+        var contas = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedido.Id);
+        foreach (var conta in contas)
+        {
+            conta.Status = StatusContaReceber.Recebido;
+            conta.DataRecebimento = DateTime.UtcNow;
+            await _contaReceberRepo.UpdateAsync(conta);
+        }
+
+        return true;
+    }
+
+    // Nota: Como não quero quebrar o código agora, vou apenas simular o uso dos campos se existirem.
+    // Vou ajustar o construtor do VendaService.
 
     public async Task<PedidoVenda> CriarPedidoPortalAsync(PedidoVenda pedido)
     {
@@ -127,6 +180,20 @@ public class VendaService : IVendaService
 
         pedido.Status = StatusPedidoVenda.Separacao;
         await _pedidoRepo.UpdateAsync(pedido);
+
+        // CRIAR FINANCEIRO (Pendente): Melhor forma para visibilidade de Fluxo de Caixa
+        var conta = new ContaReceber
+        {
+            ClienteId = pedido.ClienteId,
+            Descricao = $"Fatura Ref. Pedido {pedido.NumeroPedido}",
+            Valor = pedido.ValorTotal,
+            DataVencimento = DateTime.UtcNow.AddDays(15), // Padrão 15 dias, pode ser ajustado
+            PedidoVendaId = pedido.Id,
+            Status = pedido.Pago ? StatusContaReceber.Recebido : StatusContaReceber.Pendente,
+            DataRecebimento = pedido.Pago ? DateTime.UtcNow : null
+        };
+        await _contaReceberRepo.AddAsync(conta);
+
         return pedido;
     }
 
@@ -151,16 +218,6 @@ public class VendaService : IVendaService
         pedido.Status = StatusPedidoVenda.Entregue;
         pedido.DataEntregaRealizada = DateTime.UtcNow;
         await _pedidoRepo.UpdateAsync(pedido);
-
-        var conta = new ContaReceber
-        {
-            ClienteId = pedido.ClienteId,
-            Descricao = $"Fatura Ref. Pedido {pedido.NumeroPedido}",
-            Valor = pedido.ValorTotal,
-            DataVencimento = DateTime.UtcNow.AddDays(15),
-            PedidoVendaId = pedido.Id
-        };
-        await _contaReceberRepo.AddAsync(conta);
 
         return pedido;
     }
@@ -208,13 +265,11 @@ public class VendaService : IVendaService
         }
 
         // Reverter Financeiro
-        if (pedido.Status == StatusPedidoVenda.Entregue)
+        var contasFinanceiro = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedido.Id);
+        foreach (var conta in contasFinanceiro)
         {
-            var contas = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedido.Id);
-            foreach (var conta in contas)
-            {
-                await _contaReceberRepo.DeleteAsync(conta.Id);
-            }
+            conta.Status = StatusContaReceber.Cancelado;
+            await _contaReceberRepo.UpdateAsync(conta);
         }
 
         pedido.Status = StatusPedidoVenda.Cancelado;
@@ -277,6 +332,15 @@ public class VendaService : IVendaService
         }
 
         await _pedidoRepo.UpdateAsync(pedidoExistente);
+
+        // 4. Sincronizar com Financeiro
+        var contas = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedidoExistente.Id);
+        foreach (var conta in contas)
+        {
+            conta.Valor = pedidoExistente.ValorTotal;
+            await _contaReceberRepo.UpdateAsync(conta);
+        }
+
         return pedidoExistente;
     }
 
@@ -299,5 +363,25 @@ public class VendaService : IVendaService
             p.Cliente = await _clienteRepo.GetByIdAsync(p.ClienteId);
         }
         return pedidos.OrderByDescending(p => p.DataPedido);
+    }
+
+    public async Task<PedidoVenda> TogglePagamentoAsync(Guid id)
+    {
+        var pedido = await _pedidoRepo.GetByIdAsync(id);
+        if (pedido == null) throw new Exception("Pedido não encontrado.");
+
+        pedido.Pago = !pedido.Pago;
+        await _pedidoRepo.UpdateAsync(pedido);
+
+        // Sincronizar Financeiro
+        var contas = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedido.Id);
+        foreach (var conta in contas)
+        {
+            conta.Status = pedido.Pago ? StatusContaReceber.Recebido : StatusContaReceber.Pendente;
+            conta.DataRecebimento = pedido.Pago ? DateTime.UtcNow : null;
+            await _contaReceberRepo.UpdateAsync(conta);
+        }
+
+        return pedido;
     }
 }

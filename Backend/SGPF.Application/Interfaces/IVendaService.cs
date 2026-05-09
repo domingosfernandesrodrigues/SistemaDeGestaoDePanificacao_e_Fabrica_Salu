@@ -14,4 +14,6 @@ public interface IVendaService
     Task<PedidoVenda> AtualizarPedidoAsync(Guid id, PedidoVenda pedido);
     Task<PedidoVenda?> GetByIdAsync(Guid id);
     Task<IEnumerable<PedidoVenda>> GetPedidosAsync();
+    Task<PedidoVenda> TogglePagamentoAsync(Guid id);
+    Task<bool> ConfirmarPagamentoAsync(string numeroPedido);
 }

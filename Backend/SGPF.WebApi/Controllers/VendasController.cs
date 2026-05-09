@@ -78,4 +78,19 @@ public class VendasController : ControllerBase
         try { await _vendaService.ExcluirPedidoAsync(id); return NoContent(); }
         catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
+    [HttpPatch("{id}/toggle-pagamento")]
+    public async Task<IActionResult> TogglePagamento(Guid id)
+    {
+        try { return Ok(await _vendaService.TogglePagamentoAsync(id)); }
+        catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
+    }
+
+    [AllowAnonymous]
+    [HttpPost("webhook/confirmar-pagamento/{numeroPedido}")]
+    public async Task<IActionResult> WebhookConfirmarPagamento(string numeroPedido)
+    {
+        var sucesso = await _vendaService.ConfirmarPagamentoAsync(numeroPedido);
+        if (sucesso) return Ok(new { message = "Pagamento confirmado via Webhook" });
+        return NotFound(new { message = "Pedido não encontrado" });
+    }
 }

@@ -3,10 +3,19 @@ namespace SGPF.Domain.Entities;
 public enum StatusPedidoVenda
 {
     Novo,
-    Separacao, // Reservou no estoque
+    Separacao,
     EmRota,
-    Entregue,  // Saiu do estoque de fato e gerou Conta a Receber
+    Entregue,
     Cancelado
+}
+
+public enum FormaPagamento
+{
+    Dinheiro,
+    Pix,
+    CartaoCredito,
+    CartaoDebito,
+    Boleto
 }
 
 public class PedidoVenda
@@ -17,7 +26,7 @@ public class PedidoVenda
     public Guid ClienteId { get; set; }
     public Cliente? Cliente { get; set; }
     
-    public Guid? VeiculoId { get; set; } // Opcional, atrelado quando for "Em Rota"
+    public Guid? VeiculoId { get; set; }
     public Veiculo? Veiculo { get; set; }
     
     public DateTime DataPedido { get; set; } = DateTime.UtcNow;
@@ -27,6 +36,12 @@ public class PedidoVenda
     public decimal ValorTotal { get; set; }
     
     public StatusPedidoVenda Status { get; set; } = StatusPedidoVenda.Novo;
+    
+    // Novas propriedades de pagamento
+    public FormaPagamento FormaPagamento { get; set; } = FormaPagamento.Dinheiro;
+    public bool Pago { get; set; } = false;
+    public string? PixQrCode { get; set; } // Simulação de dados do Pix
+    public string? BoletoCodigoBarras { get; set; } // Simulação do Boleto
     
     public ICollection<PedidoVendaItem> Itens { get; set; } = new List<PedidoVendaItem>();
 }
