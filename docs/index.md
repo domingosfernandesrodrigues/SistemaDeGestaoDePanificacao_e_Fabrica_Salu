@@ -39,13 +39,16 @@ Este documento é o mapa mestre do Sistema de Gestão de Panificação e Fábric
 
 ## 7. Gestão Estratégica (`/7-gestao`)
 - [Valor de Venda (Valuation)](7-gestao/valor-venda-sistema.md) - Precificação e Mercado.
+- [Manual do Administrador](7-gestao/manual-administrador.md) - Guia de implantação e operação.
 
 ## 📌 Status Atual do Sistema (09/05/2026)
-O sistema SGP-F encontra-se em estado de **Entrega de Inteligência Executiva (BI)**.
-- **Núcleo de Fábrica:** Ficha técnica com cálculo de custo e OPs totalmente funcionais com monitoramento de OEE.
+O sistema SGP-F encontra-se em estado de **Produção — Financeiro Integrado e Landing Page**.
+- **Núcleo de Fábrica:** Ficha técnica, OPs e controle de estoque totalmente funcionais.
 - **BI e Dashboards:** Painel Executivo 360° com KPIs em tempo real para Vendas, Produção, Frota e Financeiro.
 - **RH e Comercial:** Motor de folha CLT v2 e Painel Kanban de Vendas B2B com automação logística completa.
-- **Análise de Lucratividade:** Ranking de produtos por rentabilidade e ticket médio integrado por cliente.
+- **Financeiro:** Contas Bancárias com conciliação automática de saldo. Saldo em caixa reflete dados reais.
+- **Landing Page:** Página institucional pública em `/` com apresentação da empresa e login via modal.
+- **Bug Crítico Corrigido:** Simulação automática de pagamento removida do `VendaService`.
 
 ---
 ## 🚀 Execução do Projeto

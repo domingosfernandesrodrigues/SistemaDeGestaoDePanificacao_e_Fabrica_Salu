@@ -92,4 +92,35 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 - **Integridade de Dados (Ponto):** Refinamento da lógica de turnos para garantir que o adicional noturno e as horas extras sejam calculados corretamente mesmo em jornadas que cruzam a meia-noite.
 - **Segurança da Agenda:** Implementada proteção de escrita para feriados nacionais, garantindo que o calendário base do ERP permaneça íntegro para cálculos fiscais e trabalhistas.
 
-**Instrução para IA:** Manter foco em testes de usabilidade e suporte aos refinamentos solicitados pelo usuário.
+### 🛠️ Refinamentos Recentes (09/Mai/2026 - Financeiro Integrado & Landing Page):
+
+#### 💳 Módulo de Contas Bancárias (`/financeiro/contas`)
+- **Entidade `ContaBancaria`:** Implementada com campos `SaldoInicial`, `SaldoAtual`, `Ativa`, `IsPadrao`, `PixChave`, `BancoNome`, `Agencia`, `NumeroConta`, `GatewayToken`.
+- **Migração de Dados de Pagamento:** Os campos de Pix/Banco foram removidos de `Empresa` e centralizados em `ContaBancaria`, permitindo múltiplas contas.
+- **Conta Padrão:** Lógica de unicidade no backend — apenas uma conta ativa como padrão por vez.
+- **Inativação sem Exclusão:** Contas não podem ser excluídas para preservar histórico. Apenas inativação via edição.
+- **Movimentação Manual:** Endpoint `POST /{id}/movimentar` para entradas e saídas avulsas (reforços, sangrias).
+- **Formulário Responsivo:** Layout com `grid-cols-1 md:grid-cols-2` para mobile e desktop.
+
+#### 🏦 Conciliação Financeira Automática
+- **`FinanceiroService.BaixarContaReceberAsync`:** Ao baixar, credita o valor no `SaldoAtual` da conta padrão.
+- **`FinanceiroService.BaixarContaPagarAsync`:** Ao pagar, debita o valor no `SaldoAtual` da conta padrão.
+- **`VendaService.TogglePagamentoAsync`:** Ao marcar/desmarcar venda como paga, credita/reverte na conta padrão.
+- **`FinanceiroService.ObterResumoAsync`:** Saldo em caixa agora soma os `SaldoAtual` reais das contas ativas (não mais cálculo histórico).
+
+#### 🐛 Bug Crítico Corrigido
+- **Simulação Automática de Pagamento Removida:** `VendaService.CriarPedidoAsync` tinha um `Task.Run` com `Task.Delay(15000)` que confirmava pagamentos automaticamente após 15 segundos em produção. Removido.
+- **VendaService usa ContaBancaria:** Pix/Boleto agora buscam dados da conta padrão, não mais de `Empresa`.
+
+#### 🌐 Landing Page Institucional (`/`)
+- **Nova rota pública** na raiz do sistema com apresentação institucional completa.
+- **Seções:** Hero, Quem Somos, Funcionalidades (6 módulos), CTA e Rodapé com contato.
+- **Login Integrado via Modal:** Sem página separada — autenticação inline com troca de senha no primeiro acesso.
+- **Fluxo de Autenticação Corrigido:** Login redireciona para `/dashboard`. AuthGuard redireciona para `/`. Rota `/login` redireciona usuários já logados para `/dashboard`.
+
+#### 📚 Documentação Atualizada
+- `1-negocio/modulo-financeiro.md` — reescrito com ContaBancaria, conciliação e endpoints.
+- `2-tecnica/modelo-dados-dicionario.md` — todas as entidades atualizadas e novas colunas documentadas.
+- `7-gestao/manual-administrador.md` — reescrito com passo a passo de implantação e novos módulos.
+
+**Instrução para IA:** Ao modificar qualquer fluxo financeiro, garantir que as baixas de contas atualizem o `SaldoAtual` da `ContaBancaria` padrão. O saldo do dashboard vem da soma das contas ativas, não de cálculo histórico.

@@ -21,6 +21,7 @@ public class FinanceiroService : IFinanceiroService
     private readonly IRepository<ManutencaoVeiculo> _manutencaoRepo;
     private readonly IRepository<TrocaAvaria> _trocaRepo;
     private readonly IRepository<Produto> _produtoRepo;
+    private readonly IRepository<ContaBancaria> _contaBancariaRepo;
 
     public FinanceiroService(
         IRepository<ContaReceber> receberRepo,
@@ -29,7 +30,8 @@ public class FinanceiroService : IFinanceiroService
         IRepository<FolhaPagamento> folhaRepo,
         IRepository<ManutencaoVeiculo> manutencaoRepo,
         IRepository<TrocaAvaria> trocaRepo,
-        IRepository<Produto> produtoRepo)
+        IRepository<Produto> produtoRepo,
+        IRepository<ContaBancaria> contaBancariaRepo)
     {
         _receberRepo = receberRepo;
         _pagarRepo = pagarRepo;
@@ -38,6 +40,7 @@ public class FinanceiroService : IFinanceiroService
         _manutencaoRepo = manutencaoRepo;
         _trocaRepo = trocaRepo;
         _produtoRepo = produtoRepo;
+        _contaBancariaRepo = contaBancariaRepo;
     }
 
     public async Task<RelatorioDreDto> GerarDreAsync(int mes, int ano)
@@ -77,15 +80,16 @@ public class FinanceiroService : IFinanceiroService
     {
         var receber = await _receberRepo.FindAsync(r => r.Status == StatusContaReceber.Pendente);
         var pagar = await _pagarRepo.FindAsync(p => p.Status == StatusContaPagar.Pendente);
-        
-        var recebidos = await _receberRepo.FindAsync(r => r.Status == StatusContaReceber.Recebido);
-        var pagos = await _pagarRepo.FindAsync(p => p.Status == StatusContaPagar.Paga);
+
+        // Saldo real: soma dos SaldoAtual das contas bancárias ativas
+        var contas = await _contaBancariaRepo.FindAsync(c => c.Ativa);
+        var saldoReal = contas.Sum(c => c.SaldoAtual);
 
         return new ResumoFinanceiroDto
         {
             ContasReceberPendentes = receber.Sum(r => r.Valor),
             ContasPagarPendentes = pagar.Sum(p => p.Valor),
-            SaldoEmCaixa = recebidos.Sum(r => r.Valor) - pagos.Sum(p => p.Valor) // Simulação simples de Fluxo
+            SaldoEmCaixa = saldoReal
         };
     }
 
@@ -97,6 +101,14 @@ public class FinanceiroService : IFinanceiroService
             conta.Status = StatusContaPagar.Paga;
             conta.DataPagamento = DateTime.UtcNow;
             await _pagarRepo.UpdateAsync(conta);
+
+            // Conciliação automática: desconta da conta padrão
+            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+            if (contaPadrao != null)
+            {
+                contaPadrao.SaldoAtual -= conta.Valor;
+                await _contaBancariaRepo.UpdateAsync(contaPadrao);
+            }
         }
     }
 
@@ -108,6 +120,14 @@ public class FinanceiroService : IFinanceiroService
             conta.Status = StatusContaReceber.Recebido;
             conta.DataRecebimento = DateTime.UtcNow;
             await _receberRepo.UpdateAsync(conta);
+
+            // Conciliação automática: credita na conta padrão
+            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+            if (contaPadrao != null)
+            {
+                contaPadrao.SaldoAtual += conta.Valor;
+                await _contaBancariaRepo.UpdateAsync(contaPadrao);
+            }
         }
     }
 }

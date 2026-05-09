@@ -7,7 +7,7 @@ namespace SGPF.WebApi.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize(Roles = "Admin,Gestor")] // Por padrão, só Admin e Gestor gerenciam empresas
+[Authorize(Roles = "Admin,Gestor,Operador,Cliente")]
 public class EmpresasController : ControllerBase
 {
     private readonly IRepository<Empresa> _repository;
@@ -28,6 +28,7 @@ public class EmpresasController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Gestor")]
     public async Task<IActionResult> Create([FromBody] Empresa empresa)
     {
         await _repository.AddAsync(empresa);
@@ -35,6 +36,7 @@ public class EmpresasController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,Gestor")]
     public async Task<IActionResult> Update(Guid id, [FromBody] Empresa empresa)
     {
         if (id != empresa.Id) return BadRequest();
@@ -43,6 +45,7 @@ public class EmpresasController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin,Gestor")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _repository.DeleteAsync(id);

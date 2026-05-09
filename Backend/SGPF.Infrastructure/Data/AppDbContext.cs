@@ -45,6 +45,7 @@ public class AppDbContext : DbContext
     public DbSet<Compra> Compras { get; set; }
     public DbSet<CompraItem> CompraItems { get; set; }
     public DbSet<HistoricoPrecoProduto> HistoricoPrecos { get; set; }
+    public DbSet<ContaBancaria> ContasBancarias { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -161,5 +162,8 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<HistoricoPrecoProduto>().Property(h => h.PrecoAntigo).HasPrecision(18, 4);
         modelBuilder.Entity<HistoricoPrecoProduto>().Property(h => h.PrecoNovo).HasPrecision(18, 4);
+
+        modelBuilder.Entity<ContaBancaria>().Property(c => c.SaldoInicial).HasPrecision(18, 2);
+        modelBuilder.Entity<ContaBancaria>().Property(c => c.SaldoAtual).HasPrecision(18, 2);
     }
 }

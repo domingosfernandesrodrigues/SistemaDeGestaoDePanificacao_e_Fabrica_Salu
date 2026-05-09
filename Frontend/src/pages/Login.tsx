@@ -96,7 +96,10 @@ export function Login() {
     localStorage.setItem('sgpf_role', userData.role);
     localStorage.setItem('sgpf_user_name', userData.nome);
     localStorage.setItem('sgpf_user_email', userData.email);
-    navigate('/');
+    if (userData.clienteId) {
+      localStorage.setItem('sgpf_cliente_id', userData.clienteId);
+    }
+    navigate('/dashboard');
   };
 
   return (

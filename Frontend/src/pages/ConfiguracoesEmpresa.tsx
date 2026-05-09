@@ -17,12 +17,7 @@ const empresaSchema = z.object({
   telefone: z.string().min(14, 'Telefone inválido').optional().or(z.literal('')),
   email: z.string().email('E-mail inválido').or(z.literal('')),
   endereco: z.string().min(5, 'Endereço é obrigatório'),
-  logoUrl: z.string().optional(),
-  pixChave: z.string().optional(),
-  bancoNome: z.string().optional(),
-  bancoAgencia: z.string().optional(),
-  bancoConta: z.string().optional(),
-  gatewayToken: z.string().optional()
+  logoUrl: z.string().optional()
 });
 
 type EmpresaForm = z.infer<typeof empresaSchema>;
@@ -41,12 +36,7 @@ export function ConfiguracoesEmpresa() {
       telefone: '',
       email: '',
       endereco: '',
-      logoUrl: '',
-      pixChave: '',
-      bancoNome: '',
-      bancoAgencia: '',
-      bancoConta: '',
-      gatewayToken: ''
+      logoUrl: ''
     }
   });
 
@@ -236,50 +226,6 @@ export function ConfiguracoesEmpresa() {
               <p className="text-xs text-slate-500 mt-2">A logo enviada será impressa automaticamente no cabeçalho do PDF do contracheque.</p>
             </div>
 
-            <div className="col-span-1 md:col-span-2 mt-8">
-              <h3 className="text-lg font-semibold text-indigo-700 mb-4 border-b-2 border-indigo-50 pb-2 flex items-center gap-2">
-                <Info size={20} />
-                Configurações de Pagamento (Boleto/Pix)
-              </h3>
-              <p className="text-xs text-slate-400 mb-6">As informações abaixo serão usadas para gerar os códigos de pagamento no Painel de Vendas.</p>
-            </div>
-
-            <div className="col-span-1 md:col-span-2">
-              <Input
-                label="Chave Pix (CPF/CNPJ/E-mail/Chave Aleatória)"
-                placeholder="Sua chave pix para recebimento"
-                {...register('pixChave')}
-              />
-            </div>
-
-            <Input
-              label="Banco (Ex: ITAU, NUBANK)"
-              placeholder="Nome do Banco"
-              {...register('bancoNome')}
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                label="Agência"
-                placeholder="0001"
-                {...register('bancoAgencia')}
-              />
-              <Input
-                label="Conta"
-                placeholder="12345-6"
-                {...register('bancoConta')}
-              />
-            </div>
-
-            <div className="col-span-1 md:col-span-2">
-              <Input
-                label="Token de API do Gateway (Opcional)"
-                type="password"
-                placeholder="Insira o Token do Mercado Pago ou similar para integração real"
-                {...register('gatewayToken')}
-              />
-              <p className="text-[10px] text-slate-400 mt-1 italic">Ao inserir um Token válido, o sistema tentará gerar cobranças reais automaticamente.</p>
-            </div>
           </div>
 
           <div className="mt-8 pt-6 border-t border-slate-200 flex justify-end">

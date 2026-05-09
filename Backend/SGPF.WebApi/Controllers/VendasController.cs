@@ -7,7 +7,7 @@ namespace SGPF.WebApi.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize(Roles = "Admin,Gestor,Operador")]
+[Authorize(Roles = "Admin,Gestor,Operador,Cliente")]
 public class VendasController : ControllerBase
 {
     private readonly IVendaService _vendaService;
@@ -79,6 +79,7 @@ public class VendasController : ControllerBase
         catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
     [HttpPatch("{id}/toggle-pagamento")]
+    [Authorize(Roles = "Admin,Gestor,Operador")]
     public async Task<IActionResult> TogglePagamento(Guid id)
     {
         try { return Ok(await _vendaService.TogglePagamentoAsync(id)); }
@@ -92,5 +93,27 @@ public class VendasController : ControllerBase
         var sucesso = await _vendaService.ConfirmarPagamentoAsync(numeroPedido);
         if (sucesso) return Ok(new { message = "Pagamento confirmado via Webhook" });
         return NotFound(new { message = "Pedido não encontrado" });
+    }
+
+    [HttpGet("{id}/nota-fiscal")]
+    public async Task<IActionResult> DownloadNotaFiscal(Guid id)
+    {
+        try
+        {
+            var pdf = await _vendaService.GerarNotaFiscalAsync(id);
+            return File(pdf, "application/pdf", $"NF-{id}.pdf");
+        }
+        catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
+    }
+
+    [HttpGet("{id}/comanda")]
+    public async Task<IActionResult> DownloadComanda(Guid id)
+    {
+        try
+        {
+            var pdf = await _vendaService.GerarComandaAsync(id);
+            return File(pdf, "application/pdf", $"Comanda-{id}.pdf");
+        }
+        catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
 }

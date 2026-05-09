@@ -7,7 +7,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
-import { ShoppingCart, Truck, CheckCircle, Loader2, Plus, Trash2, Save, PowerOff, Edit3, Search, CreditCard, Banknote, QrCode, FileText, QrCode as PixIcon } from 'lucide-react';
+import { ShoppingCart, Truck, CheckCircle, Loader2, Plus, Trash2, Save, PowerOff, Edit3, Search, CreditCard, Banknote, QrCode, FileText, QrCode as PixIcon, Printer } from 'lucide-react';
 import api from '../services/api';
 
 const pedidoSchema = z.object({
@@ -31,6 +31,7 @@ interface Venda {
   dataPedido: string;
   formaPagamento: number;
   pago: boolean;
+  clienteId: string;
   pixQrCode?: string;
   boletoCodigoBarras?: string;
 }
@@ -46,8 +47,12 @@ export function Vendas() {
   const [filtroMes, setFiltroMes] = useState((new Date().getMonth() + 1).toString());
   const [filtroData, setFiltroData] = useState('');
   const [filtroPago, setFiltroPago] = useState<string>('');
+  const userRole = localStorage.getItem('sgpf_role') || 'Cliente';
+  const userClienteId = localStorage.getItem('sgpf_cliente_id');
+  const isCliente = userRole === 'Cliente';
 
   const [selectedVendaDocs, setSelectedVendaDocs] = useState<Venda | null>(null);
+  const [selectedContaId, setSelectedContaId] = useState<string | null>(null);
 
   const queryClient = useQueryClient();
 
@@ -69,8 +74,7 @@ export function Vendas() {
     }, 0) || 0;
   };
 
-  const userRole = localStorage.getItem('sgpf_role') || 'Cliente';
-  const canGiveDiscount = userRole === 'Admin' || userRole === 'Gestor' || userRole === 'Operador';
+  const canGiveDiscount = (userRole === 'Admin' || userRole === 'Gestor' || userRole === 'Operador');
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -92,6 +96,19 @@ export function Vendas() {
       const response = await api.get('/Clientes');
       return response.data;
     },
+  });
+
+  const { data: empresa } = useQuery<any>({
+    queryKey: ['empresa-config'],
+    queryFn: async () => {
+      const response = await api.get('/Empresas');
+      return response.data[0];
+    },
+  });
+
+  const { data: contasBancarias } = useQuery<any[]>({
+    queryKey: ['contas-bancarias'],
+    queryFn: async () => (await api.get('/ContasBancarias')).data,
   });
 
   const { data: produtos } = useQuery<any[]>({
@@ -167,6 +184,21 @@ export function Vendas() {
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao mover pedido')
   });
 
+  const handleDownloadComanda = async (id: string) => {
+    try {
+      const response = await api.get(`/Vendas/${id}/comanda`, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Comanda_${id}.pdf`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (error) {
+      alert('Erro ao baixar Comanda');
+    }
+  };
+
   const mutationTogglePagamento = useMutation({
     mutationFn: (id: string) => api.patch(`/Vendas/${id}/toggle-pagamento`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vendas'] }),
@@ -185,10 +217,12 @@ export function Vendas() {
   });
 
   const handleDragStart = (id: string) => {
+    if (isCliente) return;
     setDraggedId(id);
   };
 
   const handleDrop = (status: number) => {
+    if (isCliente) return;
     if (draggedId) {
       mutationUpdateStatus.mutate({ id: draggedId, status });
       setDraggedId(null);
@@ -238,8 +272,9 @@ export function Vendas() {
       const matchesMes = filtroMes === '' || (!isInvalidDate && (dataVenda!.getMonth() + 1).toString() === filtroMes);
       const matchesData = filtroData === '' || (dataVenda && dataVenda.toISOString().split('T')[0] === filtroData);
       const matchesPago = filtroPago === '' || v.pago.toString() === filtroPago;
+      const matchesUserCliente = !isCliente || v.clienteId === userClienteId;
 
-      return matchesStatus && matchesCliente && matchesAno && matchesMes && matchesData && matchesPago;
+      return matchesStatus && matchesCliente && matchesAno && matchesMes && matchesData && matchesPago && matchesUserCliente;
     }) || [];
 
     // Ordenação: Do mais recente (maior data) para o mais antigo
@@ -266,45 +301,55 @@ export function Vendas() {
           {ordenadas.map(venda => (
             <div 
               key={venda.id} 
-              draggable
+              draggable={!isCliente}
               onDragStart={() => handleDragStart(venda.id)}
-              className={`bg-white p-4 rounded-xl shadow-sm border border-slate-200 hover:border-indigo-400 cursor-grab active:cursor-grabbing transition-all hover:shadow-md group 
+              className={`bg-white p-4 rounded-xl shadow-sm border border-slate-200 transition-all hover:shadow-md group 
+                ${!isCliente ? 'cursor-grab active:cursor-grabbing hover:border-indigo-400' : ''}
                 ${draggedId === venda.id ? 'opacity-50' : ''} 
                 ${statusValue === 4 ? 'bg-red-50/50 border-red-100 opacity-80' : ''}`}
             >
-              <div className="flex justify-between items-start mb-2">
-                <span className="text-[10px] font-bold text-slate-400">{venda.numeroPedido}</span>
-                <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                   {(statusValue === 0 || statusValue === 1) && (
+              <div className="flex justify-between items-start mb-2 gap-2">
+                <span className="text-[10px] font-bold text-slate-400 truncate">{venda.numeroPedido}</span>
+                <div className="flex flex-wrap gap-1 justify-end opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
+                   {((!isCliente && (statusValue === 0 || statusValue === 1)) || (isCliente && statusValue === 0)) && (
                      <>
                        <button 
                          onClick={(e) => { e.stopPropagation(); handleEdit(venda); }}
-                         className="p-1.5 text-blue-500 hover:text-blue-700 rounded bg-slate-50 border border-slate-100"
+                         className="p-1 text-blue-500 hover:text-blue-700 rounded bg-slate-50 border border-slate-100"
                          title="Editar Pedido"
                        >
                          <Edit3 size={14} />
                        </button>
                        <button 
                          onClick={(e) => { e.stopPropagation(); confirm('Excluir permanentemente?') && mutationDeleteOrder.mutate(venda.id); }}
-                         className="p-1.5 text-red-400 hover:text-red-600 rounded bg-slate-50 border border-slate-100"
+                         className="p-1 text-red-400 hover:text-red-600 rounded bg-slate-50 border border-slate-100"
                        >
                          <Trash2 size={14} />
                        </button>
                      </>
                    )}
-                   {statusValue !== 4 && (
+                   {(statusValue >= 1 && statusValue <= 3) && (
+                     <button 
+                       onClick={(e) => { e.stopPropagation(); handleDownloadComanda(venda.id); }}
+                       className="p-1 text-slate-600 hover:text-slate-800 rounded bg-slate-50 border border-slate-100"
+                       title="Imprimir Comanda"
+                     >
+                       <Printer size={14} />
+                     </button>
+                   )}
+                   {!isCliente && statusValue !== 4 && (
                     <button 
                       onClick={(e) => { e.stopPropagation(); confirm('Deseja realmente cancelar este pedido?') && mutationCancel.mutate(venda.id); }}
-                      className="p-1.5 text-amber-500 hover:text-amber-700 rounded bg-slate-50 border border-slate-100"
+                      className="p-1 text-amber-500 hover:text-amber-700 rounded bg-slate-50 border border-slate-100"
                       title="Cancelar Pedido"
                     >
                       <PowerOff size={14} />
                     </button>
                    )}
-                   {statusValue === 4 && (
+                   {!isCliente && statusValue === 4 && (
                      <button 
                         onClick={(e) => { e.stopPropagation(); confirm('Deseja excluir permanentemente este pedido cancelado?') && mutationDeleteOrder.mutate(venda.id); }}
-                        className="p-1.5 text-red-500 hover:text-red-700 rounded bg-red-50 border border-red-100"
+                        className="p-1 text-red-500 hover:text-red-700 rounded bg-red-50 border border-red-100"
                         title="Excluir Permanentemente"
                       >
                         <Trash2 size={14} />
@@ -327,10 +372,17 @@ export function Vendas() {
                   </span>
                   <div className="flex items-center gap-1.5">
                     <button 
-                      onClick={(e) => { e.stopPropagation(); mutationTogglePagamento.mutate(venda.id); }}
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        if (isCliente) return;
+                        mutationTogglePagamento.mutate(venda.id); 
+                      }}
                       className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase transition-colors ${
-                        venda.pago ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700 hover:bg-amber-200'
-                      }`}
+                        venda.pago 
+                          ? 'bg-green-100 text-green-700' 
+                          : `bg-amber-100 text-amber-700 ${!isCliente ? 'hover:bg-amber-200' : ''}`
+                      } ${isCliente ? 'cursor-default' : 'cursor-pointer'}`}
+                      title={isCliente ? '' : 'Clique para alternar status de pagamento'}
                     >
                       {venda.pago ? 'Pago' : 'Pendente'}
                     </button>
@@ -376,20 +428,22 @@ export function Vendas() {
       </div>
 
       {/* Barra de Filtros */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-5 gap-4 items-end">
-        <div className="md:col-span-2">
-          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Buscar Cliente</label>
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-            <input 
-              type="text" 
-              placeholder="Nome do cliente..."
-              value={filtroCliente}
-              onChange={(e) => setFiltroCliente(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
+      <div className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 gap-4 items-end ${isCliente ? 'md:grid-cols-3' : 'md:grid-cols-5'}`}>
+        {!isCliente && (
+          <div className="md:col-span-2">
+            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Buscar Cliente</label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+              <input 
+                type="text" 
+                placeholder="Nome do cliente..."
+                value={filtroCliente}
+                onChange={(e) => setFiltroCliente(e.target.value)}
+                className="w-full h-10 pl-9 pr-4 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+              />
+            </div>
           </div>
-        </div>
+        )}
         
         <div>
           <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Ano / Mês</label>
@@ -477,10 +531,11 @@ export function Vendas() {
                 <SearchableSelect
                   label="Cliente"
                   placeholder="Pesquise o cliente..."
-                  options={clientes?.map(c => ({ value: c.id, label: c.nomeFantasia })) || []}
-                  value={field.value}
+                  options={clientes?.filter(c => !isCliente || c.id === userClienteId).map(c => ({ value: c.id, label: c.nomeFantasia })) || []}
+                  value={isCliente ? userClienteId : field.value}
                   onChange={field.onChange}
                   error={errors.clienteId?.message}
+                  disabled={isCliente}
                 />
               )}
             />
@@ -635,7 +690,7 @@ export function Vendas() {
       {/* Modal de Documentos (Boleto/Pix) */}
       <Modal 
         isOpen={!!selectedVendaDocs} 
-        onClose={() => setSelectedVendaDocs(null)} 
+        onClose={() => { setSelectedVendaDocs(null); setSelectedContaId(null); }} 
         title="Documentos de Pagamento"
       >
         <div className="p-4 space-y-6 flex flex-col items-center">
@@ -656,70 +711,88 @@ export function Vendas() {
 
           {Number(selectedVendaDocs?.formaPagamento) === 1 ? (
             <>
-              <div className="bg-white p-4 rounded-xl shadow-inner border border-slate-100">
-                <img 
-                  src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(selectedVendaDocs.pixQrCode || '00020126580014BR.GOV.BCB.PIX0136SGPF-FABRICA-CHAVE-PIX-MOCK-2024')}`} 
-                  alt="QR Code Pix"
-                  className="w-48 h-48 mx-auto"
-                />
-              </div>
-              <div className="text-center space-y-2">
-                <p className="text-sm text-slate-500">Escaneie o código abaixo para pagar via Pix</p>
-                <div className="bg-slate-100 p-3 rounded-lg text-[10px] font-mono break-all max-w-xs border border-slate-200">
-                  {selectedVendaDocs.pixQrCode || '00020126580014BR.GOV.BCB.PIX0136SGPF-FABRICA-CHAVE-PIX-MOCK-2024'}
-                </div>
-                <Button 
-                  size="sm" 
-                  variant="secondary" 
-                  className="mt-2"
-                  onClick={() => {
-                    navigator.clipboard.writeText(selectedVendaDocs.pixQrCode || '');
-                    alert('Código Pix copiado!');
-                  }}
-                >
-                  Copiar Código Pix
-                </Button>
-              </div>
+              {(() => {
+                const contaSelecionada = contasBancarias?.find(c => c.isPadrao);
+                
+                const pixChave = contaSelecionada?.pixChave || empresa?.pixChave || 'CHAVE-PIX-NAO-CONFIGURADA';
+
+                return (
+                  <>
+                    <div className="bg-white p-4 rounded-xl shadow-inner border border-slate-100">
+                      <img 
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(selectedVendaDocs.pixQrCode || `00020126580014BR.GOV.BCB.PIX0136${pixChave}5204000053039865405${selectedVendaDocs.valorTotal.toFixed(2)}5802BR5915SGPF-FABRICA6009SAO PAULO62070503***6304****`)}`} 
+                        alt="QR Code Pix"
+                        className="w-48 h-48 mx-auto"
+                      />
+                    </div>
+                    <div className="text-center space-y-2">
+                      <p className="text-sm text-slate-500">Escaneie o código abaixo para pagar via Pix</p>
+                      <div className="bg-slate-100 p-3 rounded-lg text-[10px] font-mono break-all max-w-xs border border-slate-200">
+                        {selectedVendaDocs.pixQrCode || `00020126580014BR.GOV.BCB.PIX0136${pixChave}5204000053039865405${selectedVendaDocs.valorTotal.toFixed(2)}5802BR5915SGPF-FABRICA6009SAO PAULO62070503***6304****`}
+                      </div>
+                      <Button 
+                        size="sm" 
+                        variant="secondary" 
+                        className="mt-2"
+                        onClick={() => {
+                          navigator.clipboard.writeText(selectedVendaDocs.pixQrCode || `00020126580014BR.GOV.BCB.PIX0136${pixChave}`);
+                          alert('Código Pix copiado!');
+                        }}
+                      >
+                        Copiar Código Pix
+                      </Button>
+                    </div>
+                  </>
+                );
+              })()}
             </>
           ) : (
             <>
-              <div className="w-full bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-4">
-                <div className="flex justify-between items-start border-b border-slate-100 pb-4">
-                  <div className="font-bold text-lg text-slate-800">ITAU UNIBANCO S.A.</div>
-                  <div className="text-right">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Vencimento</p>
-                    <p className="font-bold text-slate-700">15/05/2026</p>
+              {(() => {
+                const contaSelecionada = contasBancarias?.find(c => c.isPadrao);
+
+                return (
+                  <div className="w-full bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-4">
+                    <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                      <div className="font-bold text-lg text-slate-800 uppercase">{contaSelecionada?.bancoNome || empresa?.bancoNome || 'BANCO NÃO CONFIGURADO'}</div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">Vencimento</p>
+                        <p className="font-bold text-slate-700">{new Intl.DateTimeFormat('pt-BR').format(new Date(new Date().setDate(new Date().getDate() + 3)))}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase">Beneficiário</p>
+                      <p className="text-sm font-medium text-slate-700 uppercase">{empresa?.razaoSocial || empresa?.nomeFantasia || 'EMPRESA NÃO CONFIGURADA'}</p>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">Agência / Conta</p>
+                        <p className="text-sm font-medium text-slate-700">
+                          {contaSelecionada?.agencia || '---'} / {contaSelecionada?.numeroConta || '---'}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">Valor do Documento</p>
+                        <p className="text-lg font-black text-indigo-600">
+                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedVendaDocs?.valorTotal || 0)}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="pt-4 border-t-2 border-black border-dashed">
+                      <div className="w-full flex flex-col items-center gap-2">
+                        <img 
+                          src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${selectedVendaDocs?.boletoCodigoBarras?.replace(/\D/g, '') || '341917900101043510047910201500085950200000'}&scale=2&height=15&includetext`} 
+                          alt="Código de Barras Boleto"
+                          className="w-full max-h-24 object-contain"
+                        />
+                        <p className="text-[10px] font-bold font-mono tracking-widest text-slate-800">
+                          {selectedVendaDocs?.boletoCodigoBarras || '34191.79001 01043.510047 91020.150008 5 950200000'}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                <div className="space-y-2">
-                  <p className="text-[10px] text-slate-400 font-bold uppercase">Beneficiário</p>
-                  <p className="text-sm font-medium text-slate-700">SGP-FÁBRICA DE PANIFICAÇÃO LTDA</p>
-                </div>
-                <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
-                  <div>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Nosso Número</p>
-                    <p className="text-sm font-medium text-slate-700">{selectedVendaDocs?.numeroPedido.replace('PED-', '')}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">Valor do Documento</p>
-                    <p className="text-lg font-black text-indigo-600">
-                      {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedVendaDocs?.valorTotal || 0)}
-                    </p>
-                  </div>
-                </div>
-                <div className="pt-4 border-t-2 border-black border-dashed">
-                  <div className="w-full flex flex-col items-center gap-2">
-                    <img 
-                      src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${selectedVendaDocs?.boletoCodigoBarras?.replace(/\D/g, '') || '341917900101043510047910201500085950200000'}&scale=2&height=15&includetext`} 
-                      alt="Código de Barras Boleto"
-                      className="w-full max-h-24 object-contain"
-                    />
-                    <p className="text-[10px] font-bold font-mono tracking-widest text-slate-800">
-                      {selectedVendaDocs?.boletoCodigoBarras || '34191.79001 01043.510047 91020.150008 5 950200000'}
-                    </p>
-                  </div>
-                </div>
-              </div>
+                );
+              })()}
               <Button onClick={() => window.print()} className="w-full flex items-center justify-center gap-2">
                  <FileText size={18} /> Imprimir Boleto
               </Button>

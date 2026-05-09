@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Package, ChefHat, Factory, LayoutDashboard, LogOut, Clock, FileText, ShoppingCart, Truck, ArrowRightLeft, Users, Menu, X, KeyRound, Loader2, Save, Lock, Eye, EyeOff, FlaskConical } from 'lucide-react';
+import { Package, ChefHat, Factory, LayoutDashboard, LogOut, Clock, FileText, ShoppingCart, Truck, ArrowRightLeft, Users, Menu, X, KeyRound, Loader2, Save, Lock, Eye, EyeOff, FlaskConical, Wallet } from 'lucide-react';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Input } from './Input';
@@ -75,7 +75,7 @@ export function Layout() {
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'Gestor', 'Operador'] },
     { name: 'Portal do Cliente', path: '/portal-cliente', icon: ShoppingCart, roles: ['Cliente'] },
     { name: 'CRM & Reuniões', path: '/crm', icon: Users, roles: ['Admin', 'Gestor'] },
-    { name: 'Vendas (B2B)', path: '/vendas', icon: ShoppingCart, roles: ['Admin', 'Gestor'] },
+    { name: 'Vendas (B2B)', path: '/vendas', icon: ShoppingCart, roles: ['Admin', 'Gestor', 'Cliente'] },
     { name: 'Compras e Entradas', path: '/compras', icon: Package, roles: ['Admin', 'Gestor'] },
     { name: 'Entrada de Insumos', path: '/entrada-insumos', icon: FlaskConical, roles: ['Admin', 'Gestor'] },
     { name: 'Gestão de Clientes', path: '/clientes', icon: Users, roles: ['Admin', 'Gestor'] },
@@ -91,6 +91,7 @@ export function Layout() {
     { name: 'Folha de Pagamento', path: '/rh/folha', icon: FileText, roles: ['Admin', 'Gestor'] },
     { name: 'Meus Contracheques', path: '/rh/meus-contracheques', icon: FileText, roles: ['Admin', 'Gestor', 'Operador', 'Funcionario'] },
     { name: 'Despesas Gerais', path: '/financeiro/despesas', icon: FileText, roles: ['Admin', 'Gestor'] },
+    { name: 'Contas e Saldos', path: '/financeiro/contas', icon: Wallet, roles: ['Admin', 'Gestor'] },
     { name: 'Usuários do Sistema', path: '/usuarios', icon: Users, roles: ['Admin', 'Gestor'] },
     { name: 'Dados da Empresa', path: '/configuracoes/empresa', icon: Factory, roles: ['Admin', 'Gestor'] },
   ];

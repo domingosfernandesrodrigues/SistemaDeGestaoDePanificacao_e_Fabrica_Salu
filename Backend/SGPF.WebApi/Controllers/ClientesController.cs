@@ -9,7 +9,7 @@ namespace SGPF.WebApi.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize]
+[Authorize(Roles = "Admin,Gestor,Operador,Cliente")]
 public class ClientesController : ControllerBase
 {
     private readonly IRepository<Cliente> _repository;
@@ -25,6 +25,7 @@ public class ClientesController : ControllerBase
     public async Task<IActionResult> GetAll() => Ok(await _repository.GetAllAsync());
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Gestor,Operador")]
     public async Task<IActionResult> Create([FromBody] Cliente cliente)
     {
         cliente.Ativo = true;
@@ -33,6 +34,7 @@ public class ClientesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,Gestor,Operador")]
     public async Task<IActionResult> Update(Guid id, [FromBody] Cliente clienteAtualizado)
     {
         var cliente = await _repository.GetByIdAsync(id);
@@ -50,6 +52,7 @@ public class ClientesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin,Gestor,Operador")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var cliente = await _repository.GetByIdAsync(id);
@@ -70,6 +73,7 @@ public class ClientesController : ControllerBase
     }
 
     [HttpPost("{id}/toggle-status")]
+    [Authorize(Roles = "Admin,Gestor,Operador")]
     public async Task<IActionResult> ToggleStatus(Guid id)
     {
         var cliente = await _repository.GetByIdAsync(id);

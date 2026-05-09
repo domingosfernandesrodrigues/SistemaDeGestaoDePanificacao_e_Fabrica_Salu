@@ -235,6 +235,33 @@ using (var scope = app.Services.CreateScope())
                 )
             END
         "); } catch {}
+        // Patch para criar tabela ContasBancarias se não existir
+        try { await context.Database.ExecuteSqlRawAsync(@"
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ContasBancarias]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[ContasBancarias](
+                    [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                    [Nome] [nvarchar](max) NOT NULL,
+                    [Tipo] [int] NOT NULL,
+                    [SaldoInicial] [decimal](18,2) NOT NULL,
+                    [SaldoAtual] [decimal](18,2) NOT NULL,
+                    [DataAbertura] [datetime2](7) NOT NULL,
+                    [Ativa] [bit] NOT NULL DEFAULT 1,
+                    [IsPadrao] [bit] NOT NULL DEFAULT 0,
+                    [PixChave] [nvarchar](max) NULL,
+                    [BancoNome] [nvarchar](max) NULL,
+                    [Agencia] [nvarchar](max) NULL,
+                    [NumeroConta] [nvarchar](max) NULL
+                )
+            END
+        "); } catch {}
+
+        try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'IsPadrao') BEGIN ALTER TABLE ContasBancarias ADD IsPadrao BIT NOT NULL DEFAULT 0; END"); } catch {}
+        try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'PixChave') BEGIN ALTER TABLE ContasBancarias ADD PixChave NVARCHAR(MAX) NULL; END"); } catch {}
+        try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'BancoNome') BEGIN ALTER TABLE ContasBancarias ADD BancoNome NVARCHAR(MAX) NULL; END"); } catch {}
+        try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'Agencia') BEGIN ALTER TABLE ContasBancarias ADD Agencia NVARCHAR(MAX) NULL; END"); } catch {}
+        try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'NumeroConta') BEGIN ALTER TABLE ContasBancarias ADD NumeroConta NVARCHAR(MAX) NULL; END"); } catch {}
+        try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'GatewayToken') BEGIN ALTER TABLE ContasBancarias ADD GatewayToken NVARCHAR(MAX) NULL; END"); } catch {}
     } catch (Exception ex) { 
         Console.WriteLine($"Erro ao aplicar patches: {ex.Message}");
     }

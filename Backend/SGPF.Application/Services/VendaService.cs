@@ -1,6 +1,10 @@
 using SGPF.Application.Interfaces;
 using SGPF.Domain.Entities;
 using SGPF.Domain.Interfaces;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
+using QuestPDF.Previewer;
 
 namespace SGPF.Application.Services;
 
@@ -13,6 +17,7 @@ public class VendaService : IVendaService
     private readonly IRepository<PedidoVendaItem> _itemRepo;
     private readonly IRepository<Cliente> _clienteRepo;
     private readonly IRepository<Empresa> _empresaRepo;
+    private readonly IRepository<ContaBancaria> _contaBancariaRepo;
 
     public VendaService(
         IRepository<PedidoVenda> pedidoRepo,
@@ -21,7 +26,8 @@ public class VendaService : IVendaService
         IRepository<ContaReceber> contaReceberRepo,
         IRepository<PedidoVendaItem> itemRepo,
         IRepository<Cliente> clienteRepo,
-        IRepository<Empresa> empresaRepo)
+        IRepository<Empresa> empresaRepo,
+        IRepository<ContaBancaria> contaBancariaRepo)
     {
         _pedidoRepo = pedidoRepo;
         _produtoRepo = produtoRepo;
@@ -30,6 +36,7 @@ public class VendaService : IVendaService
         _itemRepo = itemRepo;
         _clienteRepo = clienteRepo;
         _empresaRepo = empresaRepo;
+        _contaBancariaRepo = contaBancariaRepo;
     }
 
     public async Task<PedidoVenda?> GetByIdAsync(Guid id)
@@ -78,33 +85,22 @@ public class VendaService : IVendaService
             await _produtoRepo.UpdateAsync(produto);
         }
 
-        // Buscar configurações da Empresa para gerar cobrança customizada
+        // Buscar conta bancária padrão para gerar dados de pagamento
+        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
         var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
         
         if (pedido.FormaPagamento == FormaPagamento.Boleto)
         {
-            var banco = empresa?.BancoNome ?? "BANCO ITAU";
+            var banco = contaPadrao?.BancoNome ?? empresa?.BancoNome ?? "BANCO ITAU";
             pedido.BoletoCodigoBarras = $"34191.79001 01043.510047 91020.150008 5 950200000{pedido.ValorTotal:0000}";
         }
         else if (pedido.FormaPagamento == FormaPagamento.Pix)
         {
-            var chave = empresa?.PixChave ?? "sgpf-fabrica-pix-key-12345";
+            var chave = contaPadrao?.PixChave ?? empresa?.PixChave ?? "sgpf-fabrica-pix-key-12345";
             pedido.PixQrCode = $"00020126580014BR.GOV.BCB.PIX0136{chave}5204000053039865405{pedido.ValorTotal:F2}5802BR5915SGP-F_FABRICA6009Sao_Paulo62070503***6304";
         }
 
         await _pedidoRepo.AddAsync(pedido);
-
-        // SIMULAÇÃO DE AUTOMAÇÃO: 
-        // Se for Pix ou Boleto, vamos simular que o banco confirmou o pagamento após 15 segundos.
-        // Em produção, isso seria disparado pelo Webhook real do banco/gateway.
-        if (pedido.FormaPagamento == FormaPagamento.Pix || pedido.FormaPagamento == FormaPagamento.Boleto)
-        {
-            _ = Task.Run(async () => 
-            {
-                await Task.Delay(15000); // Aguarda 15 segundos
-                await ConfirmarPagamentoAsync(pedido.NumeroPedido);
-            });
-        }
 
         return pedido;
     }
@@ -370,6 +366,7 @@ public class VendaService : IVendaService
         var pedido = await _pedidoRepo.GetByIdAsync(id);
         if (pedido == null) throw new Exception("Pedido não encontrado.");
 
+        var eraPago = pedido.Pago;
         pedido.Pago = !pedido.Pago;
         await _pedidoRepo.UpdateAsync(pedido);
 
@@ -382,6 +379,191 @@ public class VendaService : IVendaService
             await _contaReceberRepo.UpdateAsync(conta);
         }
 
+        // Conciliação automática: atualiza o saldo da conta padrão
+        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+        if (contaPadrao != null)
+        {
+            var valorTotal = contas.Sum(c => c.Valor);
+            if (pedido.Pago && !eraPago)
+                contaPadrao.SaldoAtual += valorTotal; // marcou como pago: credita
+            else if (!pedido.Pago && eraPago)
+                contaPadrao.SaldoAtual -= valorTotal; // reverteu: debita de volta
+
+            await _contaBancariaRepo.UpdateAsync(contaPadrao);
+        }
+
         return pedido;
+    }
+
+    public async Task<byte[]> GerarNotaFiscalAsync(Guid pedidoId)
+    {
+        var pedido = await GetByIdAsync(pedidoId);
+        if (pedido == null) throw new Exception("Pedido não encontrado");
+
+        var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
+        var nomeEmpresa = empresa?.NomeFantasia ?? "SGP-F FABRICA";
+
+        // QuestPDF License - Necessário na versão comunitária/paga (Simulado)
+        QuestPDF.Settings.License = LicenseType.Community;
+
+        return Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                page.Size(PageSizes.A4);
+                page.Margin(1, Unit.Centimetre);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(10).FontFamily(Fonts.Verdana));
+
+                page.Header().Row(row =>
+                {
+                    row.RelativeItem().Column(col =>
+                    {
+                        col.Item().Text(nomeEmpresa).FontSize(20).SemiBold().FontColor(Colors.Indigo.Medium);
+                        col.Item().Text($"CNPJ: {empresa?.CNPJ ?? "00.000.000/0000-00"}");
+                        col.Item().Text(empresa?.Endereco ?? "Endereço não configurado");
+                    });
+
+                    row.RelativeItem().AlignRight().Column(col =>
+                    {
+                        col.Item().Text("DANFE (Simulado)").FontSize(12).SemiBold();
+                        col.Item().Text($"Nº: {pedido.NumeroPedido.Replace("PED-", "")}");
+                        col.Item().Text($"Série: 001");
+                        col.Item().Text($"Data: {pedido.DataPedido:dd/MM/yyyy HH:mm}");
+                    });
+                });
+
+                page.Content().PaddingVertical(10).Column(col =>
+                {
+                    // Dados do Cliente
+                    col.Item().Background(Colors.Grey.Lighten3).Padding(5).Text("DADOS DO DESTINATÁRIO").SemiBold();
+                    col.Item().Padding(5).Column(innerCol =>
+                    {
+                        innerCol.Item().Text($"Nome/Razão Social: {pedido.Cliente?.NomeFantasia}");
+                        innerCol.Item().Text($"CNPJ/CPF: {pedido.Cliente?.CNPJ_CPF}");
+                        innerCol.Item().Text("Endereço: Endereço do Cliente (Simulado)");
+                    });
+
+                    col.Item().PaddingVertical(10);
+
+                    // Tabela de Itens
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.ConstantColumn(50);
+                            columns.RelativeColumn();
+                            columns.ConstantColumn(50);
+                            columns.ConstantColumn(80);
+                            columns.ConstantColumn(80);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Element(CellStyle).Text("CÓD");
+                            header.Cell().Element(CellStyle).Text("DESCRIÇÃO");
+                            header.Cell().Element(CellStyle).Text("QTD");
+                            header.Cell().Element(CellStyle).Text("UNIT");
+                            header.Cell().Element(CellStyle).Text("TOTAL");
+
+                            static IContainer CellStyle(IContainer container) => container.DefaultTextStyle(x => x.SemiBold()).PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Black);
+                        });
+
+                        foreach (var item in pedido.Itens)
+                        {
+                            table.Cell().Element(ItemStyle).Text(item.Produto?.Id.ToString().Substring(0, 5) ?? "000");
+                            table.Cell().Element(ItemStyle).Text(item.Produto?.Nome ?? "Produto");
+                            table.Cell().Element(ItemStyle).Text($"{item.Quantidade:N0}");
+                            table.Cell().Element(ItemStyle).Text($"{item.PrecoUnitario:C}");
+                            table.Cell().Element(ItemStyle).Text($"{item.Subtotal:C}");
+
+                            static IContainer ItemStyle(IContainer container) => container.PaddingVertical(5).BorderBottom(1).BorderColor(Colors.Grey.Lighten2);
+                        }
+                    });
+
+                    col.Item().AlignRight().PaddingVertical(10).Column(innerCol =>
+                    {
+                        innerCol.Item().Text($"TOTAL PRODUTOS: {pedido.ValorTotal:C}").SemiBold();
+                        innerCol.Item().Text($"TOTAL NOTA: {pedido.ValorTotal:C}").FontSize(14).SemiBold().FontColor(Colors.Indigo.Medium);
+                    });
+
+                    col.Item().PaddingVertical(20).Text("DADOS ADICIONAIS").SemiBold();
+                    col.Item().Border(1).Padding(5).Text($"Forma de Pagamento: {pedido.FormaPagamento}. Status: {(pedido.Pago ? "PAGO" : "PENDENTE")}");
+                });
+
+                page.Footer().AlignCenter().Text(x =>
+                {
+                    x.Span("Página ");
+                    x.CurrentPageNumber();
+                });
+            });
+        }).GeneratePdf();
+    }
+
+    public async Task<byte[]> GerarComandaAsync(Guid pedidoId)
+    {
+        var pedido = await GetByIdAsync(pedidoId);
+        if (pedido == null) throw new Exception("Pedido não encontrado");
+
+        var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
+        var nomeEmpresa = empresa?.NomeFantasia ?? "SGP-F PANIFICAÇÃO";
+
+        QuestPDF.Settings.License = LicenseType.Community;
+
+        return Document.Create(container =>
+        {
+            container.Page(page =>
+            {
+                // Formato Impressora de Balcão (80mm)
+                page.Size(226, PageSizes.A4.Height); // ~80mm width
+                page.Margin(0.5f, Unit.Centimetre);
+                page.PageColor(Colors.White);
+                page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.CourierNew));
+
+                page.Header().Column(col =>
+                {
+                    col.Item().AlignCenter().Text(nomeEmpresa).FontSize(12).SemiBold();
+                    col.Item().AlignCenter().Text("--------------------------------");
+                    col.Item().AlignCenter().Text("COMPROVANTE DE PEDIDO").SemiBold();
+                    col.Item().Text($"DATA: {DateTime.Now:dd/MM/yyyy HH:mm}");
+                    col.Item().Text($"PEDIDO: {pedido.NumeroPedido}");
+                    col.Item().Text($"CLIENTE: {pedido.Cliente?.NomeFantasia}");
+                    col.Item().AlignCenter().Text("--------------------------------");
+                });
+
+                page.Content().Column(col =>
+                {
+                    col.Item().Table(table =>
+                    {
+                        table.ColumnsDefinition(columns =>
+                        {
+                            columns.RelativeColumn();
+                            columns.ConstantColumn(30);
+                            columns.ConstantColumn(50);
+                        });
+
+                        table.Header(header =>
+                        {
+                            header.Cell().Text("ITEM");
+                            header.Cell().AlignRight().Text("QTD");
+                            header.Cell().AlignRight().Text("TOTAL");
+                        });
+
+                        foreach (var item in pedido.Itens)
+                        {
+                            table.Cell().Text(item.Produto?.Nome ?? "Prod");
+                            table.Cell().AlignRight().Text($"{item.Quantidade:N0}");
+                            table.Cell().AlignRight().Text($"{item.Subtotal:N2}");
+                        }
+                    });
+
+                    col.Item().AlignCenter().PaddingVertical(5).Text("--------------------------------");
+                    col.Item().AlignRight().Text($"TOTAL: {pedido.ValorTotal:C}").SemiBold().FontSize(11);
+                    col.Item().Text($"PAGTO: {pedido.FormaPagamento}");
+                    col.Item().Text($"STATUS: {(pedido.Pago ? "PAGO" : "PENDENTE")}");
+                    col.Item().AlignCenter().PaddingVertical(10).Text("OBRIGADO PELA PREFERÊNCIA!").FontSize(8).Italic();
+                });
+            });
+        }).GeneratePdf();
     }
 }

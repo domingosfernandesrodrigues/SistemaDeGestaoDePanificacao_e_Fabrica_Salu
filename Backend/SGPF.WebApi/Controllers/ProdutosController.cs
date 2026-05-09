@@ -8,7 +8,7 @@ namespace SGPF.WebApi.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize(Roles = "Admin,Gestor,Operador")]
+[Authorize(Roles = "Admin,Gestor,Operador,Cliente")]
 public class ProdutosController : ControllerBase
 {
     private readonly AppDbContext _context;
@@ -32,6 +32,7 @@ public class ProdutosController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin,Gestor,Operador")]
     public async Task<IActionResult> Create([FromBody] Produto produto)
     {
         _context.Produtos.Add(produto);
@@ -40,6 +41,7 @@ public class ProdutosController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Admin,Gestor,Operador")]
     public async Task<IActionResult> Update(Guid id, [FromBody] Produto produto)
     {
         if (id != produto.Id) return BadRequest();
@@ -98,6 +100,7 @@ public class ProdutosController : ControllerBase
     }
 
     [HttpPatch("{id}/toggle-status")]
+    [Authorize(Roles = "Admin,Gestor,Operador")]
     public async Task<IActionResult> ToggleStatus(Guid id)
     {
         var produto = await _context.Produtos.FindAsync(id);

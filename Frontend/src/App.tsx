@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Login } from './pages/Login';
+import { LandingPage } from './pages/LandingPage';
 import { AuthGuard } from './components/auth/AuthGuard';
 import { Layout } from './components/ui/Layout';
 import { Dashboard } from './pages/Dashboard';
@@ -23,6 +24,7 @@ import Funcionarios from './pages/Funcionarios';
 import Usuarios from './pages/Usuarios';
 import Despesas from './pages/Despesas';
 import { ConfiguracoesEmpresa } from './pages/ConfiguracoesEmpresa';
+import { ContasBancarias } from './pages/ContasBancarias';
 
 const queryClient = new QueryClient();
 
@@ -31,7 +33,12 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/login" element={<Login />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={
+            localStorage.getItem('sgpf_token') 
+              ? <Navigate to="/dashboard" replace /> 
+              : <Login />
+          } />
           
           {/* Rotas Exclusivas do Cliente (Portal B2B) */}
           <Route path="/portal" element={<PortalCliente />} />
@@ -61,13 +68,13 @@ function App() {
             <Route path="/rh/meus-contracheques" element={<MeusContracheques />} />
             <Route path="/rh/funcionarios" element={<Funcionarios />} />
             <Route path="/financeiro/despesas" element={<Despesas />} />
+            <Route path="/financeiro/contas" element={<ContasBancarias />} />
             <Route path="/fornecedores" element={<Fornecedores />} />
             <Route path="/usuarios" element={<Usuarios />} />
             <Route path="/configuracoes/empresa" element={<ConfiguracoesEmpresa />} />
           </Route>
 
-          <Route path="/" element={<Navigate to="/dashboard" replace />} />
-          <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

@@ -10,15 +10,17 @@ import {
   Search, 
   Truck, 
   ArrowRightLeft, 
-  AlertCircle,
-  ChevronRight,
-  Filter,
-  RefreshCw,
-  Clock,
-  Briefcase,
-  Users,
-  ShoppingCart
+  AlertCircle, 
+  ChevronRight, 
+  Filter, 
+  RefreshCw, 
+  Clock, 
+  Briefcase, 
+  Users, 
+  ShoppingCart, 
+  LayoutDashboard as LayoutDashboardIcon 
 } from 'lucide-react';
+import { Navigate } from 'react-router-dom';
 import api from '../services/api';
 
 interface DashboardData {
@@ -42,6 +44,9 @@ export function Dashboard() {
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterDay, setFilterDay] = useState<number | string>('');
   const [filterCliente, setFilterCliente] = useState('');
+  
+  const userRole = localStorage.getItem('sgpf_role') || 'Operador';
+  if (userRole === 'Cliente') return <Navigate to="/vendas" replace />;
 
   const { data: clientes } = useQuery<any[]>({
     queryKey: ['clientes'],
@@ -73,7 +78,6 @@ export function Dashboard() {
     );
   }
 
-  const userRole = localStorage.getItem('sgpf_role') || 'Operador';
   const isAdmin = userRole === 'Admin' || userRole === 'Gestor';
 
   const tabs = [
@@ -440,24 +444,4 @@ function DataCard({ title, items, isNumber }: { title: string; items: any[]; isN
   );
 }
 
-function LayoutDashboardIcon(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <rect width="7" height="9" x="3" y="3" rx="1" />
-      <rect width="7" height="5" x="14" y="3" rx="1" />
-      <rect width="7" height="9" x="14" y="12" rx="1" />
-      <rect width="7" height="5" x="3" y="16" rx="1" />
-    </svg>
-  );
-}
+
