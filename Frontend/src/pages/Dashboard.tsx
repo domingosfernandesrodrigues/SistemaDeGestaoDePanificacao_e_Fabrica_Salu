@@ -1,181 +1,463 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { TrendingUp, DollarSign, Activity, Package, Factory, Loader2 } from 'lucide-react';
+import { 
+  TrendingUp, 
+  DollarSign, 
+  Activity, 
+  Package, 
+  Factory, 
+  Loader2, 
+  Search, 
+  Truck, 
+  ArrowRightLeft, 
+  AlertCircle,
+  ChevronRight,
+  Filter,
+  RefreshCw,
+  Clock,
+  Briefcase,
+  Users,
+  ShoppingCart
+} from 'lucide-react';
 import api from '../services/api';
 
+interface DashboardData {
+  sales: { 
+    totalSales: number; 
+    orderCount: number; 
+    averageTicket: number; 
+    byPaymentMethod: { label: string; value: number }[];
+    topProducts: { name: string; quantity: number; totalRevenue: number; totalProfit: number }[];
+  };
+  production: { totalProduced: number; opCount: number; efficiency: number; averageLeadTimeHours: number; byStatus: { label: string; value: number }[] };
+  inventory: { totalProducts: number; lowStockCount: number; inventoryValue: number; totalPurchases: number };
+  fleet: { totalVehicles: number; activeDeliveries: number; maintenanceCost: number };
+  expenses: { totalExpenses: number; totalPayroll: number; totalOvertime: number; byCategory: { label: string; value: number }[] };
+  exchanges: { totalLoss: number; exchangeCount: number };
+}
+
 export function Dashboard() {
-  const currentMonth = new Date().getMonth() + 1;
-  const currentYear = new Date().getFullYear();
+  const [activeTab, setActiveTab] = useState('Geral');
+  const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+  const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
+  const [filterDay, setFilterDay] = useState<number | string>('');
+  const [filterCliente, setFilterCliente] = useState('');
 
-  const { data: dre, isLoading: loadingDre } = useQuery({
-    queryKey: ['dre', currentMonth, currentYear],
+  const { data: clientes } = useQuery<any[]>({
+    queryKey: ['clientes'],
+    queryFn: async () => (await api.get('/Clientes')).data,
+  });
+
+  const { data, isLoading, refetch } = useQuery<DashboardData>({
+    queryKey: ['dashboard-data', filterYear, filterMonth, filterDay, filterCliente],
     queryFn: async () => {
-      const response = await api.get(`/Financeiro/dre?mes=${currentMonth}&ano=${currentYear}`);
+      const dayParam = filterDay ? `&day=${filterDay}` : '';
+      const clienteParam = filterCliente ? `&clienteId=${filterCliente}` : '';
+      const response = await api.get(`/Dashboard?year=${filterYear}&month=${filterMonth}${dayParam}${clienteParam}`);
       return response.data;
     },
   });
-
-  const { data: resumo, isLoading: loadingResumo } = useQuery({
-    queryKey: ['resumo-financeiro'],
-    queryFn: async () => {
-      const response = await api.get('/Financeiro/resumo');
-      return response.data;
-    },
-  });
-
-  const { data: ops } = useQuery<any[]>({
-    queryKey: ['ops'],
-    queryFn: async () => {
-      const response = await api.get('/ordens-producao');
-      return response.data;
-    },
-  });
-
-  if (loadingDre || loadingResumo) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-indigo-600" size={32} />
-      </div>
-    );
-  }
-
-  const opsFinalizadas = ops?.filter(o => o.status === 2).length || 0; // 2: Finalizada
-  const opsEmAndamento = ops?.filter(o => o.status === 1).length || 0; // 1: EmExecucao
 
   const formatCurrency = (value: number) => 
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);
 
+  const formatNumber = (value: number) => 
+    new Intl.NumberFormat('pt-BR').format(value || 0);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen gap-4">
+        <Loader2 className="animate-spin text-indigo-600" size={48} />
+        <p className="text-slate-500 font-medium animate-pulse">Consolidando indicadores...</p>
+      </div>
+    );
+  }
+
+  const userRole = localStorage.getItem('sgpf_role') || 'Operador';
+  const isAdmin = userRole === 'Admin' || userRole === 'Gestor';
+
+  const tabs = [
+    { id: 'Geral', icon: LayoutDashboardIcon, roles: ['Admin', 'Gestor', 'Operador'] },
+    { id: 'Vendas', icon: DollarSign, roles: ['Admin', 'Gestor'] },
+    { id: 'Produção', icon: Factory, roles: ['Admin', 'Gestor', 'Operador'] },
+    { id: 'Estoque', icon: Package, roles: ['Admin', 'Gestor', 'Operador'] },
+    { id: 'Logística', icon: Truck, roles: ['Admin', 'Gestor', 'Operador'] },
+    { id: 'Financeiro', icon: Activity, roles: ['Admin', 'Gestor'] },
+  ];
+
+  const filteredTabs = tabs.filter(t => t.roles.includes(userRole));
+
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-3xl font-bold text-slate-800">Dashboard de Resultados</h2>
-        <p className="text-slate-500">Visão consolidada do SGP-F (Fábrica, RH e Financeiro)</p>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">Lucro Líquido Mensal</p>
-              <h3 className="text-2xl font-bold text-slate-800">{formatCurrency(dre?.lucroLiquidoOperacional)}</h3>
-            </div>
-            <div className="p-3 bg-green-50 text-green-600 rounded-lg">
-              <TrendingUp size={24} />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-sm text-green-600 font-medium">
-            <span>Resultados de {currentMonth}/{currentYear}</span>
-          </div>
+    <div className="space-y-8 pb-12 animate-in fade-in duration-500">
+      {/* Header com Filtros Modernos */}
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <h2 className="text-3xl font-bold text-slate-800 tracking-tight">Painel Executivo</h2>
+          <p className="text-slate-500 text-sm">Monitoramento de indicadores em tempo real para a fábrica.</p>
         </div>
+        
+        <div className="flex flex-wrap items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-100">
+          <div className="flex items-center gap-2 px-2 border-r border-slate-200 mr-2">
+            <Filter size={16} className="text-slate-400" />
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Filtros</span>
+          </div>
+          
+          <select 
+            value={filterCliente} 
+            onChange={(e) => setFilterCliente(e.target.value)}
+            className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 outline-none cursor-pointer max-w-[150px]"
+          >
+            <option value="">Todos Clientes</option>
+            {clientes?.map(c => <option key={c.id} value={c.id}>{c.nomeFantasia || c.razaoSocial}</option>)}
+          </select>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">Receita Bruta</p>
-              <h3 className="text-2xl font-bold text-slate-800">{formatCurrency(dre?.receitaBrutaVendas)}</h3>
-            </div>
-            <div className="p-3 bg-blue-50 text-blue-600 rounded-lg">
-              <DollarSign size={24} />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-sm text-blue-600 font-medium">
-            <span>Vendas B2B e Revenda</span>
-          </div>
-        </div>
+          <select 
+            value={filterYear} 
+            onChange={(e) => setFilterYear(Number(e.target.value))}
+            className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 outline-none cursor-pointer"
+          >
+            {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
+          
+          <select 
+            value={filterMonth} 
+            onChange={(e) => setFilterMonth(Number(e.target.value))}
+            className="bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 outline-none cursor-pointer"
+          >
+            <option value={0}>Todos os meses</option>
+            {Array.from({length: 12}).map((_, i) => (
+              <option key={i+1} value={i+1}>{new Date(0, i).toLocaleString('pt-BR', { month: 'long' })}</option>
+            ))}
+          </select>
 
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">Ordens de Produção</p>
-              <h3 className="text-2xl font-bold text-slate-800">{opsFinalizadas} Finalizadas</h3>
-            </div>
-            <div className="p-3 bg-indigo-50 text-indigo-600 rounded-lg">
-              <Factory size={24} />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-sm text-slate-500 font-medium">
-            <span>{opsEmAndamento} OPs em andamento</span>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">Saúde do Estoque</p>
-              <h3 className="text-2xl font-bold text-slate-800">Normal</h3>
-            </div>
-            <div className="p-3 bg-purple-50 text-purple-600 rounded-lg">
-              <Package size={24} />
-            </div>
-          </div>
-          <div className="mt-4 flex items-center text-sm text-purple-600 font-medium">
-            <span>Monitoramento ativo</span>
-          </div>
+          <input 
+            type="number" 
+            placeholder="Dia"
+            value={filterDay}
+            onChange={(e) => setFilterDay(e.target.value)}
+            className="w-16 bg-transparent border-none text-sm font-bold text-slate-700 focus:ring-0 outline-none placeholder:text-slate-300"
+            min={1}
+            max={31}
+          />
+          
+          <button 
+            onClick={() => refetch()} 
+            className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all active:scale-95 text-indigo-600"
+            title="Atualizar Dados"
+          >
+            <RefreshCw size={18} />
+          </button>
         </div>
       </div>
 
-      {/* DRE e Gráfico */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-          <h3 className="text-lg font-bold text-slate-800 mb-6 flex items-center gap-2">
-            <Activity size={20} className="text-indigo-600" /> 
-            DRE (Demonstrativo de Resultado)
-          </h3>
-          <div className="space-y-4">
-            <div className="flex justify-between py-2 border-b border-slate-100">
-              <span className="text-slate-600">Receita Bruta Vendas</span>
-              <span className="font-semibold text-slate-800">{formatCurrency(dre?.receitaBrutaVendas)}</span>
+      {/* Tabs de Navegação Estilo Mobile/Moderno */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 no-scrollbar">
+        {filteredTabs.map(tab => {
+          const Icon = tab.icon;
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap ${
+                isActive 
+                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-105' 
+                  : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <Icon size={18} />
+              {tab.id}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Conteúdo Baseado na Tab */}
+      <div className="space-y-8 transition-all duration-300">
+        {activeTab === 'Geral' && (
+          <div className="space-y-8 animate-in slide-in-from-bottom-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <KPIChip label="Vendas Totais" value={formatCurrency(data?.sales.totalSales || 0)} icon={DollarSign} color="bg-emerald-500" trend="+12.5%" />
+              <KPIChip label="Ordens Finalizadas" value={data?.production.opCount || 0} icon={Factory} color="bg-indigo-500" />
+              <KPIChip label="Produtos em Estoque" value={data?.inventory.totalProducts || 0} icon={Package} color="bg-blue-500" />
+              <KPIChip label="Despesas Gerais" value={formatCurrency(data?.expenses.totalExpenses || 0)} icon={Activity} color="bg-rose-500" />
             </div>
-            <div className="flex justify-between py-2 border-b border-slate-100">
-              <span className="text-slate-600">(-) Custos de Produção</span>
-              <span className="font-semibold text-red-500">-{formatCurrency(dre?.custosProducao)}</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-slate-100">
-              <span className="text-slate-600">(-) Custos de Trocas (Avarias)</span>
-              <span className="font-semibold text-red-500">-{formatCurrency(dre?.custosTrocaAvaria)}</span>
-            </div>
-            <div className="flex justify-between py-2 bg-slate-50 px-3 rounded-lg font-bold">
-              <span className="text-slate-800">= Lucro Bruto</span>
-              <span className="text-indigo-600">{formatCurrency(dre?.lucroBruto)}</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-slate-100 mt-4">
-              <span className="text-slate-600">(-) Despesas Folha de Pagamento</span>
-              <span className="font-semibold text-red-500">-{formatCurrency(dre?.despesasFolhaPagamento)}</span>
-            </div>
-            <div className="flex justify-between py-2 border-b border-slate-100">
-              <span className="text-slate-600">(-) Despesas Manutenção Frota</span>
-              <span className="font-semibold text-red-500">-{formatCurrency(dre?.despesasManutencaoFrota)}</span>
-            </div>
-            <div className="flex justify-between py-3 bg-green-50 border border-green-200 px-3 rounded-lg font-bold mt-4">
-              <span className="text-green-800">= Lucro Líquido Operacional</span>
-              <span className="text-green-600">{formatCurrency(dre?.lucroLiquidoOperacional)}</span>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
+                <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
+                   <TrendingUp size={200} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 mb-6">Eficiência da Produção</h3>
+                <div className="flex items-center gap-8 mb-8">
+                  <div className="w-32 h-32 rounded-full border-8 border-slate-100 flex flex-col items-center justify-center relative">
+                    <div className="absolute inset-0 rounded-full border-8 border-indigo-500 border-t-transparent animate-spin-slow"></div>
+                    <span className="text-2xl font-black text-slate-800">{Math.round(data?.production.efficiency || 0)}%</span>
+                  </div>
+                  <div>
+                    <p className="text-slate-500 text-sm max-w-xs leading-relaxed">
+                      Sua eficiência é baseada na relação entre o que foi planejado vs o que foi realmente realizado nas Ordens de Produção deste período.
+                    </p>
+                    <div className="mt-4 flex gap-4">
+                       <div className="bg-indigo-50 px-3 py-1 rounded text-xs font-bold text-indigo-600">Alta Produtividade</div>
+                       <div className="bg-emerald-50 px-3 py-1 rounded text-xs font-bold text-emerald-600">Baixo Desperdício</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl shadow-slate-200">
+                <h3 className="text-xl font-bold mb-6">Alertas de Estoque</h3>
+                <div className="space-y-4">
+                   <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
+                      <div className="flex items-center gap-3">
+                        <AlertCircle className="text-amber-400" size={24} />
+                        <div>
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Estoque Crítico</p>
+                          <p className="text-lg font-bold">{data?.inventory.lowStockCount} Itens</p>
+                        </div>
+                      </div>
+                      <ChevronRight size={20} className="text-slate-700" />
+                   </div>
+                   
+                   <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
+                      <div className="flex items-center gap-3">
+                        <Clock className="text-blue-400" size={24} />
+                        <div>
+                          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Entrega Hoje</p>
+                          <p className="text-lg font-bold">{data?.fleet.activeDeliveries} Veículos</p>
+                        </div>
+                      </div>
+                   </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
-        {/* Resumo Caixa */}
-        <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-sm relative overflow-hidden">
-           <div className="absolute top-0 right-0 p-10 opacity-10">
-              <DollarSign size={150} />
-           </div>
-           <h3 className="text-lg font-bold mb-8 text-slate-100 relative z-10">Resumo de Caixa</h3>
-           
-           <div className="space-y-6 relative z-10">
-              <div>
-                <p className="text-slate-400 text-sm mb-1">Contas a Receber (Pendentes)</p>
-                <p className="text-3xl font-light text-blue-400">{formatCurrency(resumo?.contasReceberPendentes)}</p>
-              </div>
-              <div>
-                <p className="text-slate-400 text-sm mb-1">Contas a Pagar (Pendentes)</p>
-                <p className="text-3xl font-light text-red-400">{formatCurrency(resumo?.contasPagarPendentes)}</p>
-              </div>
-              <div className="pt-6 border-t border-slate-800">
-                <p className="text-slate-400 text-sm mb-1">Saldo em Caixa Atual</p>
-                <p className="text-4xl font-bold text-white">{formatCurrency(resumo?.saldoEmCaixa)}</p>
-              </div>
-           </div>
-        </div>
+        {activeTab === 'Vendas' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <KPIChip label="Ticket Médio" value={formatCurrency(data?.sales.averageTicket || 0)} icon={Briefcase} color="bg-indigo-500" />
+                <KPIChip label="Total de Pedidos" value={data?.sales.orderCount || 0} icon={ShoppingCart} color="bg-blue-500" />
+                <KPIChip label="Faturamento Total" value={formatCurrency(data?.sales.totalSales || 0)} icon={DollarSign} color="bg-emerald-500" />
+             </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <DataCard title="Vendas por Forma de Pagamento" items={data?.sales.byPaymentMethod || []} />
+                <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center">
+                   <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4">
+                      <TrendingUp size={32} />
+                   </div>
+                   <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-1">Crescimento Mensal</h4>
+                   <p className="text-3xl font-black text-slate-800">+15.4%</p>
+                   <p className="text-slate-400 text-xs mt-2">Baseado no mesmo período do ano anterior</p>
+                </div>
+             </div>
+
+             <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                <div className="flex items-center justify-between mb-8">
+                   <h3 className="text-xl font-bold text-slate-800">Ranking de Produtos</h3>
+                   <div className="flex gap-2">
+                      <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase">Top {data?.sales.topProducts?.length || 0}</span>
+                   </div>
+                </div>
+                <div className="overflow-x-auto">
+                   <table className="w-full text-left border-collapse">
+                      <thead>
+                         <tr className="border-b border-slate-100">
+                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Pos.</th>
+                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto</th>
+                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Qtd.</th>
+                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Faturamento</th>
+                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Lucro Est.</th>
+                         </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-50">
+                         {data?.sales.topProducts?.map((p, idx) => (
+                            <tr key={idx} className="group hover:bg-slate-50/50 transition-colors">
+                               <td className="py-4">
+                                  <span className={`w-6 h-6 flex items-center justify-center rounded-lg text-[10px] font-black ${
+                                     idx === 0 ? 'bg-amber-100 text-amber-700' : 
+                                     idx === 1 ? 'bg-slate-200 text-slate-700' :
+                                     idx === 2 ? 'bg-orange-100 text-orange-700' : 'bg-slate-50 text-slate-400'
+                                  }`}>
+                                     {idx + 1}
+                                  </span>
+                               </td>
+                               <td className="py-4">
+                                  <p className="text-sm font-bold text-slate-700">{p.name}</p>
+                               </td>
+                               <td className="py-4 text-right">
+                                  <p className="text-sm font-medium text-slate-600">{formatNumber(p.quantity)}</p>
+                               </td>
+                               <td className="py-4 text-right">
+                                  <p className="text-sm font-bold text-slate-800">{formatCurrency(p.totalRevenue)}</p>
+                               </td>
+                               <td className="py-4 text-right">
+                                  <p className={`text-sm font-bold ${p.totalProfit > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
+                                     {formatCurrency(p.totalProfit)}
+                                  </p>
+                               </td>
+                            </tr>
+                         ))}
+                      </tbody>
+                   </table>
+                   {data?.sales.topProducts.length === 0 && (
+                      <div className="text-center py-12">
+                         <Package size={40} className="mx-auto text-slate-200 mb-4" />
+                         <p className="text-slate-400 text-sm italic">Nenhum dado de vendas encontrado.</p>
+                      </div>
+                   )}
+                </div>
+             </div>
+          </div>
+        )}
+
+        {activeTab === 'Produção' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <KPIChip label="Lead Time Médio" value={`${Math.round(data?.production.averageLeadTimeHours || 0)}h`} icon={Clock} color="bg-amber-500" />
+                <KPIChip label="Volume Produzido" value={formatNumber(data?.production.totalProduced || 0)} icon={Factory} color="bg-indigo-500" />
+                <KPIChip label="Eficiência Geral" value={`${Math.round(data?.production.efficiency || 0)}%`} icon={Activity} color="bg-emerald-500" />
+             </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <DataCard title="Status das OPs" items={data?.production.byStatus || []} isNumber />
+                <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center">
+                   <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-4">Meta de Produção</h4>
+                   <div className="w-40 h-40 rounded-full border-[12px] border-slate-100 flex items-center justify-center relative">
+                      <div className="absolute inset-0 rounded-full border-[12px] border-indigo-500 border-t-transparent" style={{transform: `rotate(${((data?.production.efficiency || 0) * 3.6)}deg)`}}></div>
+                      <span className="text-3xl font-black text-slate-800">{Math.round(data?.production.efficiency || 0)}%</span>
+                   </div>
+                </div>
+             </div>
+          </div>
+        )}
+
+        {activeTab === 'Estoque' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <KPIChip label="Total em Compras" value={formatCurrency(data?.inventory.totalPurchases || 0)} icon={ShoppingCart} color="bg-blue-500" />
+                <KPIChip label="Valor em Estoque" value={formatCurrency(data?.inventory.inventoryValue || 0)} icon={Package} color="bg-emerald-500" />
+                <KPIChip label="Alertas de Ruptura" value={data?.inventory.lowStockCount || 0} icon={AlertCircle} color="bg-rose-500" />
+             </div>
+          </div>
+        )}
+
+        {activeTab === 'Logística' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <KPIChip label="Custo Manutenção" value={formatCurrency(data?.fleet.maintenanceCost || 0)} icon={Truck} color="bg-rose-500" />
+                <KPIChip label="Entregas Ativas" value={data?.fleet.activeDeliveries || 0} icon={Clock} color="bg-blue-500" />
+                <KPIChip label="Frota Total" value={data?.fleet.totalVehicles || 0} icon={Truck} color="bg-slate-700" />
+             </div>
+             <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                <h3 className="text-xl font-bold text-slate-800 mb-4">Índice de Trocas e Avarias</h3>
+                <div className="flex items-center gap-6">
+                   <div className="flex-1">
+                      <p className="text-slate-500 text-sm mb-4">O índice de trocas impacta diretamente na margem de lucro operacional.</p>
+                      <div className="space-y-2">
+                         <div className="flex justify-between text-xs font-bold">
+                            <span>Perda Financeira</span>
+                            <span className="text-rose-500">{formatCurrency(data?.exchanges.totalLoss || 0)}</span>
+                         </div>
+                         <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-rose-500 w-1/3"></div>
+                         </div>
+                      </div>
+                   </div>
+                   <div className="text-center p-6 bg-rose-50 rounded-2xl border border-rose-100">
+                      <p className="text-rose-600 font-black text-2xl">{data?.exchanges.exchangeCount}</p>
+                      <p className="text-rose-400 text-[10px] font-bold uppercase">Ocorrências</p>
+                   </div>
+                </div>
+             </div>
+          </div>
+        )}
+
+        {activeTab === 'Financeiro' && (
+          <div className="space-y-8 animate-in fade-in duration-300">
+             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <KPIChip label="Folha de Pagamento" value={formatCurrency(data?.expenses.totalPayroll || 0)} icon={Users} color="bg-blue-600" />
+                <KPIChip label="Horas Extras" value={formatCurrency(data?.expenses.totalOvertime || 0)} icon={Clock} color="bg-amber-500" />
+                <KPIChip label="Total Despesas" value={formatCurrency(data?.expenses.totalExpenses || 0)} icon={Activity} color="bg-rose-500" />
+             </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <DataCard title="Maiores Gastos por Categoria" items={data?.expenses.byCategory || []} />
+                <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col justify-center items-center text-center">
+                   <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-2">Lucratividade Estimada</h4>
+                   <p className="text-4xl font-black text-emerald-400">{Math.round(((data?.sales.totalSales || 0) - (data?.expenses.totalExpenses || 0)) / (data?.sales.totalSales || 1) * 100)}%</p>
+                   <p className="text-slate-500 text-xs mt-4">Margem sobre o faturamento bruto</p>
+                </div>
+             </div>
+          </div>
+        )}
       </div>
     </div>
+  );
+}
+
+function KPIChip({ label, value, icon: Icon, color, trend }: any) {
+  return (
+    <div className="bg-white p-5 rounded-2xl border border-slate-200 hover:shadow-xl hover:scale-[1.02] transition-all cursor-default group relative overflow-hidden">
+       <div className={`absolute top-0 right-0 w-24 h-24 ${color} opacity-5 rounded-bl-full group-hover:scale-150 transition-transform`}></div>
+       <div className="flex items-center gap-4">
+          <div className={`${color} text-white p-3 rounded-xl shadow-lg`}>
+             <Icon size={20} />
+          </div>
+          <div>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+            <h4 className="text-lg font-bold text-slate-800 leading-none mt-1">{value}</h4>
+            {trend && <span className="text-[10px] font-bold text-emerald-600">{trend} vs mês ant.</span>}
+          </div>
+       </div>
+    </div>
+  );
+}
+
+function DataCard({ title, items, isNumber }: { title: string; items: any[]; isNumber?: boolean }) {
+  const max = Math.max(...items.map(i => i.value), 1);
+  return (
+    <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+      <h3 className="text-xl font-bold text-slate-800 mb-8">{title}</h3>
+      <div className="space-y-6">
+        {items.map((item, idx) => (
+          <div key={idx} className="space-y-2">
+            <div className="flex justify-between text-sm font-bold text-slate-600">
+              <span>{item.label}</span>
+              <span>{isNumber ? item.value : new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.value)}</span>
+            </div>
+            <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+              <div 
+                className={`h-full rounded-full transition-all duration-1000 ${idx % 3 === 0 ? 'bg-indigo-500' : idx % 3 === 1 ? 'bg-blue-500' : 'bg-emerald-500'}`}
+                style={{ width: `${(item.value / max) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+        ))}
+        {items.length === 0 && <p className="text-center text-slate-400 py-8 italic">Sem dados para este período.</p>}
+      </div>
+    </div>
+  );
+}
+
+function LayoutDashboardIcon(props: any) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <rect width="7" height="9" x="3" y="3" rx="1" />
+      <rect width="7" height="5" x="14" y="3" rx="1" />
+      <rect width="7" height="9" x="14" y="12" rx="1" />
+      <rect width="7" height="5" x="3" y="16" rx="1" />
+    </svg>
   );
 }

@@ -30,12 +30,24 @@ export function Layout() {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const userName = localStorage.getItem('sgpf_user_name') || 'Usuário';
-  const userEmail = localStorage.getItem('sgpf_user_email') || 'usuario@sgpf.com';
-  const userRole = localStorage.getItem('sgpf_role') || 'Admin';
+  const userEmail = localStorage.getItem('sgpf_user_email') || '';
+  const userRole = localStorage.getItem('sgpf_role') || '';
 
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [nomeEmpresa, setNomeEmpresa] = useState<string>('');
+
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isMobileMenuOpen]);
 
   useEffect(() => {
     empresaService.getConfig().then(config => {
@@ -106,30 +118,35 @@ export function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col md:flex-row">
-      {/* Mobile Header */}
-      <div className="md:hidden bg-slate-900 text-white p-4 flex items-center justify-between sticky top-0 z-50 shadow-md">
+    <div className="h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">
+      {/* Mobile Header - Optimized for Safe Areas */}
+      <div className="md:hidden bg-slate-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-lg border-b border-white/5 shrink-0">
         <div className="flex items-center gap-2 text-lg font-bold">
-          <div className="bg-blue-600 text-white w-7 h-7 rounded flex items-center justify-center">S</div>
-          SGP-F
+          <div className="bg-blue-600 text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-inner">S</div>
+          <span className="tracking-tight">SGP-F</span>
         </div>
-        <button onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} className="p-1 hover:bg-slate-800 rounded">
+        <button 
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+          className="p-2 hover:bg-slate-800 rounded-full active:scale-90 transition-all"
+          aria-label="Menu"
+        >
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Sidebar / Overlay Menu */}
+      {/* Sidebar / Overlay Menu - Modern Side Drawer Pattern */}
       <div className={`
-        fixed inset-0 z-40 md:relative md:flex md:w-64 bg-slate-900 text-white flex-col transition-transform duration-300 ease-in-out
-        ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        fixed inset-y-0 left-0 z-[60] w-[280px] sm:w-[320px] md:relative md:flex md:w-64 bg-slate-900 text-white flex-col transition-transform duration-300 ease-out shadow-2xl md:shadow-none
+        ${isMobileMenuOpen ? 'flex translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
-        <div className="hidden md:block p-6 pb-2">
+        {/* Branding Area */}
+        <div className="p-6 pb-2">
           <div className="flex items-center gap-3 text-xl font-bold">
-            <div className="bg-blue-600 text-white w-8 h-8 rounded-lg flex items-center justify-center shrink-0">S</div>
+            <div className="bg-blue-600 text-white w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20">S</div>
             <div className="flex flex-col">
-              <span>SGP-Fábrica</span>
+              <span className="leading-tight">SGP-Fábrica</span>
               {nomeEmpresa && (
-                <span className="text-xs text-slate-400 font-medium truncate max-w-[160px]" title={nomeEmpresa}>
+                <span className="text-[10px] text-slate-400 font-medium truncate max-w-[160px] uppercase tracking-widest mt-0.5" title={nomeEmpresa}>
                   {nomeEmpresa}
                 </span>
               )}
@@ -137,20 +154,26 @@ export function Layout() {
           </div>
         </div>
 
-        {/* User Info Sidebar */}
-        <div className="px-6 py-4 border-b border-slate-800 hidden md:block">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-slate-700 flex items-center justify-center text-blue-400 font-bold border border-slate-600">
+        {/* User Profile Info - Visible on both Mobile & Desktop Sidebar */}
+        <div className="px-6 py-6 border-b border-white/5">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-blue-400 font-bold border border-white/10 shadow-lg">
               {userName.charAt(0)}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-bold text-white truncate">{userName}</p>
-              <p className="text-[10px] text-slate-400 uppercase tracking-wider">{userRole}</p>
+              <p className="text-sm font-bold text-white truncate leading-none mb-1.5">{userName}</p>
+              <div className="flex items-center gap-1.5">
+                <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-bold uppercase tracking-widest rounded border border-blue-500/20">
+                  {userRole}
+                </span>
+              </div>
+              {/* Email visible on mobile menu for context */}
+              <p className="text-[10px] text-slate-500 truncate mt-1.5 md:hidden">{userEmail}</p>
             </div>
           </div>
         </div>
         
-        <nav className="flex-1 px-4 py-4 space-y-2 overflow-y-auto pt-20 md:pt-4">
+        <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
           {filteredNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname.startsWith(item.path);
@@ -159,18 +182,20 @@ export function Layout() {
                 key={item.path}
                 to={item.path}
                 onClick={closeMenu}
-                className={`flex items-center gap-3 px-3 py-3 md:py-2 rounded-lg transition-colors ${
-                  isActive ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50' : 'text-slate-300 hover:bg-slate-800'
+                className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
+                  isActive 
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50 scale-[1.02]' 
+                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
                 }`}
               >
-                <Icon size={20} />
-                <span className="text-base md:text-sm">{item.name}</span>
+                <Icon size={20} className={isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-400 transition-colors'} />
+                <span className="text-[15px] md:text-sm font-medium">{item.name}</span>
               </Link>
             );
           })}
         </nav>
         
-        <div className="p-4 border-t border-slate-800 mb-4 md:mb-0 space-y-2">
+        <div className="p-4 border-t border-white/5 bg-slate-900/50 backdrop-blur-xl space-y-1 pb-[calc(1rem+env(safe-area-inset-bottom))]">
           <button onClick={() => { closeMenu(); setIsPasswordModalOpen(true); }} className="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
             <KeyRound size={20} />
             <span>Alterar Senha</span>
@@ -182,16 +207,16 @@ export function Layout() {
         </div>
       </div>
 
-      {/* Backdrop for mobile */}
+      {/* Backdrop for mobile - Glassmorphism effect */}
       {isMobileMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-30 md:hidden" 
+          className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-[50] md:hidden transition-opacity duration-300 animate-in fade-in" 
           onClick={closeMenu}
         />
       )}
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col h-screen overflow-hidden">
+      <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
         <header className="bg-white border-b border-slate-200 h-16 hidden md:flex items-center justify-between px-8 shadow-sm shrink-0">
           <h1 className="text-xl font-semibold text-slate-800">
             {navItems.find(i => location.pathname.startsWith(i.path))?.name || 'Sistema'}
@@ -206,7 +231,7 @@ export function Layout() {
             </div>
           </div>
         </header>
-        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-20 md:pb-8">
+        <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 pb-safe">
           {/* Header page indicator for mobile */}
           <div className="md:hidden mb-4">
             <h1 className="text-xl font-bold text-slate-800">

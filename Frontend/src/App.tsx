@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Login } from './pages/Login';
+import { AuthGuard } from './components/auth/AuthGuard';
 import { Layout } from './components/ui/Layout';
 import { Dashboard } from './pages/Dashboard';
 import { Produtos } from './pages/Produtos';
@@ -36,7 +37,13 @@ function App() {
           <Route path="/portal" element={<PortalCliente />} />
           
           {/* Rotas Administrativas da Fábrica */}
-          <Route element={<Layout />}>
+          <Route 
+            element={
+              <AuthGuard>
+                <Layout />
+              </AuthGuard>
+            }
+          >
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/crm" element={<CrmReunioes />} />
             <Route path="/vendas" element={<Vendas />} />
@@ -59,6 +66,7 @@ function App() {
             <Route path="/configuracoes/empresa" element={<ConfiguracoesEmpresa />} />
           </Route>
 
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
           <Route path="*" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
