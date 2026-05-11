@@ -127,14 +127,14 @@ export function Frota() {
   const openAbast = (veiculo: any) => {
     setSelectedVeiculo(veiculo);
     setA('veiculoId', veiculo.id);
-    setA('quilometragemRegistrada', veiculo.quilometragemAtual);
+    setA('quilometragemRegistrada', '' as any);
     setIsAbastModalOpen(true);
   };
 
   const openManu = (veiculo: any) => {
     setSelectedVeiculo(veiculo);
     setM('veiculoId', veiculo.id);
-    setM('quilometragemRegistrada', veiculo.quilometragemAtual);
+    setM('quilometragemRegistrada', '' as any);
     setIsManuModalOpen(true);
   };
 

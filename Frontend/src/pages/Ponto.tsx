@@ -21,6 +21,16 @@ const afastamentoSchema = z.object({
 
 type AfastamentoForm = z.infer<typeof afastamentoSchema>;
 
+const formatarHoras = (decimal: number) => {
+  if (!decimal || isNaN(decimal)) return '00h00';
+  const isNegative = decimal < 0;
+  const abs = Math.abs(decimal);
+  const hours = Math.floor(abs);
+  const minutes = Math.round((abs - hours) * 60);
+  const prefix = isNegative ? '-' : '';
+  return `${prefix}${hours.toString().padStart(2, '0')}h${minutes.toString().padStart(2, '0')}`;
+};
+
 export function Ponto() {
   const [time, setTime] = useState(new Date());
   const [tab, setTab] = useState<'ponto' | 'historico' | 'afastamentos'>('ponto');
@@ -142,6 +152,14 @@ export function Ponto() {
     'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
   ];
 
+  const afastamentosFiltrados = afastamentos?.filter((af: any) => {
+    const afStart = new Date(af.dataInicio);
+    const afEnd = new Date(af.dataFim);
+    const filterStart = new Date(ano, mes - 1, 1);
+    const filterEnd = new Date(ano, mes, 0, 23, 59, 59);
+    return afStart <= filterEnd && afEnd >= filterStart;
+  });
+
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <div className="flex gap-2 bg-slate-100 p-1 rounded-xl w-fit mx-auto">
@@ -217,7 +235,7 @@ export function Ponto() {
                         </div>
                         <div className="flex justify-between items-center pt-1">
                           <span className="text-xs text-slate-500">Total trabalhado</span>
-                          <span className="text-sm font-bold text-indigo-600">{Number(reg.totalHorasTrabalhadas).toFixed(2)}h</span>
+                          <span className="text-sm font-bold text-indigo-600">{formatarHoras(Number(reg.totalHorasTrabalhadas))}</span>
                         </div>
                       </>
                     ) : (
@@ -289,12 +307,12 @@ export function Ponto() {
             </div>
             <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
               <Timer className="text-green-500 mx-auto mb-2" size={22} />
-              <p className="text-2xl font-bold text-slate-800">{totalHoras.toFixed(1)}h</p>
+              <p className="text-2xl font-bold text-slate-800">{formatarHoras(totalHoras)}</p>
               <p className="text-xs text-slate-500">Total de horas</p>
             </div>
             <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
               <TrendingUp className="text-amber-500 mx-auto mb-2" size={22} />
-              <p className="text-2xl font-bold text-slate-800">{totalExtras.toFixed(1)}h</p>
+              <p className="text-2xl font-bold text-slate-800">{formatarHoras(totalExtras)}</p>
               <p className="text-xs text-slate-500">Horas extras</p>
             </div>
           </div>
@@ -329,11 +347,11 @@ export function Ponto() {
                       }
                     </td>
                     <td className="px-4 py-3 text-right font-medium text-slate-800">
-                      {reg.totalHorasTrabalhadas ? `${Number(reg.totalHorasTrabalhadas).toFixed(2)}h` : '-'}
+                      {reg.totalHorasTrabalhadas ? formatarHoras(Number(reg.totalHorasTrabalhadas)) : '-'}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {reg.totalHorasExtras > 0
-                        ? <span className="text-amber-600 font-medium">+{Number(reg.totalHorasExtras).toFixed(2)}h</span>
+                        ? <span className="text-amber-600 font-medium">+{formatarHoras(Number(reg.totalHorasExtras))}</span>
                         : <span className="text-slate-400">-</span>
                       }
                     </td>
@@ -358,9 +376,9 @@ export function Ponto() {
       {tab === 'afastamentos' && (
         <div className="space-y-6">
           <div className="flex justify-between items-center gap-4 flex-wrap">
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-[200px] flex items-center gap-3 flex-wrap">
               {isAdminOrGestor && (
-                <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex-1 min-w-[200px]">
                   <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Visualizar Afastamentos de:</label>
                   <select
                     value={selectedFuncId}
@@ -374,6 +392,32 @@ export function Ponto() {
                   </select>
                 </div>
               )}
+              <div className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3 flex-wrap">
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Mês</label>
+                  <select
+                    value={mes}
+                    onChange={(e) => setMes(Number(e.target.value))}
+                    className="h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {meses.map((m, i) => (
+                      <option key={i + 1} value={i + 1}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Ano</label>
+                  <select
+                    value={ano}
+                    onChange={(e) => setAno(Number(e.target.value))}
+                    className="h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    {[2024, 2025, 2026, 2027].map(a => (
+                      <option key={a} value={a}>{a}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
             </div>
             <Button onClick={() => {
               if (isAdminOrGestor && !selectedFuncId) {
@@ -394,7 +438,7 @@ export function Ponto() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {afastamentos?.map((af) => (
+                {afastamentosFiltrados?.map((af: any) => (
                   <div key={af.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-indigo-300 transition-all group">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3">
@@ -449,7 +493,7 @@ export function Ponto() {
               </div>
             )}
 
-            {!loadingAfastamentos && afastamentos?.length === 0 && (
+            {!loadingAfastamentos && afastamentosFiltrados?.length === 0 && (
               <div className="bg-white rounded-2xl border border-dashed border-slate-300 p-12 text-center flex flex-col items-center">
                 <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-200 mb-4">
                   <FileText size={32} />

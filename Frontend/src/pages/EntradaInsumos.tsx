@@ -329,7 +329,7 @@ export function EntradaInsumos() {
                 <Plus size={14} /> Adicionar Insumo
               </Button>
             </div>
-            <div className="space-y-3 max-h-64 overflow-y-auto pr-2">
+            <div className="space-y-3">
               {fields.map((field, index) => (
                 <div key={field.id} className="grid grid-cols-12 gap-2 bg-orange-50 p-3 rounded-lg border border-orange-100 items-end">
                   <div className="col-span-6">

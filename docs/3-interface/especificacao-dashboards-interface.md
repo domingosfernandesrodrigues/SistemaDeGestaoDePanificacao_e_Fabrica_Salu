@@ -1,34 +1,40 @@
-# Especificação de Dashboards e Widgets
+# Especificação do Painel Executivo 360°
 
-## 1. Layout Principal
-- Grid responsivo para exibição de KPIs.
-- Filtros globais por período (Data Início / Data Fim).
+## 1. Arquitetura de Navegação (Abas)
+O dashboard foi redesenhado para uma arquitetura em abas temáticas, garantindo que a diretoria tenha acesso rápido a diferentes esferas da operação sem poluição visual.
 
-## 2. Widgets Críticos
-- **Gráfico de Rendimento:** Comparativo entre Matéria-prima vs Produto Acabado.
-- **Gráfico de Custos:** Pizza demonstrando impacto da Folha vs Logística vs Insumos.
-- **Alerta de Estoque:** Lista de insumos abaixo do nível de segurança.
+- **Filtros Globais Consolidados:** Ano, Mês, Dia e Cliente.
+- As abas disponíveis são renderizadas com base na Role (Admin, Gestor, Operador).
 
-# Dashboard de Vendas, Estoque e Qualidade
+## 2. Aba Geral (Macro Visão)
+- **KPIs Principais:** Vendas Totais, Ordens Finalizadas, Produtos em Estoque, Despesas Gerais, Lucro Estimado.
+- **Gráfico Principal:** Eficiência da Produção (OEE simplificado) em gráfico circular (donut).
+- **Alertas Dinâmicos:** Estoque Crítico (Ruptura) e Entregas Ativas no Dia.
 
-## 1. Layout Principal
-- Grid responsivo para exibição de KPIs.
-- Filtros globais por período (Data Início / Data Fim).
+## 3. Aba Vendas
+- **KPIs Principais:** Ticket Médio, Total de Pedidos, Faturamento Total.
+- **Widgets:** 
+  - Vendas por Forma de Pagamento (Bar Chart).
+  - Crescimento Dinâmico (Cálculo Automático MoM e YoY).
+  - Tabela de Ranking Top Produtos (Quantidade, Faturamento e Lucratividade).
 
-## 2. Widgets de Vendas e Portal
-- **Pedidos Pendentes de Aprovação:** Lista de pedidos criados via Portal do Cliente que aguardam validação da equipe comercial.
-- **Ticket Médio:** Valor médio por pedido (pode ser segmentado por "Interno" e "Portal").
+## 4. Aba Produção
+- **KPIs Principais:** Lead Time Médio (Horas), Volume Produzido, Eficiência Geral (%).
+- **Widgets:**
+  - Status das Ordens de Produção (Bar Chart).
+  - Meta de Produção Visível.
 
-## 3. Widgets de Estoque e Validade
-- **Produtos com Validade Próxima:** Alerta visual para itens que estão próximos do vencimento.
-- **Entrada vs Saída:** Comparativo de volume de estoque ingressado e consumido.
-- **Custo de Produção Atual:** Valor total investido em insumos para o estoque atual.
+## 5. Aba Estoque
+- **KPIs Principais:** Total em Compras, Valor Total em Estoque, Alertas de Ruptura (Low Stock).
 
-## 4. Widgets de RH e Jornada
-- **Horas Extras Calculadas:** Total de horas extras acumuladas no período.
-- **Salário Base Médio:** Média dos salários cadastrados na empresa.
+## 6. Aba Logística
+- **KPIs Principais:** Frota Total, Entregas Ativas, Custo de Manutenção, Custo Total de Abastecimento.
+- **Widgets de Auditoria (Trocas/Avarias):**
+  - Índice de Trocas (Ocorrências vs Perda Financeira).
+  - Top Produtos com Avarias e Top Clientes com Ocorrências.
 
-## 5. Widgets de Qualidade e Frota
-- **Taxa de Reprovação:** Percentual de produtos reprovados na inspeção de qualidade.
-- **Veículos em Manutenção:** Alerta para veículos que estão fora de operação por manutenção.
-- **Consumo de Combustível:** Total de litros consumidos no período.    
+## 7. Aba Financeiro
+- **KPIs Principais:** Folha de Pagamento, Horas Extras Pagas, Total de Despesas.
+- **Widgets:**
+  - Maiores Gastos por Categoria (Bar Chart).
+  - Lucratividade Estimada (Percentual da Margem e Valor Absoluto).

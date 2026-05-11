@@ -1,9 +1,16 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ShoppingCart, LogOut, PackageSearch, ListOrdered } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 export function PortalCliente() {
   const [activeTab, setActiveTab] = useState<'catalogo' | 'pedidos'>('catalogo');
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.clear();
+    navigate('/');
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
@@ -19,7 +26,7 @@ export function PortalCliente() {
           
           <div className="flex items-center gap-6">
             <span className="text-sm font-medium text-slate-600">Olá, Supermercado XYZ</span>
-            <Button variant="secondary" size="sm" className="text-slate-500 hover:text-slate-700">
+            <Button variant="secondary" size="sm" className="text-slate-500 hover:text-slate-700" onClick={handleLogout}>
               <LogOut size={16} className="mr-2" />
               Sair
             </Button>

@@ -123,4 +123,17 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 - `2-tecnica/modelo-dados-dicionario.md` — todas as entidades atualizadas e novas colunas documentadas.
 - `7-gestao/manual-administrador.md` — reescrito com passo a passo de implantação e novos módulos.
 
-**Instrução para IA:** Ao modificar qualquer fluxo financeiro, garantir que as baixas de contas atualizem o `SaldoAtual` da `ContaBancaria` padrão. O saldo do dashboard vem da soma das contas ativas, não de cálculo histórico.
+**Instrução para IA:** Ao modificar qualquer fluxo financeiro, garantir que as baixas de contas atualizem o `SaldoAtual` da `ContaBancaria` padrão. O saldo do dashboard vem da soma das contas ativas, não de cálculo histórico.
+
+### 🛠️ Refinamentos Finais (10/Mai/2026 - Painel Executivo e Operações)
+- **Painel Executivo (Novos KPIs API):** 
+  - Cálculo inteligente de **Crescimento Mensal** comparativo (MoM e YoY) em Vendas.
+  - Adição do **Lucro Estimado Monetário** para complementar o percentual.
+  - Novos cards de **Logística** calculando **Custo Total com Abastecimento** em tempo real.
+  - Gráficos de barra integrados para **Top Produtos com Trocas/Avarias** e **Top Clientes com Ocorrências**.
+- **Usabilidade em Formulários Complexos (Modais):**
+  - Remoção das limitações de _overflow_ em listas (`max-h-64`) nos formulários de **Entrada de Insumos** e **Nova Compra Geral**, permitindo que menus _dropdown_ de busca sobreponham os componentes corretamente.
+- **Auditoria Logística (Hodômetro):**
+  - Ajuste no módulo de `Frota`: Remoção do preenchimento padrão automático da quilometragem nos modais de Abastecimento e Manutenção, forçando o operador a preencher manualmente a quilometragem atual do veículo no ato, prevenindo erros de digitação e histórico incorreto.
+- **Filtros e Relatórios Ponto:** 
+  - Padronização de horas na visualização decimal (`hh:mm`) e filtros precisos de mês e ano para a aba de Afastamentos de funcionários.

@@ -13,11 +13,15 @@ const despesaSchema = z.object({
   descricao: z.string().min(2, 'Informe a descrição'),
   valor: z.coerce.number().min(0.01, 'Valor deve ser maior que zero'),
   dataVencimento: z.string().optional().or(z.literal('')),
-  mesReferencia: z.string().optional().or(z.literal('')),
+  mes: z.string().optional().or(z.literal('')),
+  ano: z.string().optional().or(z.literal('')),
   categoria: z.string().min(1, 'Selecione a categoria'),
 });
 
 type DespesaForm = z.infer<typeof despesaSchema>;
+
+const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+const anos = ['2024', '2025', '2026', '2027', '2028', '2029', '2030'];
 
 export default function Despesas() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -27,7 +31,8 @@ export default function Despesas() {
   const [filtroCategoria, setFiltroCategoria] = useState('');
   const [filtroVencimentoInicio, setFiltroVencimentoInicio] = useState('');
   const [filtroVencimentoFim, setFiltroVencimentoFim] = useState('');
-  const [filtroMesReferencia, setFiltroMesReferencia] = useState('');
+  const [filtroMes, setFiltroMes] = useState('');
+  const [filtroAno, setFiltroAno] = useState('');
   
   // Paginação
   const [paginaAtual, setPaginaAtual] = useState(1);
@@ -46,7 +51,11 @@ export default function Despesas() {
 
   const mutation = useMutation({
     mutationFn: (data: DespesaForm) => {
-      return editId ? api.put(`/Despesas/${editId}`, { ...data, id: editId }) : api.post('/Despesas', data);
+      const payload = {
+        ...data,
+        mesReferencia: data.mes && data.ano ? `${data.mes}/${data.ano}` : ''
+      };
+      return editId ? api.put(`/Despesas/${editId}`, { ...payload, id: editId }) : api.post('/Despesas', payload);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['despesas'] });
@@ -65,7 +74,9 @@ export default function Despesas() {
     setValue('descricao', d.descricao);
     setValue('valor', d.valor);
     setValue('dataVencimento', d.dataVencimento?.split('T')[0] || '');
-    setValue('mesReferencia', d.mesReferencia || '');
+    const [mes, ano] = (d.mesReferencia || '').split('/');
+    setValue('mes', mes || '');
+    setValue('ano', ano || '');
     setValue('categoria', d.categoria || 'Geral');
     setIsModalOpen(true);
   };
@@ -79,7 +90,7 @@ export default function Despesas() {
   // Reset da página ao alterar os filtros
   useEffect(() => {
     setPaginaAtual(1);
-  }, [filtroCategoria, filtroVencimentoInicio, filtroVencimentoFim, filtroMesReferencia]);
+  }, [filtroCategoria, filtroVencimentoInicio, filtroVencimentoFim, filtroMes, filtroAno]);
 
   // Aplicação dos filtros
   const despesasFiltradas = despesas?.filter(d => {
@@ -88,7 +99,8 @@ export default function Despesas() {
 
     const dataVenc = d.dataVencimento?.split('T')[0] || '';
     if (filtroCategoria && d.categoria !== filtroCategoria) return false;
-    if (filtroMesReferencia && !d.mesReferencia?.toLowerCase().includes(filtroMesReferencia.toLowerCase())) return false;
+    if (filtroMes && !d.mesReferencia?.toLowerCase().includes(filtroMes.toLowerCase())) return false;
+    if (filtroAno && !d.mesReferencia?.includes(filtroAno)) return false;
     if (filtroVencimentoInicio && dataVenc < filtroVencimentoInicio) return false;
     if (filtroVencimentoFim && dataVenc > filtroVencimentoFim) return false;
     return true;
@@ -130,15 +142,29 @@ export default function Despesas() {
               <option value="Outros">Outros</option>
             </select>
           </div>
-          <div className="space-y-1">
-            <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1"><Tag size={12} /> Mês Referência</label>
-            <input 
-              type="text" 
-              placeholder="Ex: Março/2026"
-              value={filtroMesReferencia} 
-              onChange={e => setFiltroMesReferencia(e.target.value)}
-              className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
-            />
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1"><Tag size={12} /> Mês</label>
+              <select 
+                value={filtroMes} 
+                onChange={e => setFiltroMes(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+              >
+                <option value="">Todos</option>
+                {meses.map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="text-xs font-bold text-slate-400 uppercase flex items-center gap-1"><Calendar size={12} /> Ano</label>
+              <select 
+                value={filtroAno} 
+                onChange={e => setFiltroAno(e.target.value)}
+                className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+              >
+                <option value="">Todos</option>
+                {anos.map(a => <option key={a} value={a}>{a}</option>)}
+              </select>
+            </div>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-4 w-full xl:w-80">
@@ -161,7 +187,7 @@ export default function Despesas() {
             />
           </div>
         </div>
-        <Button variant="secondary" className="h-10 px-4 w-full xl:w-auto" onClick={() => { setFiltroCategoria(''); setFiltroVencimentoInicio(''); setFiltroVencimentoFim(''); setFiltroMesReferencia(''); }}>
+        <Button variant="secondary" className="h-10 px-4 w-full xl:w-auto" onClick={() => { setFiltroCategoria(''); setFiltroVencimentoInicio(''); setFiltroVencimentoFim(''); setFiltroMes(''); setFiltroAno(''); }}>
           Limpar
         </Button>
       </div>
@@ -173,7 +199,7 @@ export default function Despesas() {
             <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
               <tr>
                 <th className="px-6 py-4 font-medium">Descrição</th>
-                <th className="px-6 py-4 font-medium text-center">Referência</th>
+                <th className="px-6 py-4 font-medium text-center">Mês/Ano</th>
                 <th className="px-6 py-4 font-medium">Categoria</th>
                 <th className="px-6 py-4 font-medium">Vencimento</th>
                 <th className="px-6 py-4 font-medium text-right">Valor</th>
@@ -300,7 +326,28 @@ export default function Despesas() {
                 <option value="Outros">Outros</option>
               </select>
             </div>
-            <Input label="Mês Referência" placeholder="Ex: Março/2026" {...register('mesReferencia')} error={errors.mesReferencia?.message} />
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-700">Mês</label>
+                <select 
+                  {...register('mes')}
+                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                >
+                  <option value="">Mês</option>
+                  {meses.map(m => <option key={m} value={m}>{m}</option>)}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <label className="text-sm font-medium text-slate-700">Ano</label>
+                <select 
+                  {...register('ano')}
+                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
+                >
+                  <option value="">Ano</option>
+                  {anos.map(a => <option key={a} value={a}>{a}</option>)}
+                </select>
+              </div>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

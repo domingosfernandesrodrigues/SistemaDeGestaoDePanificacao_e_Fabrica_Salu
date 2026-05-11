@@ -24,6 +24,8 @@ public class SalesMetrics
     public decimal AverageTicket => OrderCount > 0 ? TotalSales / OrderCount : 0;
     public List<MetricItem> ByPaymentMethod { get; set; } = new();
     public List<ProductMetric> TopProducts { get; set; } = new();
+    public decimal GrowthMoM { get; set; }
+    public decimal GrowthYoY { get; set; }
 }
 
 public class ProductMetric
@@ -57,6 +59,7 @@ public class FleetMetrics
     public int TotalVehicles { get; set; }
     public int ActiveDeliveries { get; set; }
     public decimal MaintenanceCost { get; set; }
+    public decimal TotalFuelCost { get; set; }
 }
 
 public class ExpenseMetrics
@@ -71,6 +74,8 @@ public class ExchangeMetrics
 {
     public decimal TotalLoss { get; set; }
     public int ExchangeCount { get; set; }
+    public List<MetricItem> TopProducts { get; set; } = new();
+    public List<MetricItem> TopClients { get; set; } = new();
 }
 
 public class MetricItem

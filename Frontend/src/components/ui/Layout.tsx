@@ -103,7 +103,7 @@ export function Layout() {
   const handleLogout = (e: React.MouseEvent) => {
     e.preventDefault();
     localStorage.clear();
-    navigate('/login');
+    navigate('/');
   };
 
   const onSubmitTrocarSenha = async (data: TrocarSenhaForm) => {

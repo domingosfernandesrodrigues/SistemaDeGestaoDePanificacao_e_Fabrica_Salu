@@ -6,8 +6,12 @@
 ## 2. Impacto da Folha no Faturamento
 - **Fórmula:** `(Total Salários + Encargos + Extras / Faturamento Bruto) * 100`
 
-## 3. Custo Logístico por KM
-- **Fórmula:** `(Custo Combustível + Manutenção) / Total KM Rodados no Período`
+## 3. Custo Logístico Total
+- **Fórmula:** `Custo Combustível (Abastecimento) + Custo de Manutenção`
+
+## 4. Crescimento de Vendas (MoM / YoY)
+- **Fórmula (MoM):** `((Vendas Mês Atual - Vendas Mês Anterior) / Vendas Mês Anterior) * 100`
+- **Fórmula (YoY):** `((Vendas Mês Atual - Vendas Mesmo Mês Ano Anterior) / Vendas Mesmo Mês Ano Anterior) * 100`
 
 ## 4. Rendimento de Produção (Polvilho)
 - **Fórmula:** `(KG de Produto Acabado Obtido / KG de Matéria-Prima Utilizada) * 100`

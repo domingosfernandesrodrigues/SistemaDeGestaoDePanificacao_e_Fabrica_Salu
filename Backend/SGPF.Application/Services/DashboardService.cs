@@ -18,6 +18,8 @@ public class DashboardService : IDashboardService
     private readonly IRepository<FolhaPagamento> _folhaRepo;
     private readonly IRepository<TrocaAvaria> _trocaRepo;
     private readonly IRepository<ManutencaoVeiculo> _manutencaoRepo;
+    private readonly IRepository<Abastecimento> _abastecimentoRepo;
+    private readonly IRepository<Cliente> _clienteRepo;
 
     public DashboardService(
         IRepository<PedidoVenda> vendaRepo,
@@ -31,7 +33,9 @@ public class DashboardService : IDashboardService
         IRepository<Compra> compraRepo,
         IRepository<FolhaPagamento> folhaRepo,
         IRepository<TrocaAvaria> trocaRepo,
-        IRepository<ManutencaoVeiculo> manutencaoRepo)
+        IRepository<ManutencaoVeiculo> manutencaoRepo,
+        IRepository<Abastecimento> abastecimentoRepo,
+        IRepository<Cliente> clienteRepo)
     {
         _vendaRepo = vendaRepo;
         _itemRepo = itemRepo;
@@ -45,6 +49,8 @@ public class DashboardService : IDashboardService
         _folhaRepo = folhaRepo;
         _trocaRepo = trocaRepo;
         _manutencaoRepo = manutencaoRepo;
+        _abastecimentoRepo = abastecimentoRepo;
+        _clienteRepo = clienteRepo;
     }
 
     public async Task<DashboardData> GetDashboardDataAsync(int year, int month, int? day = null, Guid? clienteId = null)
@@ -72,6 +78,18 @@ public class DashboardService : IDashboardService
             .GroupBy(v => v.FormaPagamento)
             .Select(g => new MetricItem { Label = g.Key.ToString(), Value = g.Sum(v => v.ValorTotal) })
             .ToList();
+
+        // Crescimento MoM e YoY
+        if (month > 0)
+        {
+            var prevMonth = month == 1 ? 12 : month - 1;
+            var prevMonthYear = month == 1 ? year - 1 : year;
+            var prevMonthSales = (await _vendaRepo.GetAllAsync()).Where(v => v.DataPedido.Year == prevMonthYear && v.DataPedido.Month == prevMonth && v.Status != StatusPedidoVenda.Cancelado).Sum(v => v.ValorTotal);
+            data.Sales.GrowthMoM = prevMonthSales > 0 ? ((data.Sales.TotalSales - prevMonthSales) / prevMonthSales) * 100 : 0;
+
+            var prevYearSales = (await _vendaRepo.GetAllAsync()).Where(v => v.DataPedido.Year == year - 1 && v.DataPedido.Month == month && v.Status != StatusPedidoVenda.Cancelado).Sum(v => v.ValorTotal);
+            data.Sales.GrowthYoY = prevYearSales > 0 ? ((data.Sales.TotalSales - prevYearSales) / prevYearSales) * 100 : 0;
+        }
 
         // Ranking de Produtos
         var todosItens = (await _itemRepo.GetAllAsync()).Where(i => vendaIds.Contains(i.PedidoVendaId)).ToList();
@@ -125,6 +143,9 @@ public class DashboardService : IDashboardService
         
         var manutencoes = (await _manutencaoRepo.GetAllAsync()).Where(m => dateFilter(m.Data));
         data.Fleet.MaintenanceCost = manutencoes.Sum(m => m.CustoTotal);
+        
+        var abastecimentos = (await _abastecimentoRepo.GetAllAsync()).Where(a => dateFilter(a.Data));
+        data.Fleet.TotalFuelCost = abastecimentos.Sum(a => a.ValorTotal);
 
         // --- DESPESAS & RH ---
         var despesas = (await _contaPagarRepo.GetAllAsync()).Where(d => dateFilter(d.DataVencimento)).ToList();
@@ -154,6 +175,24 @@ public class DashboardService : IDashboardService
             if (p != null) totalLoss += t.Quantidade * p.PrecoVenda;
         }
         data.Exchanges.TotalLoss = totalLoss;
+
+        var todosClientes = await _clienteRepo.GetAllAsync();
+
+        data.Exchanges.TopProducts = trocas
+            .GroupBy(t => t.ProdutoId)
+            .Select(g => new MetricItem { 
+                Label = todosProdutos.FirstOrDefault(p => p.Id == g.Key)?.Nome ?? "Desconhecido", 
+                Value = g.Count() 
+            })
+            .OrderByDescending(x => x.Value).Take(5).ToList();
+            
+        data.Exchanges.TopClients = trocas
+            .GroupBy(t => t.ClienteId)
+            .Select(g => new MetricItem { 
+                Label = todosClientes.FirstOrDefault(c => c.Id == g.Key)?.NomeFantasia ?? "Desconhecido", 
+                Value = g.Count() 
+            })
+            .OrderByDescending(x => x.Value).Take(5).ToList();
 
         return data;
     }

@@ -13,12 +13,26 @@ import api from '../services/api';
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
-  senha: z.string().min(6, 'Mínimo 6 caracteres'),
+  senha: z.string().min(8, 'Mínimo 8 caracteres'),
 });
+
 const trocarSchema = z.object({
-  novaSenha: z.string().min(8).regex(/[A-Z]/).regex(/[a-z]/).regex(/[0-9]/).regex(/[!@#$%^&*(),.?":{}|<>]/),
-  confirmarSenha: z.string().min(8)
+  novaSenha: z.string()
+    .min(8, 'A senha deve ter no mínimo 8 caracteres')
+    .regex(/[A-Z]/, 'A senha deve conter pelo menos uma letra maiúscula')
+    .regex(/[a-z]/, 'A senha deve conter pelo menos uma letra minúscula')
+    .regex(/[0-9]/, 'A senha deve conter pelo menos um número')
+    .regex(/[!@#$%^&*(),.?":{}|<>]/, 'A senha deve conter pelo menos um caractere especial'),
+  confirmarSenha: z.string().min(8, 'Confirme a nova senha')
 }).refine(d => d.novaSenha === d.confirmarSenha, { message: 'Senhas não coincidem', path: ['confirmarSenha'] });
+
+const passwordRequirements = [
+  { label: 'Mínimo 8 caracteres', test: (val: string) => val.length >= 8 },
+  { label: 'Letra maiúscula', test: (val: string) => /[A-Z]/.test(val) },
+  { label: 'Letra minúscula', test: (val: string) => /[a-z]/.test(val) },
+  { label: 'Número', test: (val: string) => /[0-9]/.test(val) },
+  { label: 'Caractere especial', test: (val: string) => /[!@#$%^&*(),.?":{}|<> ]/.test(val) },
+];
 
 type LoginForm = z.infer<typeof loginSchema>;
 type TrocarForm = z.infer<typeof trocarSchema>;
@@ -50,7 +64,9 @@ export function LandingPage() {
   const [loginError, setLoginError] = useState('');
 
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
-  const { register: rT, handleSubmit: hT, formState: { errors: eT, isSubmitting: isT } } = useForm<TrocarForm>({ resolver: zodResolver(trocarSchema) });
+  const { register: rT, handleSubmit: hT, watch: wT, formState: { errors: eT, isSubmitting: isT } } = useForm<TrocarForm>({ resolver: zodResolver(trocarSchema) });
+  
+  const novaSenha = wT('novaSenha') || '';
 
   const finalize = (data: any) => {
     localStorage.setItem('sgpf_token', data.token);
@@ -386,8 +402,24 @@ export function LandingPage() {
                     <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-[34px] text-slate-400">
                       {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
-                    {eT.novaSenha && <p className="text-red-500 text-xs mt-1">Senha não atende aos requisitos</p>}
+                    {eT.novaSenha && <p className="text-red-500 text-xs mt-1">{eT.novaSenha.message}</p>}
                   </div>
+
+                  {/* Checklist de Requisitos em Tempo Real */}
+                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 grid grid-cols-2 gap-2">
+                    {passwordRequirements.map((req, idx) => {
+                      const isMet = req.test(novaSenha);
+                      return (
+                        <div key={idx} className={`flex items-center gap-2 text-[10px] ${isMet ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}>
+                          <div className={`w-3 h-3 rounded-full flex items-center justify-center ${isMet ? 'bg-emerald-100' : 'bg-slate-200'}`}>
+                            {isMet ? '✓' : ''}
+                          </div>
+                          {req.label}
+                        </div>
+                      );
+                    })}
+                  </div>
+
                   <div className="relative">
                     <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400" />
                     <label className="block text-sm font-semibold text-slate-700 mb-1">Confirmar Senha</label>

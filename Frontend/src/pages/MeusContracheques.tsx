@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '../components/ui/Button';
 import { Download, Loader2, FileText, Calendar } from 'lucide-react';
 import api from '../services/api';
 
 export function MeusContracheques() {
+  const [filtroMes, setFiltroMes] = useState('');
+  const [filtroAno, setFiltroAno] = useState('');
+
   const { data: contracheques, isLoading } = useQuery<any[]>({
     queryKey: ['meus-contracheques'],
     queryFn: async () => (await api.get('/folha-pagamento/meus-contracheques')).data,
@@ -33,6 +37,12 @@ export function MeusContracheques() {
     }
   };
 
+  const contrachequesFiltrados = contracheques?.filter(c => {
+    if (filtroMes && c.mesReferencia.toString() !== filtroMes) return false;
+    if (filtroAno && c.anoReferencia.toString() !== filtroAno) return false;
+    return true;
+  });
+
   if (isLoading) return (
     <div className="flex flex-col items-center justify-center p-12 space-y-4">
       <Loader2 className="animate-spin text-indigo-600" size={40} />
@@ -49,8 +59,40 @@ export function MeusContracheques() {
         </div>
       </div>
 
+      <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col sm:flex-row gap-4 items-end">
+        <div className="space-y-1 w-full sm:w-48">
+          <label className="text-xs font-bold text-slate-400 uppercase">Mês</label>
+          <select 
+            value={filtroMes} 
+            onChange={e => setFiltroMes(e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+          >
+            <option value="">Todos</option>
+            {Array.from({length: 12}, (_, i) => i + 1).map(m => (
+              <option key={m} value={m.toString()}>{m.toString().padStart(2, '0')}</option>
+            ))}
+          </select>
+        </div>
+        <div className="space-y-1 w-full sm:w-48">
+          <label className="text-xs font-bold text-slate-400 uppercase">Ano</label>
+          <select 
+            value={filtroAno} 
+            onChange={e => setFiltroAno(e.target.value)}
+            className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:bg-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+          >
+            <option value="">Todos</option>
+            {[2024, 2025, 2026, 2027, 2028, 2029, 2030].map(a => (
+              <option key={a} value={a.toString()}>{a}</option>
+            ))}
+          </select>
+        </div>
+        <Button variant="secondary" className="h-10 px-4 w-full sm:w-auto" onClick={() => { setFiltroMes(''); setFiltroAno(''); }}>
+          Limpar
+        </Button>
+      </div>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {contracheques?.length === 0 && (
+        {contrachequesFiltrados?.length === 0 && (
           <div className="col-span-full bg-white p-8 md:p-12 rounded-xl border border-dashed border-slate-300 flex flex-col items-center text-center">
             <FileText size={48} className="text-slate-200 mb-4" />
             <h3 className="text-lg font-bold text-slate-700">Nenhum contracheque encontrado</h3>
@@ -60,7 +102,7 @@ export function MeusContracheques() {
           </div>
         )}
 
-        {contracheques?.map((c) => {
+        {contrachequesFiltrados?.map((c) => {
           const ref = `${c.mesReferencia.toString().padStart(2, '0')}/${c.anoReferencia}`;
           return (
             <div key={c.id} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 md:p-6 hover:border-indigo-400 transition-all group relative overflow-hidden">

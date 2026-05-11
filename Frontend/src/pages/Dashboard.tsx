@@ -30,12 +30,14 @@ interface DashboardData {
     averageTicket: number; 
     byPaymentMethod: { label: string; value: number }[];
     topProducts: { name: string; quantity: number; totalRevenue: number; totalProfit: number }[];
+    growthMoM: number;
+    growthYoY: number;
   };
   production: { totalProduced: number; opCount: number; efficiency: number; averageLeadTimeHours: number; byStatus: { label: string; value: number }[] };
   inventory: { totalProducts: number; lowStockCount: number; inventoryValue: number; totalPurchases: number };
-  fleet: { totalVehicles: number; activeDeliveries: number; maintenanceCost: number };
+  fleet: { totalVehicles: number; activeDeliveries: number; maintenanceCost: number; totalFuelCost: number };
   expenses: { totalExpenses: number; totalPayroll: number; totalOvertime: number; byCategory: { label: string; value: number }[] };
-  exchanges: { totalLoss: number; exchangeCount: number };
+  exchanges: { totalLoss: number; exchangeCount: number; topProducts: { label: string; value: number }[]; topClients: { label: string; value: number }[] };
 }
 
 export function Dashboard() {
@@ -180,11 +182,12 @@ export function Dashboard() {
       <div className="space-y-8 transition-all duration-300">
         {activeTab === 'Geral' && (
           <div className="space-y-8 animate-in slide-in-from-bottom-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              <KPIChip label="Vendas Totais" value={formatCurrency(data?.sales.totalSales || 0)} icon={DollarSign} color="bg-emerald-500" trend="+12.5%" />
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+              <KPIChip label="Vendas Totais" value={formatCurrency(data?.sales.totalSales || 0)} icon={DollarSign} color="bg-emerald-500" />
               <KPIChip label="Ordens Finalizadas" value={data?.production.opCount || 0} icon={Factory} color="bg-indigo-500" />
               <KPIChip label="Produtos em Estoque" value={data?.inventory.totalProducts || 0} icon={Package} color="bg-blue-500" />
               <KPIChip label="Despesas Gerais" value={formatCurrency(data?.expenses.totalExpenses || 0)} icon={Activity} color="bg-rose-500" />
+              <KPIChip label="Lucro Estimado" value={formatCurrency((data?.sales.totalSales || 0) - (data?.expenses.totalExpenses || 0))} icon={TrendingUp} color="bg-emerald-600" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -247,14 +250,18 @@ export function Dashboard() {
                 <KPIChip label="Faturamento Total" value={formatCurrency(data?.sales.totalSales || 0)} icon={DollarSign} color="bg-emerald-500" />
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <DataCard title="Vendas por Forma de Pagamento" items={data?.sales.byPaymentMethod || []} />
+                <DataCard title="Vendas por Forma de Pagamento" items={(data?.sales.byPaymentMethod || []).map(i => ({
+                  ...i, label: i.label === 'CartaoCredito' ? 'Cartão de Crédito' : i.label
+                }))} />
                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center">
-                   <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mb-4">
-                      <TrendingUp size={32} />
+                   <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mb-4 ${(data?.sales.growthMoM || 0) >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                      <TrendingUp size={32} className={(data?.sales.growthMoM || 0) < 0 ? 'rotate-180' : ''} />
                    </div>
-                   <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-1">Crescimento Mensal</h4>
-                   <p className="text-3xl font-black text-slate-800">+15.4%</p>
-                   <p className="text-slate-400 text-xs mt-2">Baseado no mesmo período do ano anterior</p>
+                   <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-1">Crescimento (Vs Mês Anterior)</h4>
+                   <p className={`text-3xl font-black ${(data?.sales.growthMoM || 0) >= 0 ? 'text-slate-800' : 'text-rose-500'}`}>
+                     {(data?.sales.growthMoM || 0) > 0 ? '+' : ''}{(data?.sales.growthMoM || 0).toFixed(1)}%
+                   </p>
+                   <p className="text-slate-400 text-xs mt-2 font-bold">Vs Ano Passado: {(data?.sales.growthYoY || 0) > 0 ? '+' : ''}{(data?.sales.growthYoY || 0).toFixed(1)}%</p>
                 </div>
              </div>
 
@@ -325,7 +332,9 @@ export function Dashboard() {
                 <KPIChip label="Eficiência Geral" value={`${Math.round(data?.production.efficiency || 0)}%`} icon={Activity} color="bg-emerald-500" />
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <DataCard title="Status das OPs" items={data?.production.byStatus || []} isNumber />
+                <DataCard title="Status das OPs" items={(data?.production.byStatus || []).map(i => ({
+                  ...i, label: (i.label === 'EmAndamento' || i.label === 'EmAdamento') ? 'Em Andamento' : i.label
+                }))} isNumber />
                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center">
                    <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-4">Meta de Produção</h4>
                    <div className="w-40 h-40 rounded-full border-[12px] border-slate-100 flex items-center justify-center relative">
@@ -349,32 +358,37 @@ export function Dashboard() {
 
         {activeTab === 'Logística' && (
           <div className="space-y-8 animate-in fade-in duration-300">
-             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <KPIChip label="Custo Manutenção" value={formatCurrency(data?.fleet.maintenanceCost || 0)} icon={Truck} color="bg-rose-500" />
-                <KPIChip label="Entregas Ativas" value={data?.fleet.activeDeliveries || 0} icon={Clock} color="bg-blue-500" />
-                <KPIChip label="Frota Total" value={data?.fleet.totalVehicles || 0} icon={Truck} color="bg-slate-700" />
-             </div>
-             <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
-                <h3 className="text-xl font-bold text-slate-800 mb-4">Índice de Trocas e Avarias</h3>
-                <div className="flex items-center gap-6">
-                   <div className="flex-1">
-                      <p className="text-slate-500 text-sm mb-4">O índice de trocas impacta diretamente na margem de lucro operacional.</p>
-                      <div className="space-y-2">
-                         <div className="flex justify-between text-xs font-bold">
-                            <span>Perda Financeira</span>
-                            <span className="text-rose-500">{formatCurrency(data?.exchanges.totalLoss || 0)}</span>
-                         </div>
-                         <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
-                            <div className="h-full bg-rose-500 w-1/3"></div>
-                         </div>
-                      </div>
-                   </div>
-                   <div className="text-center p-6 bg-rose-50 rounded-2xl border border-rose-100">
-                      <p className="text-rose-600 font-black text-2xl">{data?.exchanges.exchangeCount}</p>
-                      <p className="text-rose-400 text-[10px] font-bold uppercase">Ocorrências</p>
-                   </div>
-                </div>
-             </div>
+             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                 <KPIChip label="Frota Total" value={data?.fleet.totalVehicles || 0} icon={Truck} color="bg-slate-700" />
+                 <KPIChip label="Entregas Ativas" value={data?.fleet.activeDeliveries || 0} icon={Clock} color="bg-blue-500" />
+                 <KPIChip label="Custo Manutenção" value={formatCurrency(data?.fleet.maintenanceCost || 0)} icon={AlertCircle} color="bg-rose-500" />
+                 <KPIChip label="Custo Abastecimento" value={formatCurrency(data?.fleet.totalFuelCost || 0)} icon={Truck} color="bg-amber-500" />
+              </div>
+              <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
+                 <h3 className="text-xl font-bold text-slate-800 mb-4">Índice de Trocas e Avarias</h3>
+                 <div className="flex items-center gap-6">
+                    <div className="flex-1">
+                       <p className="text-slate-500 text-sm mb-4">O índice de trocas impacta diretamente na margem de lucro operacional.</p>
+                       <div className="space-y-2">
+                          <div className="flex justify-between text-xs font-bold">
+                             <span>Perda Financeira Estimada</span>
+                             <span className="text-rose-500">{formatCurrency(data?.exchanges.totalLoss || 0)}</span>
+                          </div>
+                          <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
+                             <div className="h-full bg-rose-500 w-1/3"></div>
+                          </div>
+                       </div>
+                    </div>
+                    <div className="text-center p-6 bg-rose-50 rounded-2xl border border-rose-100">
+                       <p className="text-rose-600 font-black text-2xl">{data?.exchanges.exchangeCount}</p>
+                       <p className="text-rose-400 text-[10px] font-bold uppercase">Ocorrências</p>
+                    </div>
+                 </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
+                 <DataCard title="Produtos com Mais Trocas/Avarias" items={data?.exchanges.topProducts || []} isNumber />
+                 <DataCard title="Clientes com Mais Trocas" items={data?.exchanges.topClients || []} isNumber />
+              </div>
           </div>
         )}
 
@@ -390,6 +404,7 @@ export function Dashboard() {
                 <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col justify-center items-center text-center">
                    <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-2">Lucratividade Estimada</h4>
                    <p className="text-4xl font-black text-emerald-400">{Math.round(((data?.sales.totalSales || 0) - (data?.expenses.totalExpenses || 0)) / (data?.sales.totalSales || 1) * 100)}%</p>
+                   <p className="text-xl font-bold text-emerald-500 mt-2">{formatCurrency((data?.sales.totalSales || 0) - (data?.expenses.totalExpenses || 0))}</p>
                    <p className="text-slate-500 text-xs mt-4">Margem sobre o faturamento bruto</p>
                 </div>
              </div>
