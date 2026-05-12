@@ -136,4 +136,20 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 - **Auditoria Logística (Hodômetro):**
   - Ajuste no módulo de `Frota`: Remoção do preenchimento padrão automático da quilometragem nos modais de Abastecimento e Manutenção, forçando o operador a preencher manualmente a quilometragem atual do veículo no ato, prevenindo erros de digitação e histórico incorreto.
 - **Filtros e Relatórios Ponto:** 
-  - Padronização de horas na visualização decimal (`hh:mm`) e filtros precisos de mês e ano para a aba de Afastamentos de funcionários.
+  - Padronização de horas na visualização decimal (`hh:mm`) e filtros precisos de mês e ano para a aba de Afastamentos de funcionários.
+
+### 📱 Padronização UI/UX e Responsividade Mobile (11/Mai/2026)
+- **Responsividade Pro Max (iPhone 14 Pro Max):**
+  - Auditoria completa e refatoração de layouts para suporte a telas de 430px de largura.
+  - Implementação do padrão **Card View** em tabelas densas (Controle de Ponto e Listagens) para visualização mobile verticalizada.
+  - Correção de visibilidade de botões de ação em dispositivos touch (removida opacidade zero em hover).
+- **Acessibilidade em Modais:**
+  - Refatoração do componente base de **Modal** com `Sticky Header` (título e fechar sempre visíveis) e `Scroll Vertical` inteligente.
+  - Botões de ação em modais agora ocupam 100% da largura no mobile, facilitando a interação por toque.
+- **Sinalização Visual de Regras de Negócio:**
+  - Padronização de **Campos Obrigatórios** com asterisco vermelho (`*`) e validação nativa em 100% dos formulários do sistema.
+- **Melhorias em Módulos Críticos:**
+  - **Financeiro:** Redesign dos modais de "Nova Conta" e "Movimentação" com foco em inputs de alta visibilidade e controles touch-friendly.
+  - **Dashboard:** Tabelas de BI agora possuem scroll horizontal protegido para não quebrar o layout global do painel.
+- **Documentação de Onboarding:**
+  - Criação do **Guia de Implantação e Treinamento** (`docs/5-apoio/guia-implantacao-treinamento.md`) focado no fluxo operacional ponta a ponta e apresentação de benefícios para o dono da empresa.

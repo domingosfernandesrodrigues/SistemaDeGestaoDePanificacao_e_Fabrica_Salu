@@ -31,6 +31,7 @@ Este documento é o mapa mestre do Sistema de Gestão de Panificação e Fábric
 ## 5. Apoio ao Usuário (`/5-apoio`)
 - [Guia da Fábrica](5-apoio/guia-operacional-fabrica.md) - Operação de produção.
 - [Guia do RH](5-apoio/guia-operacional-rh.md) - Operação de folha.
+- [Guia de Implantação e Treinamento](5-apoio/guia-implantacao-treinamento.md) - Roteiro completo de fluxo e benefícios.
 - [Manual do Administrador](5-apoio/manual-administrador.md) - Configurações globais.
 
 ## 6. Observabilidade (`/6-observabilidade`)
@@ -41,14 +42,14 @@ Este documento é o mapa mestre do Sistema de Gestão de Panificação e Fábric
 - [Valor de Venda (Valuation)](7-gestao/valor-venda-sistema.md) - Precificação e Mercado.
 - [Manual do Administrador](7-gestao/manual-administrador.md) - Guia de implantação e operação.
 
-## 📌 Status Atual do Sistema (09/05/2026)
-O sistema SGP-F encontra-se em estado de **Produção — Financeiro Integrado e Landing Page**.
-- **Núcleo de Fábrica:** Ficha técnica, OPs e controle de estoque totalmente funcionais.
-- **BI e Dashboards:** Painel Executivo 360° com KPIs em tempo real para Vendas, Produção, Frota e Financeiro.
-- **RH e Comercial:** Motor de folha CLT v2 e Painel Kanban de Vendas B2B com automação logística completa.
-- **Financeiro:** Contas Bancárias com conciliação automática de saldo. Saldo em caixa reflete dados reais.
-- **Landing Page:** Página institucional pública em `/` com apresentação da empresa e login via modal.
-- **Bug Crítico Corrigido:** Simulação automática de pagamento removida do `VendaService`.
+## 📌 Status Atual do Sistema (11/05/2026)
+O sistema SGP-F encontra-se em estado de **Produção — Estabilidade de Interface e Mobile First**.
+- **Padronização UI/UX:** Implementada a sinalização de campos obrigatórios (`*`) em 100% dos formulários do sistema.
+- **Responsividade Pro Max:** Auditados e corrigidos todos os módulos para exibição perfeita no iPhone 14 Pro Max.
+- **Componentes de Tabela:** Adotado o padrão de "Card View" para dispositivos móveis em tabelas densas (ex: Histórico de Ponto).
+- **Acessibilidade em Modais:** Refatorado o componente de Modal para incluir cabeçalho fixo (sticky), rolagem vertical inteligente e botões de ação otimizados para touch.
+- **Documentação Master:** README principal atualizado e novo Guia de Implantação e Treinamento criado para apresentações estratégicas.
+- **Financeiro:** Módulos de Contas Bancárias e Movimentação manual otimizados para operações rápidas via smartphone.
 
 ---
 ## 🚀 Execução do Projeto

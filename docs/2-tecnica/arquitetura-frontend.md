@@ -15,4 +15,7 @@
 
 ## Padrões de Código
 - Componentes Funcionais com Interfaces TS claras.
+- **Mobile First:** Uso rigoroso de breakpoints Tailwind para suporte a iPhone 14 Pro Max.
+- **Validação:** Zod + React Hook Form para todos os inputs, com sinalização visual de campos obrigatórios (*).
+- **UX Consistente:** Modais com sticky headers e scroll interno para formulários densos.
 - Tratamento de erro global nos requests (Toast Notifications).
