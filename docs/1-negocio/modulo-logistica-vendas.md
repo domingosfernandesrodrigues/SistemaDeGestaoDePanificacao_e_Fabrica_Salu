@@ -3,7 +3,8 @@
 ## 1. Fluxo de Revenda
 - **Compra:** Entrada de produtos prontos (terceirizados) no estoque via **Módulo de Compras e Entradas**.
 - **Venda:** Saída de produtos via pedidos de clientes.
-- **Entrega:** Atribuição de pedidos a veículos da frota própria.
+- **Entrega:** Atribuição de pedidos a veículos e motoristas (entregadores) da frota própria.
+- **Isolamento:** Motoristas possuem perfil restrito que exibe apenas as entregas sob sua responsabilidade.
 
 ## 2. Painel de Vendas B2B (Kanban)
 - **Interface Visual:** Dashboard dividido em colunas de status: `Aprovação (Portal)`, `Em Separação`, `Em Rota de Entrega` e `Entregues`.
@@ -45,9 +46,16 @@
 
 ## 5. Gestão de Trocas e Avarias
 - **Registro:** Identificação de itens vencidos ou danificados no cliente.
+- **Responsabilidade:** Registro obrigatório ou automático do motorista que realizou a coleta para rastreabilidade de campo.
 - **Regra de Negócio:** Entrada do item avariado (perda) e saída imediata de um novo.
 - **Financeiro:** A troca não gera nova cobrança, mas deve abater o lucro no relatório de DRE.
 
 ## 6. Gestão de Frota
 - **Manutenção:** Registro de manutenções Corretivas, Preventivas e Preditivas.
 - **Abastecimento:** Controle de consumo e KM para cálculo de eficiência.
+- **Interface Mobile:** Motoristas registram KM e abastecimentos diretamente no ato da operação via perfil restrito.
+
+## 7. Perfil Motorista / Entregador
+- **Dashboard Simplificado:** Foco em KPIs de entrega, KM rodado e trocas realizadas.
+- **Visão de Rota:** Apenas pedidos com status "Rota" ou "Separação" vinculados ao seu ID são visíveis.
+- **Auto-atendimento:** Capacidade de registrar trocas no cliente vinculando automaticamente seu perfil como coletor.

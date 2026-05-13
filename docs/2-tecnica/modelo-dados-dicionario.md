@@ -22,12 +22,12 @@
 - `Afastamentos`: Id, FuncionarioId, Tipo, DataInicio, DataFim, Observacao.
 
 ## Módulo: Operacional, Vendas e Logística (Fase 4)
-- `PedidosVenda`: Id, NumeroPedido, ClienteId, DataPedido, ValorTotal, Status (Novo/Separacao/Rota/Entregue/Cancelado), FormaPagamento, Pago (BIT), PixQrCode, BoletoCodigoBarras, DataEntregaRealizada.
+- `PedidosVenda`: Id, NumeroPedido, ClienteId, MotoristaId (GUID, FK Funcionarios), DataPedido, ValorTotal, Status (Novo/Separacao/Rota/Entregue/Cancelado), FormaPagamento, Pago (BIT), PixQrCode, BoletoCodigoBarras, DataEntregaRealizada.
 - `PedidosVenda_Itens`: Id, PedidoVendaId, ProdutoId, Quantidade, PrecoUnitario.
 - `Veiculos`: Id, Placa, Modelo, Marca, Ano, Status (Disponivel/EmRota/Manutencao).
 - `Abastecimentos`: Id, VeiculoId, Litros, ValorTotal, KM_Atual, Data.
 - `ManutencaoVeiculos`: Id, VeiculoId, Tipo (Preventiva/Corretiva), Descricao, CustoTotal, Data.
-- `TrocaAvarias`: Id, PedidoId, ProdutoId, Motivo, Quantidade, DataTroca.
+- `TrocaAvarias`: Id, PedidoId, ProdutoId, MotoristaId (GUID, FK Funcionarios), Motivo, Quantidade, DataTroca.
 - `Compras`: Id, FornecedorId, DataCompra, ValorTotal, Status (Rascunho/Confirmada), Categoria (Mercadoria/Insumo), Observacao.
 - `Compras_Itens`: Id, CompraId, ProdutoId, Quantidade, PrecoUnitario.
 
@@ -38,6 +38,6 @@
   > Regra: apenas uma conta pode ter `IsPadrao = true` por vez. Saldo conciliado automaticamente nas baixas.
 
 ## Módulo: Landing Page e Autenticação
-- `Usuarios` (ASP.NET Identity): Id, Email, NomCompleto, Role (Admin/Gestor/Operador/Cliente), PrecisaTrocarSenha (BIT), Ativo (BIT).
+- `Usuarios` (ASP.NET Identity): Id, Email, NomCompleto, Role (Admin/Gestor/Operador/Motorista/Cliente), PrecisaTrocarSenha (BIT), Ativo (BIT).
 - Rota pública `/` → Landing Page institucional com login integrado via modal.
 - Rota `/dashboard` → Sistema ERP (protegido por JWT).

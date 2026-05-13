@@ -55,8 +55,15 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 
 ## 📊 Status de Progresso Geral
 - **Fase Atual:** Finalização e Entrega BI ✅
-- **Progresso Total:** 100% (Módulos operacionais e BI Executivo concluídos)
-- **Última Atualização:** 09/05/2026
+- **Progresso Total:** 100% (Módulos operacionais, BI e Perfil Motorista concluídos)
+- **Última Atualização:** 12/05/2026
+
+### 🛠️ Refinamentos Recentes (Maio/2026 - Perfil Motorista & Logística Especializada):
+- **Novo Perfil "Motorista / Entregador":** Implementação de role específica com isolamento de dados em nível de API. Motoristas visualizam apenas pedidos atribuídos a eles no Dashboard e Kanban.
+- **Rastreabilidade de Entregas:** Adição do campo `MotoristaId` em `PedidosVenda` e `TrocasAvaria`. Admin/Gestor agora selecionam o responsável pela entrega no ato do pedido.
+- **Segurança via Claims:** Injeção do `FuncionarioId` no token JWT para identificação automática do motorista no backend, garantindo que ele não acesse dados sensíveis de outros departamentos.
+- **Interface Otimizada:** Navegação lateral adaptável ao perfil Motorista, focando em: Dashboards de Entrega, Suas Vendas (Rota), Frota (Abastecimento/Manutenção), Trocas e Meus Contracheques.
+- **Patches SQL Automatizados:** Implementação de lógica de auto-correção de esquema no startup do sistema para garantir que colunas de logística existam sem intervenção manual.
 
 ### 🛠️ Refinamentos Recentes (Maio/2026 - BI & Painel Executivo):
 - **Painel Executivo 360°:** Implementação de dashboard gerencial com abas específicas para **Vendas**, **Produção**, **Estoque**, **Logística** e **Financeiro**.

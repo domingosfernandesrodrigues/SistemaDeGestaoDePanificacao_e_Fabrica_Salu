@@ -8,7 +8,8 @@
 - **Admin:** Acesso total ao sistema.
 - **Gestor_Producao:** Acesso à Fábrica e Estoque.
 - **Gestor_RH:** Acesso à Folha e Funcionários.
-- **Operador:** Acesso a Vendas e Entregas.
+- **Operador:** Acesso a Vendas e Entregas (Nível Geral).
+- **Motorista:** Acesso restrito apenas às suas próprias entregas, frota e logística atribuída.
 - **Cliente:** Acesso restrito apenas aos seus próprios dados e pedidos.
 
 ## Políticas
@@ -17,6 +18,11 @@
 
 ## Políticas de Isolamento (Multi-tenancy Lite)
 - Todo endpoint de cliente deve validar se o `ClienteId` do recurso solicitado pertence ao `UsuarioId` autenticado no token JWT.
+- Todo endpoint de logística deve validar o `MotoristaId` contra o `FuncionarioId` presente no token JWT quando o perfil for `Motorista`.
+
+## Claims Personalizadas
+- `FuncionarioId`: Armazena o GUID do funcionário vinculado ao usuário. Essencial para isolamento de dados do perfil `Motorista`.
+- `ClienteId`: Armazena o GUID do cliente vinculado (para portal B2B).
 
 # Módulo: Gestão de Estoque e Auditoria
 
