@@ -6,7 +6,7 @@ public class Usuario
     public string Email { get; set; } = string.Empty;
     public string Nome { get; set; } = string.Empty;
     public string SenhaHash { get; set; } = string.Empty;
-    public string Role { get; set; } = string.Empty; // Admin, Gestor, Operador, Cliente
+    public string Role { get; set; } = string.Empty; // Admin, Gestor, Operador, Cliente, Motorista
     
     public Guid? ClienteId { get; set; }
     public Cliente? Cliente { get; set; }

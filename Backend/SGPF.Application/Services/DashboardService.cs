@@ -53,7 +53,7 @@ public class DashboardService : IDashboardService
         _clienteRepo = clienteRepo;
     }
 
-    public async Task<DashboardData> GetDashboardDataAsync(int year, int month, int? day = null, Guid? clienteId = null)
+    public async Task<DashboardData> GetDashboardDataAsync(int year, int month, int? day = null, Guid? clienteId = null, Guid? motoristaId = null)
     {
         var data = new DashboardData();
 
@@ -68,6 +68,9 @@ public class DashboardService : IDashboardService
         var queryVendas = (await _vendaRepo.GetAllAsync()).Where(v => dateFilter(v.DataPedido));
         if (clienteId.HasValue && clienteId.Value != Guid.Empty) 
             queryVendas = queryVendas.Where(v => v.ClienteId == clienteId.Value);
+        
+        if (motoristaId.HasValue && motoristaId.Value != Guid.Empty)
+            queryVendas = queryVendas.Where(v => v.MotoristaId == motoristaId.Value);
         
         var vendas = queryVendas.ToList();
         var vendaIds = vendas.Select(v => v.Id).ToList();
@@ -149,7 +152,9 @@ public class DashboardService : IDashboardService
 
         // --- DESPESAS & RH ---
         var despesas = (await _contaPagarRepo.GetAllAsync()).Where(d => dateFilter(d.DataVencimento)).ToList();
-        var folhas = (await _folhaRepo.GetAllAsync()).Where(f => f.MesReferencia == month && f.AnoReferencia == year).ToList();
+        var queryFolhas = (await _folhaRepo.GetAllAsync()).Where(f => f.AnoReferencia == year);
+        if (month > 0) queryFolhas = queryFolhas.Where(f => f.MesReferencia == month);
+        var folhas = queryFolhas.ToList();
         
         data.Expenses.TotalPayroll = folhas.Sum(f => f.SalarioLiquido);
         data.Expenses.TotalOvertime = folhas.Sum(f => f.ValorHorasExtras50 + f.ValorHorasExtras100);
@@ -164,6 +169,9 @@ public class DashboardService : IDashboardService
         var queryTrocas = (await _trocaRepo.GetAllAsync()).Where(t => dateFilter(t.DataTroca));
         if (clienteId.HasValue && clienteId.Value != Guid.Empty) 
             queryTrocas = queryTrocas.Where(t => t.ClienteId == clienteId.Value);
+        
+        if (motoristaId.HasValue && motoristaId.Value != Guid.Empty)
+            queryTrocas = queryTrocas.Where(t => t.MotoristaId == motoristaId.Value);
         
         var trocas = queryTrocas.ToList();
         data.Exchanges.ExchangeCount = trocas.Count;

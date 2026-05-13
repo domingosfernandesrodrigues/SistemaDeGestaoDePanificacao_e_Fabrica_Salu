@@ -2,9 +2,27 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Serilog;
 using SGPF.Infrastructure.Data;
+using SGPF.Infrastructure.Interceptors;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configuração do Serilog
+builder.Host.UseSerilog((context, configuration) =>
+    configuration.ReadFrom.Configuration(context.Configuration)
+                 .Enrich.FromLogContext()
+                 .WriteTo.Console()
+                 .WriteTo.File("Logs/sgpf_log_.txt", rollingInterval: RollingInterval.Day)
+                 .WriteTo.MSSqlServer(
+                     connectionString: context.Configuration.GetConnectionString("DefaultConnection"),
+                     sinkOptions: new Serilog.Sinks.MSSqlServer.MSSqlServerSinkOptions { 
+                         TableName = "SystemLogs", 
+                         AutoCreateSqlTable = false,
+                         BatchPostingLimit = 50,
+                         BatchPeriod = TimeSpan.FromSeconds(5)
+                     }
+                 ));
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -28,8 +46,13 @@ builder.Services.AddCors(options =>
 builder.Services.AddOpenApi();
 
 // Configure Entity Framework Core com SQL Server
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+builder.Services.AddSingleton<AuditInterceptor>();
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
+{
+    var interceptor = sp.GetRequiredService<AuditInterceptor>();
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .AddInterceptors(interceptor);
+});
 
 QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
@@ -45,6 +68,9 @@ builder.Services.AddScoped<SGPF.Application.Services.TrocaService>();
 builder.Services.AddScoped<SGPF.Application.Services.IFinanceiroService, SGPF.Application.Services.FinanceiroService>();
 builder.Services.AddScoped<SGPF.Application.Services.ICompraService, SGPF.Application.Services.CompraService>();
 builder.Services.AddScoped<SGPF.Application.Services.ReuniaoService>();
+
+// Registrar Hosted Service para retenção e limpeza de logs
+// builder.Services.AddHostedService<SGPF.WebApi.Services.LogRetentionService>();
 
 // Configure JWT Authentication
 var jwtSecret = builder.Configuration["JwtSettings:Secret"] ?? "MySuperSecretKey_SGPF_2026_Minimum32Chars!!";
@@ -165,6 +191,7 @@ using (var scope = app.Services.CreateScope())
         try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'Pago') BEGIN ALTER TABLE PedidosVenda ADD Pago BIT NOT NULL DEFAULT 0; END"); } catch {}
         try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'PixQrCode') BEGIN ALTER TABLE PedidosVenda ADD PixQrCode NVARCHAR(MAX) NULL; END"); } catch {}
         try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'BoletoCodigoBarras') BEGIN ALTER TABLE PedidosVenda ADD BoletoCodigoBarras NVARCHAR(MAX) NULL; END"); } catch {}
+        try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'MotoristaId') BEGIN ALTER TABLE PedidosVenda ADD MotoristaId UNIQUEIDENTIFIER NULL; END"); } catch {}
         
         // Patches para OrdemProducao (Rastreabilidade) - Movido para o início para garantir execução
         try { 
@@ -183,6 +210,7 @@ using (var scope = app.Services.CreateScope())
         try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'DataVencimento' AND is_nullable = 0) BEGIN ALTER TABLE ContasPagar ALTER COLUMN DataVencimento DATETIME2 NULL; END"); } catch {}
 
         try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Usuarios') AND name = 'PrecisaTrocarSenha') BEGIN ALTER TABLE Usuarios ADD PrecisaTrocarSenha BIT NOT NULL DEFAULT 1; END"); } catch {}
+        try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('TrocasAvaria') AND name = 'MotoristaId') BEGIN ALTER TABLE TrocasAvaria ADD MotoristaId UNIQUEIDENTIFIER NULL; END"); } catch {}
 
         // Patches Folha CLT
         try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FolhasPagamento') AND name = 'TotalHorasExtras50') BEGIN ALTER TABLE FolhasPagamento ADD TotalHorasExtras50 DECIMAL(18,2) NOT NULL DEFAULT 0; END"); } catch {}
@@ -262,6 +290,48 @@ using (var scope = app.Services.CreateScope())
         try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'Agencia') BEGIN ALTER TABLE ContasBancarias ADD Agencia NVARCHAR(MAX) NULL; END"); } catch {}
         try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'NumeroConta') BEGIN ALTER TABLE ContasBancarias ADD NumeroConta NVARCHAR(MAX) NULL; END"); } catch {}
         try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'GatewayToken') BEGIN ALTER TABLE ContasBancarias ADD GatewayToken NVARCHAR(MAX) NULL; END"); } catch {}
+
+        // Patch para criar tabela AuditLogs se não existir
+        try { 
+            Console.WriteLine("Verificando tabela AuditLogs...");
+            await context.Database.ExecuteSqlRawAsync(@"
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AuditLogs]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[AuditLogs](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [TableName] [nvarchar](max) NOT NULL,
+                        [Action] [nvarchar](max) NOT NULL,
+                        [KeyValues] [nvarchar](max) NOT NULL,
+                        [OldValues] [nvarchar](max) NULL,
+                        [NewValues] [nvarchar](max) NULL,
+                        [Timestamp] [datetime2](7) NOT NULL,
+                        [UserId] [uniqueidentifier] NULL
+                    )
+                END
+            "); 
+            Console.WriteLine("Tabela AuditLogs verificada/criada.");
+        } catch (Exception ex) { Console.WriteLine($"Erro no patch AuditLogs: {ex.Message}"); }
+
+        // Patch para criar tabela SystemLogs (Serilog) se não existir
+        try {
+            Console.WriteLine("Verificando tabela SystemLogs...");
+            await context.Database.ExecuteSqlRawAsync(@"
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SystemLogs]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[SystemLogs](
+                        [Id] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                        [Message] [nvarchar](max) NULL,
+                        [MessageTemplate] [nvarchar](max) NULL,
+                        [Level] [nvarchar](128) NULL,
+                        [TimeStamp] [datetimeoffset](7) NOT NULL,
+                        [Exception] [nvarchar](max) NULL,
+                        [Properties] [xml] NULL,
+                        [LogEvent] [nvarchar](max) NULL
+                    )
+                END
+            ");
+            Console.WriteLine("Tabela SystemLogs verificada/criada.");
+        } catch (Exception ex) { Console.WriteLine($"Erro no patch SystemLogs: {ex.Message}"); }
     } catch (Exception ex) { 
         Console.WriteLine($"Erro ao aplicar patches: {ex.Message}");
     }

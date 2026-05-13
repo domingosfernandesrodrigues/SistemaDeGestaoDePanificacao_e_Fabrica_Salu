@@ -21,11 +21,23 @@ public class DashboardController : ControllerBase
     {
         try
         {
+            Guid? motoristaId = null;
+            if (User.IsInRole("Motorista"))
+            {
+                var claim = User.FindFirst("FuncionarioId");
+                if (claim != null && Guid.TryParse(claim.Value, out var id))
+                {
+                    motoristaId = id;
+                }
+            }
+
             // Se não vierem dados, pega o atual
             if (year == 0) year = DateTime.UtcNow.Year;
-            if (month == 0) month = DateTime.UtcNow.Month;
+            // Se month for 0, o Service já trata como "todos os meses" do ano.
+            // Só vamos setar o mês atual se o usuário não enviou nada (nem ano nem mês)
+            if (month == 0 && !Request.Query.ContainsKey("month")) month = DateTime.UtcNow.Month;
 
-            var data = await _dashboardService.GetDashboardDataAsync(year, month, day, clienteId);
+            var data = await _dashboardService.GetDashboardDataAsync(year, month, day, clienteId, motoristaId);
             return Ok(data);
         }
         catch (Exception ex)
