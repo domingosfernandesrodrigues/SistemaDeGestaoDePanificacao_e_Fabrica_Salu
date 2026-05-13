@@ -21,6 +21,7 @@ import {
   LayoutDashboard as LayoutDashboardIcon 
 } from 'lucide-react';
 import { Navigate } from 'react-router-dom';
+import { Button } from '../components/ui/Button';
 import api from '../services/api';
 
 interface DashboardData {
@@ -76,6 +77,23 @@ export function Dashboard() {
       <div className="flex flex-col items-center justify-center h-screen gap-4">
         <Loader2 className="animate-spin text-indigo-600" size={48} />
         <p className="text-slate-500 font-medium animate-pulse">Consolidando indicadores...</p>
+      </div>
+    );
+  }
+
+  if (!data) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[60vh] gap-6 p-8 text-center bg-white rounded-3xl border border-slate-200 shadow-sm">
+        <div className="w-20 h-20 bg-rose-50 rounded-full flex items-center justify-center text-rose-500 shadow-inner">
+          <AlertCircle size={40} />
+        </div>
+        <div className="max-w-md">
+          <h3 className="text-2xl font-bold text-slate-800 mb-2">Erro ao carregar indicadores</h3>
+          <p className="text-slate-500 mb-6">Não conseguimos conectar ao servidor para buscar os dados. Verifique sua conexão ou tente novamente mais tarde.</p>
+          <Button onClick={() => refetch()} className="bg-slate-800 hover:bg-slate-900 flex items-center gap-2 mx-auto">
+            <RefreshCw size={18} /> Tentar Novamente
+          </Button>
+        </div>
       </div>
     );
   }

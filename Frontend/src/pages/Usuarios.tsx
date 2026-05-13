@@ -158,6 +158,7 @@ export default function Usuarios() {
             <option value="Admin">Administrador</option>
             <option value="Gestor">Gestor</option>
             <option value="Operador">Operador</option>
+            <option value="Motorista">Motorista / Entregador</option>
             <option value="Cliente">Cliente</option>
           </select>
         </div>
@@ -169,81 +170,84 @@ export default function Usuarios() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
-            <tr>
-              <th className="px-6 py-4 font-medium">Nome</th>
-              <th className="px-6 py-4 font-medium">E-mail</th>
-              <th className="px-6 py-4 font-medium">Perfil</th>
-              <th className="px-6 py-4 font-medium">Status</th>
-              <th className="px-6 py-4 font-medium text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {usuariosPaginados.map((u) => {
-              const ativo = u.ativo !== undefined ? u.ativo : true;
-              return (
-                <tr key={u.id} className="hover:bg-slate-50">
-                  <td className="px-6 py-4 font-medium text-slate-900 flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs">
-                      {u.nome.charAt(0)}
-                    </div>
-                    <span className={ativo ? '' : 'text-slate-400 line-through'}>{u.nome}</span>
-                  </td>
-                  <td className={`px-6 py-4 ${ativo ? 'text-slate-500' : 'text-slate-400'}`}>{u.email}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      !ativo ? 'bg-slate-100 text-slate-400' :
-                      u.role === 'Admin' ? 'bg-red-50 text-red-600' : 
-                      u.role === 'Gestor' ? 'bg-indigo-50 text-indigo-600' : 
-                      u.role === 'Operador' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600'
-                    }`}>
-                      {u.role}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4">
-                    {ativo ? (
-                      <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold"><CheckCircle2 size={14} /> Ativo</span>
-                    ) : (
-                      <span className="flex items-center gap-1 text-slate-400 text-xs font-semibold"><XCircle size={14} /> Inativo</span>
-                    )}
-                  </td>
-                  <td className="px-6 py-4">
-                    <div className="flex justify-center gap-2">
-                      <button 
-                        onClick={() => confirm(`Deseja ${ativo ? 'inativar' : 'ativar'} este usuário?`) && mutationToggle.mutate(u.id)} 
-                        className={`p-1.5 rounded-md ${ativo ? 'text-slate-400 hover:text-orange-500' : 'text-emerald-500 hover:text-emerald-600'}`} 
-                        title={ativo ? 'Inativar Usuário' : 'Ativar Usuário'}
-                      >
-                        <Power size={16} />
-                      </button>
-                      {(currentUserRole === 'Admin' || currentUserRole === 'Gestor') && (
-                        <button 
-                          onClick={() => confirm(`Deseja resetar a senha de ${u.nome} para a senha padrão? O usuário terá que alterar a senha no próximo acesso.`) && mutationReset.mutate(u.id)} 
-                          className="p-1.5 text-slate-400 hover:text-amber-600 rounded-md" 
-                          title="Resetar Senha"
-                        >
-                          <KeyRound size={16} />
-                        </button>
-                      )}
-                      <button onClick={() => handleEdit(u)} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-md" title="Editar">
-                        <Edit2 size={16} />
-                      </button>
-                      <button onClick={() => confirm('Excluir usuário permanentemente?') && mutationDelete.mutate(u.id)} className="p-1.5 text-slate-400 hover:text-red-600 rounded-md" title="Excluir">
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-            {usuariosPaginados.length === 0 && (
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm min-w-[700px]">
+            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
               <tr>
-                <td colSpan={5} className="px-6 py-10 text-center text-slate-400 italic">Nenhum usuário encontrado.</td>
+                <th className="px-6 py-4 font-medium">Nome</th>
+                <th className="px-6 py-4 font-medium">E-mail</th>
+                <th className="px-6 py-4 font-medium">Perfil</th>
+                <th className="px-6 py-4 font-medium">Status</th>
+                <th className="px-6 py-4 font-medium text-center">Ações</th>
               </tr>
-            )}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {usuariosPaginados.map((u) => {
+                const ativo = u.ativo !== undefined ? u.ativo : true;
+                return (
+                  <tr key={u.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-4 font-medium text-slate-900 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-xs">
+                        {u.nome.charAt(0)}
+                      </div>
+                      <span className={ativo ? '' : 'text-slate-400 line-through'}>{u.nome}</span>
+                    </td>
+                    <td className={`px-6 py-4 ${ativo ? 'text-slate-500' : 'text-slate-400'}`}>{u.email}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        !ativo ? 'bg-slate-100 text-slate-400' :
+                        u.role === 'Admin' ? 'bg-red-50 text-red-600' : 
+                        u.role === 'Gestor' ? 'bg-indigo-50 text-indigo-600' : 
+                        u.role === 'Motorista' ? 'bg-amber-50 text-amber-600' : 
+                        u.role === 'Operador' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600'
+                      }`}>
+                        {u.role === 'Motorista' ? 'Motorista / Entregador' : u.role}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {ativo ? (
+                        <span className="flex items-center gap-1 text-emerald-600 text-xs font-semibold"><CheckCircle2 size={14} /> Ativo</span>
+                      ) : (
+                        <span className="flex items-center gap-1 text-slate-400 text-xs font-semibold"><XCircle size={14} /> Inativo</span>
+                      )}
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex justify-center gap-2">
+                        <button 
+                          onClick={() => confirm(`Deseja ${ativo ? 'inativar' : 'ativar'} este usuário?`) && mutationToggle.mutate(u.id)} 
+                          className={`p-1.5 rounded-md ${ativo ? 'text-slate-400 hover:text-orange-500' : 'text-emerald-500 hover:text-emerald-600'}`} 
+                          title={ativo ? 'Inativar Usuário' : 'Ativar Usuário'}
+                        >
+                          <Power size={16} />
+                        </button>
+                        {(currentUserRole === 'Admin' || currentUserRole === 'Gestor') && (
+                          <button 
+                            onClick={() => confirm(`Deseja resetar a senha de ${u.nome} para a senha padrão? O usuário terá que alterar a senha no próximo acesso.`) && mutationReset.mutate(u.id)} 
+                            className="p-1.5 text-slate-400 hover:text-amber-600 rounded-md" 
+                            title="Resetar Senha"
+                          >
+                            <KeyRound size={16} />
+                          </button>
+                        )}
+                        <button onClick={() => handleEdit(u)} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-md" title="Editar">
+                          <Edit2 size={16} />
+                        </button>
+                        <button onClick={() => confirm('Excluir usuário permanentemente?') && mutationDelete.mutate(u.id)} className="p-1.5 text-slate-400 hover:text-red-600 rounded-md" title="Excluir">
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {usuariosPaginados.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="px-6 py-10 text-center text-slate-400 italic">Nenhum usuário encontrado.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
         
         {/* Paginação */}
         {totalPaginas > 1 && (
@@ -293,17 +297,18 @@ export default function Usuarios() {
             </label>
           </div>
 
-          <Input label="Nome Completo" {...register('nome')} error={errors.nome?.message} />
+          <Input label="Nome Completo" required {...register('nome')} error={errors.nome?.message} />
           
-          <Input label="E-mail de Acesso" type="email" placeholder="exemplo@empresa.com" {...register('email')} error={errors.email?.message} />
+          <Input label="E-mail de Acesso" required type="email" placeholder="exemplo@empresa.com" {...register('email')} error={errors.email?.message} />
           
           <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Perfil de Acesso</label>
+            <label className="text-sm font-medium text-slate-700">Perfil de Acesso <span className="text-red-500">*</span></label>
             <select 
               {...register('role')}
               className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-slate-800 transition-all"
             >
               <option value="Operador">Operador (Funcionário)</option>
+              <option value="Motorista">Motorista / Entregador</option>
               <option value="Gestor">Gestor</option>
               <option value="Admin">Administrador</option>
               <option value="Cliente">Cliente</option>
