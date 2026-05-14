@@ -5,9 +5,16 @@
 - Vincule o funcionário ao seu respectivo cargo e salário base.
 
 ## 2. Fechamento de Ciclo Mensal
-- **Passo A:** Importe ou registre manualmente as batidas de ponto.
-- **Passo B:** O sistema calculará automaticamente o DSR (Descanso Semanal Remunerado) e Horas Extras.
-- **Passo C:** Clique em "Processar Folha". O sistema gerará as guias de INSS e FGTS (simulação).
+- **Passo A:** Registre ou verifique as batidas de ponto no módulo de 'Controle de Ponto'.
+- **Passo B:** Acesse 'Folha de Pagamento' e clique em **"Processar Mês Atual"**. O sistema identificará automaticamente feriados e jornadas noturnas (22h às 05h).
+- **Passo C:** Revise os valores calculados (HE 50%, HE 100%, Adicional Noturno e Descontos).
+- **Passo D:** Clique em **"Fechar Folha"** para consolidar o mês e gerar automaticamente o lançamento no Financeiro (Contas a Pagar).
+
+## 3. Emissão de Contracheques (Holerites)
+- Após o processamento, clique no ícone de **"Baixar Contracheque"** (seta para baixo) na linha do funcionário.
+- O sistema gerará um PDF profissional formatado para impressão.
+- **Dica de Performance:** O primeiro download do dia pode demorar 1-2 segundos para carregar a identidade visual; os downloads seguintes serão instantâneos devido ao sistema de cache inteligente.
+- **Identidade Visual:** Se o logo da empresa não aparecer ou estiver distorcido, atualize a imagem em 'Dados da Empresa' (o sistema fará a otimização automática no upload).
 
 ## 3. Gestão de Adiantamentos
 - Registre vales ou adiantamentos ao longo do mês; eles serão abatidos automaticamente no processamento final da folha.

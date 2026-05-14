@@ -42,15 +42,15 @@ Este documento é o mapa mestre do Sistema de Gestão de Panificação e Fábric
 - [Valor de Venda (Valuation)](7-gestao/valor-venda-sistema.md) - Precificação e Mercado.
 - [Manual do Administrador](7-gestao/manual-administrador.md) - Guia de implantação e operação.
 
-## 📌 Status Atual do Sistema (12/05/2026)
-O sistema SGP-F encontra-se em estado de **Produção — Estabilidade de Interface e Perfil Motorista**.
+## 📌 Status Atual do Sistema (14/05/2026)
+O sistema SGP-F encontra-se em estado de **Produção — Estabilidade, Performance e Identidade Visual Otimizada**.
 
+- **Performance na Folha de Pagamento:** Implementado sistema de **Cache de Logo** (Frontend e Backend), reduzindo o tempo de download de contracheques de segundos para milissegundos.
+- **Otimização de Identidade Visual:** Implementada compressão automática de imagens no upload da logo da empresa, garantindo que o banco de dados e as requisições permaneçam leves e rápidas.
+- **Salu Branding Integrado:** Finalizada a transição visual para a marca "Salú", com paleta de cores Fire/Ember/Amber em todos os módulos operacionais.
 - **Perfil Motorista/Entregador:** Implementado novo perfil de acesso com isolamento de dados, permitindo que motoristas visualizem apenas suas rotas e entregas, além de registrarem trocas e abastecimentos diretamente pelo celular.
 - **Rastreabilidade Logística:** Adicionado suporte para atribuição de motoristas em Pedidos de Venda e registros de Troca/Avaria, com patches SQL automatizados para integridade do banco.
-- **Padronização UI/UX:** Implementada a sinalização de campos obrigatórios (`*`) em 100% dos formulários do sistema.
-- **Responsividade Pro Max:** Auditados e corrigidos todos os módulos para exibição perfeita no iPhone 14 Pro Max.
-- **Componentes de Tabela:** Adotado o padrão de "Card View" para dispositivos móveis em tabelas densas (ex: Histórico de Ponto).
-- **Acessibilidade em Modais:** Refatorado o componente de Modal para incluir cabeçalho fixo (sticky), rolagem vertical inteligente e botões de ação otimizados para touch.
+- **Responsividade Pro Max:** Auditados e corrigidos todos os módulos para exibição perfeita no iPhone 14 Pro Max, incluindo o uso de "Card View" para tabelas densas.
 
 ---
 ## 🚀 Execução do Projeto

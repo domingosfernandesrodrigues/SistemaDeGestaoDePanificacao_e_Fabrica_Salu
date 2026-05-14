@@ -4,6 +4,8 @@ using QuestPDF.Infrastructure;
 using SGPF.Application.Interfaces;
 using SGPF.Domain.Entities;
 using SGPF.Domain.Interfaces;
+using System.Net.Http;
+using System.Collections.Concurrent;
 
 namespace SGPF.Application.Services;
 
@@ -16,6 +18,8 @@ public class FolhaPagamentoService : IFolhaPagamentoService
     private readonly IRepository<Afastamento> _afastamentoRepo;
     private readonly IRepository<AgendaEvento> _agendaRepo;
     private readonly IRepository<Empresa> _empresaRepo;
+    private static readonly HttpClient _httpClient = new HttpClient();
+    private static readonly ConcurrentDictionary<string, byte[]> _logoCache = new();
 
     public FolhaPagamentoService(
         IRepository<FolhaPagamento> folhaRepo,
@@ -213,40 +217,47 @@ public class FolhaPagamentoService : IFolhaPagamentoService
         byte[]? logoBytes = null;
         if (!string.IsNullOrEmpty(empresa?.LogoUrl))
         {
-            if (empresa.LogoUrl.StartsWith("data:image"))
+            if (_logoCache.TryGetValue(empresa.LogoUrl, out var cachedLogo))
+            {
+                logoBytes = cachedLogo;
+            }
+            else if (empresa.LogoUrl.StartsWith("data:image"))
             {
                 try
                 {
                     var base64Data = empresa.LogoUrl.Substring(empresa.LogoUrl.IndexOf("base64,") + 7);
                     logoBytes = Convert.FromBase64String(base64Data);
+                    if (logoBytes != null) _logoCache.TryAdd(empresa.LogoUrl, logoBytes);
                 }
                 catch { }
             }
             else
             {
+                // Usa cliente estático para reusar conexão e evitar handshakes TLS repetidos
                 try
                 {
-                    using var client = new System.Net.Http.HttpClient();
-                    client.Timeout = TimeSpan.FromSeconds(5);
-                    var response = await client.GetAsync(empresa.LogoUrl);
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+                    var response = await _httpClient.GetAsync(empresa.LogoUrl, cts.Token);
                     if (response.IsSuccessStatusCode)
                     {
-                        var content = await response.Content.ReadAsByteArrayAsync();
+                        var content = await response.Content.ReadAsByteArrayAsync(cts.Token);
                         if (content.Length > 4 && 
                             ((content[0] == 0xFF && content[1] == 0xD8) || // JPG
                              (content[0] == 0x89 && content[1] == 0x50 && content[2] == 0x4E && content[3] == 0x47) || // PNG
                              (content[0] == 0x47 && content[1] == 0x49 && content[2] == 0x46))) // GIF
                         {
                             logoBytes = content;
+                            _logoCache.TryAdd(empresa.LogoUrl, logoBytes);
                         }
                     }
                 }
                 catch
                 {
-                    // Ignora erro se a URL da logo for inválida
+                    // Logo indisponível — continua sem ela
                 }
             }
         }
+
 
         var document = Document.Create(container =>
         {

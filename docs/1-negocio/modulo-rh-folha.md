@@ -19,7 +19,14 @@
 
 ## 4. Integração Financeira
 - O fechamento da folha deve gerar automaticamente um título de "Contas a Pagar" no módulo Financeiro.
-## 5. Métricas de RH
+
+## 5. Geração de Documentos e Performance
+- **Qualidade Visual**: Os contracheques devem obrigatoriamente exibir a logo da empresa para validade institucional.
+- **Performance de Geração**: O sistema utiliza cache de imagem para o logo, evitando downloads redundantes de URLs externas.
+- **Otimização de Dados**: Logos de empresa devem ser comprimidos no upload para garantir que a geração do PDF (QuestPDF) seja concluída em menos de 500ms.
+
+## 6. Métricas de RH
 - **Custo por Funcionário**: Despesas totais (Salário + Encargos + Benefícios) / Número de funcionários.
 - **Produtividade por Turno**: (Volume de Produção ou Vendas) / (Horas Trabalhadas no Turno). 
-- **Turnover Rate**: (Número de saídas / Média de funcionários) * 100.      
+- **Turnover Rate**: (Número de saídas / Média de funcionários) * 100.
+      

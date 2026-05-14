@@ -24,6 +24,7 @@ type EmpresaForm = z.infer<typeof empresaSchema>;
 
 export function ConfiguracoesEmpresa() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isCompressing, setIsCompressing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<EmpresaForm>({
@@ -63,6 +64,36 @@ export function ConfiguracoesEmpresa() {
     // pattern if you want, but simply restricting to numbers is safest nationwide.
     let value = e.target.value.replace(/\D/g, '');
     setValue('inscricaoEstadual', value, { shouldValidate: true });
+  };
+
+  const compressImage = (base64Str: string, maxWidth: number = 400, maxHeight: number = 400): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxWidth) {
+            height *= maxWidth / width;
+            width = maxWidth;
+          }
+        } else {
+          if (height > maxHeight) {
+            width *= maxHeight / height;
+            height = maxHeight;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+    });
   };
 
   useEffect(() => {
@@ -133,6 +164,7 @@ export function ConfiguracoesEmpresa() {
             
             <Input
               label="Razão Social"
+              required
               placeholder="Ex: Padaria e Fábrica SGP-F Ltda"
               {...register('razaoSocial')}
               error={errors.razaoSocial?.message}
@@ -140,6 +172,7 @@ export function ConfiguracoesEmpresa() {
 
             <Input
               label="Nome Fantasia"
+              required
               placeholder="Ex: SGP-Fábrica"
               {...register('nomeFantasia')}
               error={errors.nomeFantasia?.message}
@@ -147,6 +180,7 @@ export function ConfiguracoesEmpresa() {
 
             <Input
               label="CNPJ"
+              required
               placeholder="00.000.000/0001-00"
               {...register('cnpj')}
               onChange={handleCnpjChange}
@@ -184,6 +218,7 @@ export function ConfiguracoesEmpresa() {
             <div className="col-span-1 md:col-span-2">
               <Input
                 label="Endereço Completo"
+                required
                 placeholder="Rua, Número, Bairro, Cidade - Estado"
                 {...register('endereco')}
                 error={errors.endereco?.message}
@@ -198,13 +233,24 @@ export function ConfiguracoesEmpresa() {
               <label className="block text-sm font-semibold text-slate-700 mb-2">Upload da Logo (Opcional)</label>
               <div className="flex items-center gap-4">
                 <label className="flex-1 flex items-center justify-center h-12 border-2 border-slate-300 border-dashed rounded-xl cursor-pointer bg-slate-50 hover:bg-blue-50 hover:border-blue-400 transition-all">
-                  <span className="text-sm font-medium text-slate-500">Clique para anexar a imagem da Logo (JPG, PNG)</span>
-                  <input type="file" className="hidden" accept=".jpg,.jpeg,.png" onChange={(e) => {
+                  <span className="text-sm font-medium text-slate-500">
+                    {isCompressing ? (
+                      <span className="flex items-center gap-2"><Loader2 className="animate-spin" size={18} /> Otimizando imagem...</span>
+                    ) : (
+                      "Clique para anexar a imagem da Logo (JPG, PNG)"
+                    )}
+                  </span>
+                  <input type="file" className="hidden" accept=".jpg,.jpeg,.png" disabled={isCompressing} onChange={async (e) => {
                     const file = e.target.files?.[0];
                     if (file) {
+                      setIsCompressing(true);
                       const reader = new FileReader();
-                      reader.onloadend = () => {
-                        setValue('logoUrl', reader.result as string, { shouldDirty: true });
+                      reader.onloadend = async () => {
+                        const base64 = reader.result as string;
+                        // Comprime para max 400px e 70% qualidade
+                        const compressed = await compressImage(base64, 400, 400);
+                        setValue('logoUrl', compressed, { shouldDirty: true });
+                        setIsCompressing(false);
                       };
                       reader.readAsDataURL(file);
                     }
@@ -223,7 +269,7 @@ export function ConfiguracoesEmpresa() {
                   </div>
                 )}
               </div>
-              <p className="text-xs text-slate-500 mt-2">A logo enviada será impressa automaticamente no cabeçalho do PDF do contracheque.</p>
+              <p className="text-xs text-slate-500 mt-2">A logo enviada será otimizada automaticamente e impressa no cabeçalho do PDF do contracheque.</p>
             </div>
 
           </div>

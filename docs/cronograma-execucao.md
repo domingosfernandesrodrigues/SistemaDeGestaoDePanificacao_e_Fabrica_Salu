@@ -54,9 +54,14 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 ---
 
 ## 📊 Status de Progresso Geral
-- **Fase Atual:** Finalização e Entrega BI ✅
-- **Progresso Total:** 100% (Módulos operacionais, BI e Perfil Motorista concluídos)
-- **Última Atualização:** 12/05/2026
+- **Fase Atual:** Estabilidade e Performance ✅
+- **Progresso Total:** 100% (Todos os módulos, BI, Perfil Motorista e Otimizações de Performance concluídos)
+- **Última Atualização:** 14/05/2026
+
+### 🛠️ Refinamentos de Performance & Identidade (14/Mai/2026):
+- **Otimização de Downloads (Cache de Logo):** Implementado cache de `byte[]` no backend (`FolhaPagamentoService`) e cache de memória no frontend (`empresaService`) para evitar requisições redundantes de imagens pesadas.
+- **Compressão de Logo no Cliente:** Inclusão de algoritmo de compressão via Canvas no upload da logo. Imagens são redimensionadas para 400px e comprimidas para 70% de qualidade antes de serem enviadas ao banco de dados.
+- **Latência de Contracheques:** Redução drástica no tempo de geração de PDFs de contracheque (QuestPDF) através da eliminação de chamadas HTTP externas repetitivas para o logo da empresa.
 
 ### 🛠️ Refinamentos Recentes (Maio/2026 - Perfil Motorista & Logística Especializada):
 - **Novo Perfil "Motorista / Entregador":** Implementação de role específica com isolamento de dados em nível de API. Motoristas visualizam apenas pedidos atribuídos a eles no Dashboard e Kanban.

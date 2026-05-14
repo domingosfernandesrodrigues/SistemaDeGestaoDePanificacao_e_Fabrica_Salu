@@ -17,7 +17,7 @@
 
 ## Módulo: RH e Folha (Fase 3)
 - `RegistrosPonto`: Id, FuncionarioId, DataHoraEntrada, DataHoraSaida, TotalHorasTrabalhadas, TotalHorasExtras, Observacao.
-- `FolhaPagamento`: Id, FuncionarioId, MesReferencia, AnoReferencia, SalarioBaseCalculado, HorasExtras50, ValorHE50, HorasExtras100, ValorHE100, ValorAdicionalNoturno, TotalDescontos, SalarioLiquido, Status (Aberta/Fechada).
+- `FolhaPagamento`: Id, FuncionarioId, MesReferencia, AnoReferencia, SalarioBaseCalculado, TotalHorasExtras50, ValorHorasExtras50, TotalHorasExtras100, ValorHorasExtras100, ValorAdicionalNoturno, TotalDescontos, SalarioLiquido, Status (0=Aberta/1=Fechada).
 - `AgendaEventos`: Id, Titulo, Data, Tipo (Feriado/Lembrete/Aviso), Descricao, IsNacional (BIT).
 - `Afastamentos`: Id, FuncionarioId, Tipo, DataInicio, DataFim, Observacao.
 
