@@ -18,7 +18,16 @@ public class DespesasController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll() => Ok(await _repository.GetAllAsync());
+    public async Task<IActionResult> GetAll()
+    {
+        var todas = await _repository.GetAllAsync();
+        var filtradas = todas.Where(d => 
+            !d.Descricao.StartsWith("Compra #") && 
+            d.Categoria != "Insumos" && 
+            d.Categoria != "Mercadorias" && 
+            d.Categoria != "Folha de Pagamento").ToList();
+        return Ok(filtradas);
+    }
 
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] ContaPagar despesa)

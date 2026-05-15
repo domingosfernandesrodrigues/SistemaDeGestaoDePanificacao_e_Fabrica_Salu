@@ -26,5 +26,6 @@ public class CompraResponseDto
     public string ProdutosResumo { get; set; } = string.Empty;
     public decimal TotalItens { get; set; }
     public string? Observacao { get; set; }
+    public bool IsPago { get; set; }
     public List<CompraItemDto> Itens { get; set; } = new();
 }

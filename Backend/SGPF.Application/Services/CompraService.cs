@@ -120,7 +120,8 @@ public class CompraService : ICompraService
             Valor = compra.ValorTotal,
             DataEmissao = DateTime.UtcNow,
             DataVencimento = DateTime.UtcNow.AddDays(30),
-            Status = StatusContaPagar.Pendente
+            Status = StatusContaPagar.Pendente,
+            Categoria = compra.Categoria == CategoriaCompra.Insumo ? "Insumos" : "Mercadorias"
         });
 
         compra.Status = StatusCompra.Confirmada;

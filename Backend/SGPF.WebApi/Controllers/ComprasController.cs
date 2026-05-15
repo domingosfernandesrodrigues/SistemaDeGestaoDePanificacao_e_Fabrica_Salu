@@ -27,7 +27,7 @@ public class ComprasController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> Get()
+    public async Task<IActionResult> Get([FromServices] IRepository<ContaPagar> pagarRepo)
     {
         var compras = await _compraService.ListarTodasAsync();
         var response = new List<CompraResponseDto>();
@@ -46,6 +46,11 @@ public class ComprasController : ControllerBase
                 if (prod != null) produtosNomes.Add($"{prod.Nome} ({item.Quantidade.ToString("0.###")})");
             }
 
+            var tag = $"Compra #{c.Id.ToString().Substring(0,8)}";
+            var faturas = await pagarRepo.FindAsync(p => p.Descricao.Contains(tag));
+            var fatura = faturas.FirstOrDefault();
+            bool isPago = fatura != null && fatura.Status == StatusContaPagar.Paga;
+
             response.Add(new CompraResponseDto
             {
                 Id = c.Id,
@@ -57,6 +62,7 @@ public class ComprasController : ControllerBase
                 ProdutosResumo = string.Join(", ", produtosNomes),
                 TotalItens = itens.Sum(i => i.Quantidade),
                 Observacao = c.Observacao,
+                IsPago = isPago,
                 Itens = itens.Select(i => new CompraItemDto
                 {
                     ProdutoId = i.ProdutoId,
@@ -98,6 +104,30 @@ public class ComprasController : ControllerBase
         {
             var compra = await _compraService.ConfirmarCompraAsync(id);
             return Ok(compra);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("{id}/pagar")]
+    public async Task<IActionResult> Pagar(Guid id, [FromServices] IFinanceiroService finService, [FromServices] IRepository<ContaPagar> pagarRepo)
+    {
+        try
+        {
+            var compra = await _compraService.ObterPorIdAsync(id);
+            if (compra == null) return NotFound(new { message = "Compra não encontrada." });
+            
+            var tag = $"Compra #{compra.Id.ToString().Substring(0,8)}";
+            var faturas = await pagarRepo.FindAsync(p => p.Descricao.Contains(tag));
+            var fatura = faturas.FirstOrDefault();
+            
+            if (fatura == null) return BadRequest(new { message = "Fatura financeira não encontrada para esta compra." });
+            if (fatura.Status == StatusContaPagar.Paga) return BadRequest(new { message = "Esta compra já foi paga." });
+            
+            await finService.BaixarContaPagarAsync(fatura.Id);
+            return Ok(new { message = "Pagamento baixado com sucesso." });
         }
         catch (Exception ex)
         {
