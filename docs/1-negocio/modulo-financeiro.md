@@ -1,8 +1,11 @@
 # Módulo: Financeiro e Fluxo de Caixa
 
 ## 1. Contas a Pagar e Receber
-- Alimentado automaticamente por: Vendas (Receber), Compras (Pagar), Folha de Pagamento (Pagar) e Manutenções de Frota (Pagar).
-- **Conciliação Automática:** Ao baixar uma conta (pagar ou receber), o sistema atualiza automaticamente o `SaldoAtual` da `ContaBancaria` padrão.
+- **Gestão Descentralizada:** O módulo de "Despesas Gerais" é exclusivo para custos fixos/operacionais (aluguel, água, luz). 
+- Pagamentos atrelados a operações de terceiros possuem seu próprio checkout financeiro descentralizado:
+  - **Compras e Insumos:** Pagos diretamente nas telas de Compras / Entrada de Insumos (botão "Pagar/Liquidar" gerado após confirmação do estoque).
+  - **Folha de Pagamento:** Liquidada diretamente no módulo de RH.
+- **Conciliação Automática:** Ao baixar uma conta (descentralizada ou via despesa geral), o sistema localiza a fatura oculta e debita/credita automaticamente o `SaldoAtual` da `ContaBancaria` padrão.
 
 ## 2. Contas Bancárias e Saldos (`ContaBancaria`)
 Entidade central para gestão de saldos e configurações de recebimento.

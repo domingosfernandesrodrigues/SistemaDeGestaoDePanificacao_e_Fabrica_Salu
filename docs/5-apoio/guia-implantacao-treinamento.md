@@ -27,7 +27,7 @@ Com o sistema configurado, alimentamos os cadastros que servirão de base para a
 Este é o fluxo principal para quem fabrica.
 
 1.  **Ficha Técnica:** Definir a "receita" de cada produto. Ex: Para 1kg de polvilho, quanto de bruto é usado? Qual o custo?
-2.  **Entrada de Insumos:** Registrar as compras e entradas de nota. Isso alimenta o estoque de matéria-prima.
+2.  **Entrada de Insumos e Compras:** Registrar as entradas de nota para alimentar o estoque. **Atenção Financeira:** Após confirmar a entrada, o sistema libera o botão "Pagar/Liquidar" no próprio formulário para abater o valor do Saldo Bancário, sem precisar ir ao menu de despesas.
 3.  **Ordem de Produção (OP):** 
     *   Abrir uma OP para produzir X quantidades.
     *   O sistema reserva/baixa os insumos automaticamente.
@@ -49,7 +49,7 @@ Gestão da equipe e custos fixos.
 1.  **Controle de Ponto:** Funcionários batem ponto diariamente.
 2.  **Afastamentos e Faltas:** Lançamento de atestados ou faltas para ajuste automático na folha.
 3.  **Folha de Pagamento:** Ao final do mês, o sistema processa o ponto e gera o resumo de pagamentos (CLT).
-4.  **Despesas Gerais:** Lançar contas de luz, aluguel, manutenção e outros custos operacionais.
+4.  **Despesas Gerais:** Exclusivo para custos fixos corporativos (luz, aluguel, manutenções, água). Faturas de fornecedores de mercadorias não se misturam aqui.
 
 ## 📈 Fase 6: Inteligência e Tomada de Decisão (BI)
 
