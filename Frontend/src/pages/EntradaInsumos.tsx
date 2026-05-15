@@ -32,6 +32,7 @@ interface Compra {
   produtosResumo: string;
   totalItens: number;
   observacao?: string;
+  isPago: boolean;
   itens: { produtoId: string; quantidade: number; precoUnitario: number }[];
 }
 
@@ -48,7 +49,7 @@ export function EntradaInsumos() {
 
   const queryClient = useQueryClient();
 
-  const { register, control, handleSubmit, reset, watch, formState: { errors } } = useForm<EntradaForm>({
+  const { register, control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<EntradaForm>({
     resolver: zodResolver(schema),
     defaultValues: { itens: [{ produtoId: '', quantidade: 1, precoUnitario: 0 }] }
   });
@@ -97,6 +98,15 @@ export function EntradaInsumos() {
       alert('Entrada confirmada! Estoque de insumos atualizado.');
     },
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao confirmar')
+  });
+
+  const mutationPay = useMutation({
+    mutationFn: (id: string) => api.post(`/Compras/${id}/pagar`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['compras'] });
+      alert('Pagamento registrado! O valor foi debitado da conta bancária padrão.');
+    },
+    onError: (err: any) => alert(err.response?.data?.message || 'Erro ao registrar pagamento')
   });
 
   const handleEdit = async (entrada: Compra) => {
@@ -221,7 +231,7 @@ export function EntradaInsumos() {
                     <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
                       {entrada.status === 'Rascunho' && (
                         <div className="flex justify-end gap-2">
-                          <button onClick={() => handleEdit(entrada)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg"><Pencil size={18} /></button>
+                          <button onClick={() => handleEdit(entrada)} className="p-1.5 text-slate-500 hover:text-ember hover:bg-ember/5 rounded-lg"><Pencil size={18} /></button>
                           <button onClick={() => confirm('Excluir este rascunho?') && mutationDelete.mutate(entrada.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg">
                             {mutationDelete.isPending ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
                           </button>
@@ -229,6 +239,25 @@ export function EntradaInsumos() {
                             {mutationConfirm.isPending ? <Loader2 className="animate-spin" size={14} /> : <CheckCircle size={14} />} Confirmar
                           </Button>
                         </div>
+                      )}
+                      {entrada.status === 'Confirmada' && !entrada.isPago && (
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="secondary"
+                            className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 border-emerald-200 flex items-center gap-2"
+                            onClick={() => confirm('Confirmar pagamento? Isso debitará o valor da sua conta bancária.') && mutationPay.mutate(entrada.id)}
+                            disabled={mutationPay.isPending}
+                          >
+                            {mutationPay.isPending ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+                            Pagar
+                          </Button>
+                        </div>
+                      )}
+                      {entrada.status === 'Confirmada' && entrada.isPago && (
+                        <span className="text-xs font-bold text-emerald-600 uppercase flex items-center justify-end gap-1">
+                          <CheckCircle size={14} /> Pago
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -296,6 +325,26 @@ export function EntradaInsumos() {
                   <button onClick={() => confirm('Excluir?') && mutationDelete.mutate(entrada.id)} className="p-2 text-red-500 bg-red-50 rounded-lg"><Trash2 size={18} /></button>
                 </div>
               )}
+              {entrada.status === 'Confirmada' && !entrada.isPago && (
+                <div className="flex gap-2 pt-1">
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    className="flex-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200" 
+                    onClick={() => confirm('Confirmar pagamento?') && mutationPay.mutate(entrada.id)}
+                  >
+                    {mutationPay.isPending ? <Loader2 className="animate-spin mr-1" size={14} /> : <Save size={14} className="mr-1" />} 
+                    Pagar / Liquidar
+                  </Button>
+                </div>
+              )}
+              {entrada.status === 'Confirmada' && entrada.isPago && (
+                <div className="pt-1 text-center">
+                  <span className="text-xs font-bold text-emerald-600 uppercase flex items-center justify-center gap-1">
+                    <CheckCircle size={14} /> Pagamento Realizado
+                  </span>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -319,7 +368,7 @@ export function EntradaInsumos() {
       <Modal isOpen={isModalOpen} onClose={handleClose} title={editId ? 'Editar Entrada de Insumo' : 'Nova Entrada de Insumo'}>
         <form onSubmit={handleSubmit(d => mutationSave.mutate(d))} className="space-y-6">
           <Controller control={control} name="fornecedorId" render={({ field }) => (
-            <SearchableSelect label="Fornecedor" placeholder="Pesquise o fornecedor..." options={fornecedores?.map(f => ({ value: f.id, label: f.nomeFantasia })) || []} value={field.value} onChange={field.onChange} error={errors.fornecedorId?.message} />
+            <SearchableSelect label="Fornecedor" required placeholder="Pesquise o fornecedor..." options={fornecedores?.map(f => ({ value: f.id, label: f.nomeFantasia })) || []} value={field.value} onChange={field.onChange} error={errors.fornecedorId?.message} />
           )} />
 
           <div className="space-y-4">
@@ -329,18 +378,73 @@ export function EntradaInsumos() {
                 <Plus size={14} /> Adicionar Insumo
               </Button>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-4 pr-1">
               {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-12 gap-2 bg-orange-50 p-3 rounded-lg border border-orange-100 items-end">
-                  <div className="col-span-6">
-                    <Controller control={control} name={`itens.${index}.produtoId`} render={({ field }) => (
-                      <SearchableSelect label="Insumo" placeholder="Buscar..." options={insumos.map(p => ({ value: p.id, label: `${p.nome} (${p.unidadeMedida})` }))} value={field.value} onChange={field.onChange} error={errors.itens?.[index]?.produtoId?.message} />
-                    )} />
-                  </div>
-                  <div className="col-span-2"><Input label="Qtd" type="number" step="0.001" {...register(`itens.${index}.quantidade`)} /></div>
-                  <div className="col-span-3"><Input label="R$ Unit" type="number" step="0.0001" {...register(`itens.${index}.precoUnitario`)} /></div>
-                  <div className="col-span-1 flex justify-center pb-2">
-                    <button type="button" onClick={() => remove(index)} className="text-red-500 hover:text-red-700"><Trash2 size={18} /></button>
+                <div key={field.id} className="relative bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-orange-300 transition-all group">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-slate-100 group-hover:bg-orange-500 transition-colors rounded-l-xl"></div>
+                  
+                  <div className="flex flex-col gap-4">
+                    <div className="flex-1">
+                      <Controller
+                        control={control}
+                        name={`itens.${index}.produtoId`}
+                        render={({ field }) => (
+                          <SearchableSelect
+                            label="Insumo (Matéria-Prima)"
+                            required
+                            placeholder="Buscar..."
+                            options={insumos.map(p => ({ value: p.id, label: `${p.nome} (${p.unidadeMedida})` }))}
+                            value={field.value}
+                            onChange={(val) => {
+                              field.onChange(val);
+                              // Buscar o produto selecionado para pegar o preço de custo atual
+                              const p = insumos.find(x => x.id === val);
+                              if (p) {
+                                setValue(`itens.${index}.precoUnitario`, p.precoCusto);
+                              }
+                            }}
+                            error={errors.itens?.[index]?.produtoId?.message}
+                          />
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="flex items-end gap-3">
+                      <div className="flex-1">
+                        <Input 
+                          label="Quantidade" 
+                          required 
+                          type="number" 
+                          step="0.001" 
+                          {...register(`itens.${index}.quantidade`)} 
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <Input 
+                          label="R$ Unitário" 
+                          required 
+                          type="number" 
+                          step="0.0001" 
+                          {...register(`itens.${index}.precoUnitario`)} 
+                        />
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => remove(index)} 
+                        className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors mb-0.5"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-2 border-t border-slate-50">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Subtotal do Item</span>
+                      <span className="text-sm font-black text-slate-700">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                          (Number(watch(`itens.${index}.quantidade`)) || 0) * (Number(watch(`itens.${index}.precoUnitario`)) || 0)
+                        )}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}

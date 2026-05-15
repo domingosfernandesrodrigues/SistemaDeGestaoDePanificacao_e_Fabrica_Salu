@@ -31,6 +31,7 @@ interface Compra {
   produtosResumo: string;
   totalItens: number;
   observacao?: string;
+  isPago: boolean;
   itens: { produtoId: string; quantidade: number; precoUnitario: number }[];
 }
 
@@ -57,7 +58,7 @@ export function Compras() {
 
   const queryClient = useQueryClient();
 
-  const { register, control, handleSubmit, reset, watch, formState: { errors } } = useForm<CompraForm>({
+  const { register, control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<CompraForm>({
     resolver: zodResolver(compraSchema),
     defaultValues: { itens: [{ produtoId: '', quantidade: 1, precoUnitario: 0 }] }
   });
@@ -67,10 +68,12 @@ export function Compras() {
     name: "itens"
   });
 
-  const { data: compras, isLoading: loadingCompras } = useQuery<Compra[]>({
+  const { data: todasCompras, isLoading: loadingCompras } = useQuery<Compra[]>({
     queryKey: ['compras'],
     queryFn: async () => (await api.get('/Compras')).data,
   });
+
+  const compras = (todasCompras || []).filter(c => c.categoria === 'Mercadoria');
 
   const { data: fornecedores } = useQuery<any[]>({
     queryKey: ['fornecedores'],
@@ -83,8 +86,10 @@ export function Compras() {
   });
 
   const mutationSave = useMutation({
-    mutationFn: (data: CompraForm) => 
-      editId ? api.put(`/Compras/${editId}`, data) : api.post('/Compras', data),
+    mutationFn: (data: CompraForm) => {
+      const payload = { ...data, categoria: 'Mercadoria' };
+      return editId ? api.put(`/Compras/${editId}`, payload) : api.post('/Compras', payload);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['compras'] });
       handleCloseModal();
@@ -109,6 +114,15 @@ export function Compras() {
       alert('Compra confirmada! Estoque e Financeiro atualizados.');
     },
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao confirmar compra')
+  });
+
+  const mutationPay = useMutation({
+    mutationFn: (id: string) => api.post(`/Compras/${id}/pagar`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['compras'] });
+      alert('Pagamento registrado! O valor foi debitado da conta bancária padrão.');
+    },
+    onError: (err: any) => alert(err.response?.data?.message || 'Erro ao registrar pagamento')
   });
 
   const handleEdit = async (compra: Compra) => {
@@ -169,7 +183,7 @@ export function Compras() {
     setCurrentPage(1); // Resetar para primeira página ao filtrar
   };
 
-  if (loadingCompras) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+  if (loadingCompras) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-ember" size={32} /></div>;
 
   return (
     <div className="space-y-6">
@@ -294,7 +308,7 @@ export function Compras() {
                         <div className="flex justify-end gap-2">
                           <button 
                             onClick={() => handleEdit(compra)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                            className="p-1.5 text-slate-500 hover:text-ember hover:bg-ember/5 rounded-lg transition-colors"
                             title="Editar Rascunho"
                           >
                             <Pencil size={18} />
@@ -308,7 +322,7 @@ export function Compras() {
                           </button>
                           <Button 
                             size="sm" 
-                            className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2"
+                            className="bg-gradient-to-r from-fire to-ember hover:opacity-90 flex items-center gap-2"
                             onClick={() => confirm('Deseja confirmar esta compra? Isso atualizará o estoque e gerará uma conta a pagar.') && mutationConfirm.mutate(compra.id)}
                             disabled={mutationConfirm.isPending}
                           >
@@ -316,6 +330,25 @@ export function Compras() {
                             Confirmar
                           </Button>
                         </div>
+                      )}
+                      {compra.status === 'Confirmada' && !compra.isPago && (
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            size="sm" 
+                            variant="secondary"
+                            className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 border-emerald-200 flex items-center gap-2"
+                            onClick={() => confirm('Confirmar pagamento? Isso debitará o valor da sua conta bancária.') && mutationPay.mutate(compra.id)}
+                            disabled={mutationPay.isPending}
+                          >
+                            {mutationPay.isPending ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+                            Pagar
+                          </Button>
+                        </div>
+                      )}
+                      {compra.status === 'Confirmada' && compra.isPago && (
+                        <span className="text-xs font-bold text-emerald-600 uppercase flex items-center justify-end gap-1">
+                          <CheckCircle size={14} /> Pago
+                        </span>
                       )}
                     </td>
                   </tr>
@@ -392,7 +425,7 @@ export function Compras() {
                   </div>
                   <div className="text-right">
                     <p className="text-slate-400 uppercase text-[9px] font-bold">Valor Total</p>
-                    <p className="text-lg font-black text-indigo-600">
+                    <p className="text-lg font-bold text-fire">
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(compra.valorTotal)}
                     </p>
                   </div>
@@ -404,12 +437,32 @@ export function Compras() {
                   <Button size="sm" variant="secondary" className="flex-1" onClick={() => handleEdit(compra)}>
                     <Pencil size={14} className="mr-1" /> Editar
                   </Button>
-                  <Button size="sm" className="flex-1 bg-indigo-600" onClick={() => confirm('Confirmar compra?') && mutationConfirm.mutate(compra.id)}>
+                  <Button size="sm" className="flex-1 bg-gradient-to-r from-fire to-ember" onClick={() => confirm('Confirmar compra?') && mutationConfirm.mutate(compra.id)}>
                     <CheckCircle size={14} className="mr-1" /> Confirmar
                   </Button>
                   <button onClick={() => confirm('Excluir rascunho?') && mutationDelete.mutate(compra.id)} className="p-2 text-red-500 bg-red-50 rounded-lg">
                     <Trash2 size={18} />
                   </button>
+                </div>
+              )}
+              {compra.status === 'Confirmada' && !compra.isPago && (
+                <div className="flex gap-2 pt-1">
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    className="flex-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200" 
+                    onClick={() => confirm('Confirmar pagamento?') && mutationPay.mutate(compra.id)}
+                  >
+                    {mutationPay.isPending ? <Loader2 className="animate-spin mr-1" size={14} /> : <Save size={14} className="mr-1" />} 
+                    Pagar / Liquidar
+                  </Button>
+                </div>
+              )}
+              {compra.status === 'Confirmada' && compra.isPago && (
+                <div className="pt-1 text-center">
+                  <span className="text-xs font-bold text-emerald-600 uppercase flex items-center justify-center gap-1">
+                    <CheckCircle size={14} /> Pagamento Realizado
+                  </span>
                 </div>
               )}
               
@@ -422,7 +475,7 @@ export function Compras() {
               </button>
 
               {expandedRows[compra.id] && (
-                <div className="mt-2 space-y-2 border-l-2 border-indigo-100 pl-3">
+                <div className="mt-2 space-y-2 border-l-2 border-ember/20 pl-3">
                   {compra.itens.map((item, idx) => {
                     const prodNome = produtos?.find(p => p.id === item.produtoId)?.nome || 'Produto';
                     return (
@@ -465,7 +518,7 @@ export function Compras() {
                   onClick={() => setCurrentPage(i + 1)}
                   className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${
                     currentPage === i + 1 
-                      ? 'bg-indigo-600 text-white' 
+                      ? 'bg-ember text-white' 
                       : 'border border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
                   }`}
                 >
@@ -492,6 +545,7 @@ export function Compras() {
             render={({ field }) => (
               <SearchableSelect
                 label="Fornecedor"
+                required
                 placeholder="Pesquise o fornecedor..."
                 options={fornecedores?.map(f => ({ value: f.id, label: f.nomeFantasia })) || []}
                 value={field.value}
@@ -509,33 +563,73 @@ export function Compras() {
               </Button>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-4 pr-1">
               {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-12 gap-2 bg-slate-50 p-3 rounded-lg border border-slate-100 items-end">
-                  <div className="col-span-6">
-                    <Controller
-                      control={control}
-                      name={`itens.${index}.produtoId`}
-                      render={({ field }) => (
-                        <SearchableSelect
-                          label="Produto"
-                          placeholder="Buscar..."
-                          options={produtos?.filter(p => p.tipo !== 0).map(p => ({ value: p.id, label: p.nome })) || []}
-                          value={field.value}
-                          onChange={field.onChange}
-                          error={errors.itens?.[index]?.produtoId?.message}
+                <div key={field.id} className="relative bg-white p-4 rounded-xl border border-slate-200 shadow-sm hover:border-ember/40 transition-all group">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-slate-100 group-hover:bg-ember transition-colors rounded-l-xl"></div>
+                  
+                  <div className="flex flex-col gap-4">
+                    <div className="flex-1">
+                      <Controller
+                        control={control}
+                        name={`itens.${index}.produtoId`}
+                        render={({ field }) => (
+                          <SearchableSelect
+                            label="Produto / Item"
+                            required
+                            placeholder="Buscar..."
+                            options={produtos?.filter(p => p.tipo !== 0).map(p => ({ value: p.id, label: p.nome })) || []}
+                            value={field.value}
+                            onChange={(val) => {
+                              field.onChange(val);
+                              // Buscar o produto selecionado para pegar o preço de custo atual
+                              const p = produtos?.find(x => x.id === val);
+                              if (p) {
+                                setValue(`itens.${index}.precoUnitario`, p.precoCusto);
+                              }
+                            }}
+                            error={errors.itens?.[index]?.produtoId?.message}
+                          />
+                        )}
+                      />
+                    </div>
+                    
+                    <div className="flex items-end gap-3">
+                      <div className="flex-1">
+                        <Input 
+                          label="Quantidade" 
+                          required 
+                          type="number" 
+                          step="0.001" 
+                          {...register(`itens.${index}.quantidade`)} 
                         />
-                      )}
-                    />
-                  </div>
-                  <div className="col-span-2">
-                    <Input label="Qtd" type="number" step="0.001" {...register(`itens.${index}.quantidade`)} />
-                  </div>
-                  <div className="col-span-3">
-                    <Input label="R$ Unit" type="number" step="0.0001" {...register(`itens.${index}.precoUnitario`)} />
-                  </div>
-                  <div className="col-span-1 flex justify-center pb-2">
-                    <button type="button" onClick={() => remove(index)} className="text-red-500 hover:text-red-700"><Trash2 size={18} /></button>
+                      </div>
+                      <div className="flex-1">
+                        <Input 
+                          label="R$ Unitário" 
+                          required 
+                          type="number" 
+                          step="0.0001" 
+                          {...register(`itens.${index}.precoUnitario`)} 
+                        />
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => remove(index)} 
+                        className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors mb-0.5"
+                      >
+                        <Trash2 size={20} />
+                      </button>
+                    </div>
+
+                    <div className="flex justify-between items-center pt-2 border-t border-slate-50">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase">Subtotal do Item</span>
+                      <span className="text-sm font-black text-slate-700">
+                        {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                          (Number(watch(`itens.${index}.quantidade`)) || 0) * (Number(watch(`itens.${index}.precoUnitario`)) || 0)
+                        )}
+                      </span>
+                    </div>
                   </div>
                 </div>
               ))}
