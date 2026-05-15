@@ -143,6 +143,8 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                 folhaExistente.TotalHorasExtras100 = totalHE100;
                 folhaExistente.ValorHorasExtras100 = valorHE100;
                 folhaExistente.ValorAdicionalNoturno = valorAdicionalNoturno;
+                folhaExistente.TotalHorasExtras = totalHE50 + totalHE100;
+                folhaExistente.ValorHorasExtras = valorHE50 + valorHE100;
                 folhaExistente.TotalDescontos = descontos;
                 folhaExistente.SalarioLiquido = liquido;
                 
@@ -162,6 +164,8 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                     TotalHorasExtras100 = totalHE100,
                     ValorHorasExtras100 = valorHE100,
                     ValorAdicionalNoturno = valorAdicionalNoturno,
+                    TotalHorasExtras = totalHE50 + totalHE100,
+                    ValorHorasExtras = valorHE50 + valorHE100,
                     TotalDescontos = descontos,
                     SalarioLiquido = liquido,
                     Status = StatusFolha.Aberta
@@ -183,7 +187,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
 
         var func = await _funcRepo.GetByIdAsync(folha.FuncionarioId);
 
-        /* Integração Financeira Removida conforme solicitação do usuário
+        // Integração Financeira Restaurada
         var contaPagar = new ContaPagar
         {
             Descricao = $"Folha Pagamento {folha.MesReferencia:D2}/{folha.AnoReferencia} - {func?.Nome}",
@@ -192,7 +196,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
             Categoria = "Folha de Pagamento"
         };
         await _contaPagarRepo.AddAsync(contaPagar);
-        */
+
 
         folha.Status = StatusFolha.Fechada;
         await _folhaRepo.UpdateAsync(folha);

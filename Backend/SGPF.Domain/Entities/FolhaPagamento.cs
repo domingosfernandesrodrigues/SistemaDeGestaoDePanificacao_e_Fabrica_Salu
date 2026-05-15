@@ -27,6 +27,10 @@ public class FolhaPagamento
     
     public decimal ValorAdicionalNoturno { get; set; }
     
+    // Suporte ao banco de dados legado
+    public decimal TotalHorasExtras { get; set; }
+    public decimal ValorHorasExtras { get; set; }
+    
     public decimal TotalDescontos { get; set; } 
     public decimal SalarioLiquido { get; set; }
     
