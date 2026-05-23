@@ -7,11 +7,12 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
-import { ShoppingCart, Truck, CheckCircle, Loader2, Plus, Trash2, Save, PowerOff, Edit3, Search, CreditCard, Banknote, QrCode, FileText, QrCode as PixIcon, Printer } from 'lucide-react';
+import { ShoppingCart, Truck, CheckCircle, Loader2, Plus, Trash2, Save, PowerOff, Edit3, Search, CreditCard, Banknote, QrCode, FileText, QrCode as PixIcon, Printer, AlertTriangle } from 'lucide-react';
 import api from '../services/api';
 
 const pedidoSchema = z.object({
   clienteId: z.string().min(1, 'Selecione um cliente'),
+  motoristaId: z.string().optional().nullable(),
   formaPagamento: z.coerce.number().default(0),
   itens: z.array(z.object({
     produtoId: z.string().min(1, 'Selecione um produto'),
@@ -21,6 +22,50 @@ const pedidoSchema = z.object({
 });
 
 type PedidoForm = z.infer<typeof pedidoSchema>;
+
+function crc16Ccitt(str: string): string {
+  let crc = 0xFFFF;
+  const bytes = new TextEncoder().encode(str);
+  for (const b of bytes) {
+    crc ^= (b << 8);
+    for (let i = 0; i < 8; i++) {
+      if ((crc & 0x8000) !== 0) {
+        crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+      } else {
+        crc = (crc << 1) & 0xFFFF;
+      }
+    }
+  }
+  return crc.toString(16).toUpperCase().padStart(4, '0');
+}
+
+function gerarBrCodePix(chave: string, valor: number, nomeRecebedor: string): string {
+  const cleanChave = chave.trim();
+  let cleanNome = nomeRecebedor.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  cleanNome = cleanNome.substring(0, 25);
+
+  const pixKey = `0014BR.GOV.BCB.PIX01${cleanChave.length.toString().padStart(2, '0')}${cleanChave}`;
+  const mai = `26${pixKey.length.toString().padStart(2, '0')}${pixKey}`;
+
+  const valorStr = valor.toFixed(2);
+  const valorField = `54${valorStr.length.toString().padStart(2, '0')}${valorStr}`;
+
+  const payload = 
+    "000201" +
+    "010212" +
+    mai +
+    "52040000" +
+    "5303986" +
+    valorField +
+    "5802BR" +
+    `59${cleanNome.length.toString().padStart(2, '0')}${cleanNome}` +
+    "6009SAO PAULO" +
+    "62070503***" +
+    "6304";
+
+  const crc = crc16Ccitt(payload);
+  return payload + crc;
+}
 
 interface Venda {
   id: string;
@@ -32,6 +77,8 @@ interface Venda {
   formaPagamento: number;
   pago: boolean;
   clienteId: string;
+  motoristaId?: string;
+  motorista?: { nome: string };
   pixQrCode?: string;
   boletoCodigoBarras?: string;
 }
@@ -43,6 +90,7 @@ export function Vendas() {
   
   // Estados dos Filtros (Voltando ao padrão de Ano e Mês atual conforme solicitado)
   const [filtroCliente, setFiltroCliente] = useState('');
+  const [filtroMotorista, setFiltroMotorista] = useState('');
   const [filtroAno, setFiltroAno] = useState(new Date().getFullYear().toString());
   const [filtroMes, setFiltroMes] = useState((new Date().getMonth() + 1).toString());
   const [filtroData, setFiltroData] = useState('');
@@ -53,6 +101,7 @@ export function Vendas() {
 
   const [selectedVendaDocs, setSelectedVendaDocs] = useState<Venda | null>(null);
   const [selectedContaId, setSelectedContaId] = useState<string | null>(null);
+  const [abaDocumento, setAbaDocumento] = useState<1 | 4>(1); // 1=Pix, 4=Boleto
 
   const queryClient = useQueryClient();
 
@@ -62,6 +111,7 @@ export function Vendas() {
   });
 
   const watchItens = watch('itens');
+  const watchClienteId = watch('clienteId');
 
   const calcularTotal = () => {
     return watchItens?.reduce((acc, item) => {
@@ -90,6 +140,13 @@ export function Vendas() {
     refetchInterval: 5000, // Atualiza a cada 5 segundos para mostrar confirmações automáticas
   });
 
+  // Verifica inadimplência: >= 3 comandas pendentes (não pagas, não canceladas) para o cliente selecionado
+  const LIMITE_INADIMPLENCIA = 3;
+  const comandasPendentesCliente = vendas?.filter(
+    v => v.clienteId === watchClienteId && !v.pago && v.status !== 4
+  ) ?? [];
+  const isInadimplente = !editId && comandasPendentesCliente.length >= LIMITE_INADIMPLENCIA;
+
   const { data: clientes } = useQuery<any[]>({
     queryKey: ['clientes'],
     queryFn: async () => {
@@ -109,6 +166,11 @@ export function Vendas() {
   const { data: contasBancarias } = useQuery<any[]>({
     queryKey: ['contas-bancarias'],
     queryFn: async () => (await api.get('/ContasBancarias')).data,
+  });
+  
+  const { data: funcionarios } = useQuery<any[]>({
+    queryKey: ['funcionarios'],
+    queryFn: async () => (await api.get('/Funcionarios')).data,
   });
 
   const { data: produtos } = useQuery<any[]>({
@@ -148,9 +210,11 @@ export function Vendas() {
       const dados = pedidoFull.data;
       
       setValue('clienteId', dados.clienteId);
+      setValue('motoristaId', dados.motoristaId);
       setValue('formaPagamento', dados.formaPagamento);
       reset({ 
         clienteId: dados.clienteId, 
+        motoristaId: dados.motoristaId,
         formaPagamento: dados.formaPagamento,
         itens: dados.itens.map((i: any) => {
           const preco = i.precoUnitario || 0;
@@ -175,7 +239,7 @@ export function Vendas() {
   const handleCloseModal = () => {
     setIsModalOpen(false);
     setEditId(null);
-    reset({ clienteId: '', itens: [{ produtoId: '', quantidade: 1, desconto: 0 }] });
+    reset({ clienteId: '', motoristaId: null, itens: [{ produtoId: '', quantidade: 1, desconto: 0 }] });
   };
 
   const mutationUpdateStatus = useMutation({
@@ -254,7 +318,7 @@ export function Vendas() {
   if (loadingVendas) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-indigo-600" size={32} />
+        <Loader2 className="animate-spin text-ember" size={32} />
       </div>
     );
   }
@@ -272,9 +336,10 @@ export function Vendas() {
       const matchesMes = filtroMes === '' || (!isInvalidDate && (dataVenda!.getMonth() + 1).toString() === filtroMes);
       const matchesData = filtroData === '' || (dataVenda && dataVenda.toISOString().split('T')[0] === filtroData);
       const matchesPago = filtroPago === '' || v.pago.toString() === filtroPago;
+      const matchesMotorista = filtroMotorista === '' || v.motoristaId === filtroMotorista;
       const matchesUserCliente = !isCliente || v.clienteId === userClienteId;
 
-      return matchesStatus && matchesCliente && matchesAno && matchesMes && matchesData && matchesPago && matchesUserCliente;
+      return matchesStatus && matchesCliente && matchesAno && matchesMes && matchesData && matchesPago && matchesMotorista && matchesUserCliente;
     }) || [];
 
     // Ordenação: Do mais recente (maior data) para o mais antigo
@@ -284,59 +349,65 @@ export function Vendas() {
     
     return (
       <div 
-        className="bg-slate-100/50 rounded-xl p-4 border border-slate-200 min-h-[500px] transition-colors"
+        className="bg-slate-50/80 rounded-xl p-3 border border-slate-200 min-h-[500px] transition-colors"
         onDragOver={(e) => e.preventDefault()}
         onDrop={() => handleDrop(statusValue)}
       >
-        <h3 className="font-bold text-slate-700 mb-4 flex items-center justify-between">
+        <h3 className="font-semibold text-slate-700 text-sm mb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${dotColor}`}></span>
+            <span className={`w-2.5 h-2.5 rounded-full shadow-sm ${dotColor}`}></span>
             {title}
           </div>
-          <span className="bg-slate-200 text-slate-600 px-2 py-0.5 rounded text-[10px]">{ordenadas.length}</span>
+          <span className="bg-white text-slate-500 border border-slate-200 px-2 py-0.5 rounded-md text-[10px] font-bold">{ordenadas.length}</span>
         </h3>
         
         <div className="space-y-4">
           {ordenadas.length === 0 && <p className="text-xs text-slate-400 text-center py-8 border-2 border-dashed border-slate-200 rounded-lg">Arraste aqui</p>}
           {ordenadas.map(venda => (
-            <div 
-              key={venda.id} 
+            <div
+              key={venda.id}
               draggable={!isCliente}
               onDragStart={() => handleDragStart(venda.id)}
-              className={`bg-white p-4 rounded-xl shadow-sm border border-slate-200 transition-all hover:shadow-md group 
-                ${!isCliente ? 'cursor-grab active:cursor-grabbing hover:border-indigo-400' : ''}
-                ${draggedId === venda.id ? 'opacity-50' : ''} 
-                ${statusValue === 4 ? 'bg-red-50/50 border-red-100 opacity-80' : ''}`}
+              className={`bg-white rounded-xl border overflow-hidden transition-all group ${
+                !isCliente ? 'cursor-grab active:cursor-grabbing' : ''
+              } ${
+                draggedId === venda.id ? 'opacity-50 scale-95' : 'hover:shadow-md hover:border-ember/40'
+              } ${
+                statusValue === 4 ? 'border-red-200 opacity-70' : 'border-slate-200'
+              }`}
             >
-              <div className="flex justify-between items-start mb-2 gap-2">
-                <span className="text-[10px] font-bold text-slate-400 truncate">{venda.numeroPedido}</span>
-                <div className="flex flex-wrap gap-1 justify-end opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0">
-                   {((!isCliente && (statusValue === 0 || statusValue === 1)) || (isCliente && statusValue === 0)) && (
-                     <>
-                       <button 
-                         onClick={(e) => { e.stopPropagation(); handleEdit(venda); }}
-                         className="p-1 text-blue-500 hover:text-blue-700 rounded bg-slate-50 border border-slate-100"
-                         title="Editar Pedido"
-                       >
-                         <Edit3 size={14} />
-                       </button>
-                       <button 
-                         onClick={(e) => { e.stopPropagation(); confirm('Excluir permanentemente?') && mutationDeleteOrder.mutate(venda.id); }}
-                         className="p-1 text-red-400 hover:text-red-600 rounded bg-slate-50 border border-slate-100"
-                       >
-                         <Trash2 size={14} />
-                       </button>
-                     </>
-                   )}
-                   {(statusValue >= 1 && statusValue <= 3) && (
-                     <button 
-                       onClick={(e) => { e.stopPropagation(); handleDownloadComanda(venda.id); }}
-                       className="p-1 text-slate-600 hover:text-slate-800 rounded bg-slate-50 border border-slate-100"
-                       title="Imprimir Comanda"
-                     >
-                       <Printer size={14} />
-                     </button>
-                   )}
+              {/* Faixa de cor no topo */}
+              <div className={`h-1 w-full ${dotColor}`} />
+              {/* Header: número + ações */}
+              <div className="flex justify-between items-center px-3 pt-2 pb-1">
+                <span className="text-[10px] font-semibold text-slate-400 tracking-wide">{venda.numeroPedido}</span>
+                <div className="flex gap-0.5 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
+                    {((!isCliente && (statusValue === 0 || statusValue === 1)) || (isCliente && statusValue === 0)) && (
+                      <>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); handleEdit(venda); }}
+                          className="p-1 text-ember hover:text-fire rounded bg-surface/30 border border-ember/10"
+                          title="Editar Pedido"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); confirm('Excluir permanentemente?') && mutationDeleteOrder.mutate(venda.id); }}
+                          className="p-1 text-red-400 hover:text-red-600 rounded bg-red-50/30 border border-red-100"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </>
+                    )}
+                    {(statusValue >= 1 && statusValue <= 3) && (
+                      <button 
+                        onClick={(e) => { e.stopPropagation(); handleDownloadComanda(venda.id); }}
+                        className="p-1 text-mid hover:text-salu-text rounded bg-surface/30 border border-ember/10"
+                        title="Imprimir Comanda"
+                      >
+                        <Printer size={14} />
+                      </button>
+                    )}
                    {!isCliente && statusValue !== 4 && (
                     <button 
                       onClick={(e) => { e.stopPropagation(); confirm('Deseja realmente cancelar este pedido?') && mutationCancel.mutate(venda.id); }}
@@ -357,54 +428,45 @@ export function Vendas() {
                    )}
                 </div>
               </div>
+              {/* Body: cliente + motorista */}
+              <div className="px-3 pb-2.5">
+                <h4 className="font-bold text-slate-800 text-sm leading-snug">{venda.cliente?.nomeFantasia || 'Cliente'}</h4>
               
-              <h4 className="font-bold text-slate-800 leading-tight">{venda.cliente?.nomeFantasia || 'Cliente'}</h4>
-              
-              <div className="mt-2 flex items-center gap-2 text-[10px] text-slate-500">
-                <Truck size={12} className="text-slate-300" />
-                <span>Previsto: {new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit' }).format(new Date())}</span>
+                {venda.motorista && (
+                  <div className="flex items-center gap-1 mt-1">
+                    <Truck size={11} className="text-ember shrink-0" />
+                    <span className="text-[11px] font-semibold text-ember">{venda.motorista.nome.split(' ')[0]}</span>
+                  </div>
+                )}
               </div>
 
-              <div className="mt-4 pt-3 border-t border-slate-100 flex flex-col gap-3">
-                <div className="flex justify-between items-center">
-                  <span className="font-black text-indigo-600 text-sm">
+              {/* Footer: valor + pagamento + hora */}
+              <div className="border-t border-slate-100 bg-slate-50 px-3 py-2 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <span className="font-bold text-fire text-sm leading-none block">
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(venda.valorTotal)}
                   </span>
-                  <div className="flex items-center gap-1.5">
-                    <button 
-                      onClick={(e) => { 
-                        e.stopPropagation(); 
-                        if (isCliente) return;
-                        mutationTogglePagamento.mutate(venda.id); 
-                      }}
-                      className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase transition-colors ${
-                        venda.pago 
-                          ? 'bg-green-100 text-green-700' 
-                          : `bg-amber-100 text-amber-700 ${!isCliente ? 'hover:bg-amber-200' : ''}`
-                      } ${isCliente ? 'cursor-default' : 'cursor-pointer'}`}
-                      title={isCliente ? '' : 'Clique para alternar status de pagamento'}
-                    >
-                      {venda.pago ? 'Pago' : 'Pendente'}
-                    </button>
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); setSelectedVendaDocs(venda); }}
-                      className="p-1 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded"
-                      title="Gerar Pix ou Boleto"
-                    >
-                      <FileText size={14} />
-                    </button>
-                  </div>
+                  <span className="text-[10px] text-slate-400 mt-0.5 block">
+                    {Number(venda.formaPagamento) === 0 ? 'Dinheiro' : Number(venda.formaPagamento) === 1 ? 'Pix' : Number(venda.formaPagamento) === 2 ? 'Crédito' : Number(venda.formaPagamento) === 3 ? 'Débito' : 'Boleto'}
+                    {' · '}
+                    {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(venda.dataPedido))}
+                  </span>
                 </div>
-                <div className="flex justify-between items-center">
-                   <span className="text-[9px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
-                     {Number(venda.formaPagamento) === 0 ? 'Dinheiro' : 
-                      Number(venda.formaPagamento) === 1 ? 'Pix' : 
-                      Number(venda.formaPagamento) === 2 ? 'Crédito' : 
-                      Number(venda.formaPagamento) === 3 ? 'Débito' : 'Boleto'}
-                   </span>
-                   <span className="text-[10px] text-slate-400 font-medium">
-                      {new Intl.DateTimeFormat('pt-BR', { hour: '2-digit', minute: '2-digit' }).format(new Date(venda.dataPedido))}
-                   </span>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); if (isCliente) return; mutationTogglePagamento.mutate(venda.id); }}
+                    className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase transition-colors ${
+                      venda.pago
+                        ? 'bg-green-100 text-green-700'
+                        : `bg-amber-100 text-amber-700 ${!isCliente ? 'hover:bg-amber-200' : ''}`
+                    } ${isCliente ? 'cursor-default' : 'cursor-pointer'}`}
+                    title={isCliente ? '' : 'Alternar pagamento'}
+                  >
+                    {venda.pago ? '✓ Pago' : 'Pendente'}
+                  </button>
+                  <button onClick={(e) => { e.stopPropagation(); setSelectedVendaDocs(venda); setAbaDocumento(Number(venda.formaPagamento) === 4 ? 4 : 1); }} className="p-1 text-slate-400 hover:text-ember hover:bg-white rounded" title="Gerar Pix ou Boleto">
+                    <FileText size={13} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -416,19 +478,19 @@ export function Vendas() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-800">Painel de Vendas B2B</h2>
-          <p className="text-slate-500">Acompanhe os pedidos desde a separação até a entrega no cliente.</p>
+          <h2 className="text-3xl font-serif font-bold text-salu-text">Painel de Vendas B2B</h2>
+          <p className="text-muted">Acompanhe os pedidos desde a separação até a entrega no cliente.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700">
+        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember shadow-lg shadow-fire/20">
           <ShoppingCart size={18} />
           Novo Pedido
         </Button>
       </div>
 
       {/* Barra de Filtros */}
-      <div className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 gap-4 items-end ${isCliente ? 'md:grid-cols-3' : 'md:grid-cols-5'}`}>
+      <div className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 gap-4 items-end ${isCliente ? 'md:grid-cols-3' : 'md:grid-cols-6'}`}>
         {!isCliente && (
           <div className="md:col-span-2">
             <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Buscar Cliente</label>
@@ -442,6 +504,24 @@ export function Vendas() {
                 className="w-full h-10 pl-9 pr-4 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
               />
             </div>
+          </div>
+        )}
+
+        {!isCliente && (
+          <div>
+            <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Motorista</label>
+            <select
+              value={filtroMotorista}
+              onChange={(e) => setFiltroMotorista(e.target.value)}
+              className="w-full h-10 px-2 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+            >
+              <option value="">Todos</option>
+              {funcionarios
+                ?.filter(f => vendas?.some(v => v.motoristaId === f.id))
+                .map(f => (
+                  <option key={f.id} value={f.id}>{f.nome}</option>
+                ))}
+            </select>
           </div>
         )}
         
@@ -498,6 +578,7 @@ export function Vendas() {
               className="flex-1 h-10 text-xs"
               onClick={() => {
                 setFiltroCliente('');
+                setFiltroMotorista('');
                 setFiltroAno(new Date().getFullYear().toString());
                 setFiltroMes((new Date().getMonth() + 1).toString());
                 setFiltroData('');
@@ -510,10 +591,10 @@ export function Vendas() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {renderVendasPorStatus(0, 'Aprovação (Portal)', 'bg-purple-500')}
-        {renderVendasPorStatus(1, 'Em Separação', 'bg-amber-400')}
-        {renderVendasPorStatus(2, 'Em Rota de Entrega', 'bg-blue-500')}
-        {renderVendasPorStatus(3, 'Entregues (Hoje)', 'bg-green-500')}
+        {renderVendasPorStatus(0, 'Aprovação (Portal)', 'bg-ember')}
+        {renderVendasPorStatus(1, 'Em Separação', 'bg-gold')}
+        {renderVendasPorStatus(2, 'Em Rota de Entrega', 'bg-fire')}
+        {renderVendasPorStatus(3, 'Entregues (Hoje)', 'bg-green-600')}
         {renderVendasPorStatus(4, 'Cancelados', 'bg-red-500')}
       </div>
 
@@ -530,6 +611,7 @@ export function Vendas() {
               render={({ field }) => (
                 <SearchableSelect
                   label="Cliente"
+                  required
                   placeholder="Pesquise o cliente..."
                   options={clientes?.filter(c => !isCliente || c.id === userClienteId).map(c => ({ value: c.id, label: c.nomeFantasia })) || []}
                   value={isCliente ? userClienteId : field.value}
@@ -539,6 +621,24 @@ export function Vendas() {
                 />
               )}
             />
+            
+            {(userRole === 'Admin' || userRole === 'Gestor') && (
+              <Controller
+                control={control}
+                name="motoristaId"
+                render={({ field }) => (
+                  <SearchableSelect
+                    label="Motorista / Entregador"
+                    placeholder="Selecione o motorista..."
+                    options={funcionarios?.map(f => ({ value: f.id, label: f.nome })) || []}
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                    error={errors.motoristaId?.message}
+                  />
+                )}
+              />
+            )}
+
             <div className="space-y-1">
               <label className="text-sm font-medium text-slate-700">Forma de Pagamento</label>
               <select 
@@ -578,8 +678,8 @@ export function Vendas() {
                 const subtotalItem = Math.max(0, subtotalBase - (subtotalBase * (descPerc / 100)));
 
                 return (
-                  <div key={field.id} className="group flex flex-col sm:flex-row gap-4 items-start sm:items-end bg-white p-5 rounded-2xl border border-slate-100 shadow-sm hover:border-indigo-300 hover:shadow-lg transition-all duration-300 relative">
-                    <div className="absolute top-0 left-0 w-1 h-full bg-slate-200 group-hover:bg-indigo-500 transition-colors rounded-l-2xl"></div>
+                  <div key={field.id} className="group flex flex-col sm:flex-row gap-4 items-start sm:items-end bg-bg-card p-5 rounded-2xl border border-border-subtle shadow-sm hover:border-ember/40 hover:shadow-lg transition-all duration-300 relative">
+                    <div className="absolute top-0 left-0 w-1 h-full bg-surface group-hover:bg-ember transition-colors rounded-l-2xl"></div>
                     
                     <div className="w-full sm:flex-1 sm:min-w-[180px] space-y-1.5">
                       <Controller
@@ -588,6 +688,7 @@ export function Vendas() {
                         render={({ field }) => (
                           <SearchableSelect
                             label="Produto / Descrição"
+                            required
                             placeholder="Selecione..."
                             options={produtos?.filter(p => p.ativo !== false && Number(p.tipo) !== 0).map(p => ({ 
                               value: p.id, 
@@ -606,6 +707,7 @@ export function Vendas() {
                       <div className="w-16 sm:w-16 space-y-1.5">
                         <Input 
                           label="Qtd" 
+                          required
                           type="number"
                           className="h-10 px-2 text-sm font-bold text-slate-700"
                           {...register(`itens.${index}.quantidade`)}
@@ -627,15 +729,15 @@ export function Vendas() {
 
                     <div className="flex items-center justify-between w-full sm:w-auto sm:flex-col sm:items-end sm:min-w-[100px] sm:pb-1">
                       <div className="flex flex-col sm:items-end">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Unit.</span>
-                        <span className="text-[13px] font-semibold text-slate-500">
+                        <span className="text-[10px] text-muted font-bold uppercase tracking-wider">Unit.</span>
+                        <span className="text-[13px] font-semibold text-mid">
                           {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(preco)}
                         </span>
                       </div>
                       
                       <div className="flex flex-col sm:items-end mt-1">
-                        <span className="text-[10px] text-indigo-400 font-bold uppercase tracking-wider">Subt.</span>
-                        <span className="text-[15px] font-black text-indigo-600 font-mono">
+                        <span className="text-[10px] text-ember-light font-bold uppercase tracking-wider">Subt.</span>
+                        <span className="text-[15px] font-bold text-fire">
                           {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(subtotalItem)}
                         </span>
                       </div>
@@ -663,25 +765,42 @@ export function Vendas() {
             </div>
             {errors.itens && <p className="text-xs text-red-500">{errors.itens.message}</p>}
             
-            <div className="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex justify-between items-center mt-4">
-              <span className="text-sm font-bold text-indigo-900">Total do Pedido:</span>
-              <span className="text-xl font-black text-indigo-700 font-mono">
+            <div className="bg-warm/30 p-4 rounded-xl border border-ember/10 flex justify-between items-center mt-4">
+              <span className="text-sm font-bold text-salu-text">Total do Pedido:</span>
+              <span className="text-xl font-bold text-fire">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(calcularTotal())}
               </span>
             </div>
           </div>
 
+          {/* Alerta de Inadimplência */}
+          {isInadimplente && (
+            <div className="flex items-start gap-3 bg-red-50 border border-red-300 text-red-800 rounded-xl p-4 animate-pulse-once">
+              <AlertTriangle size={20} className="shrink-0 text-red-500 mt-0.5" />
+              <div>
+                <p className="font-bold text-sm">Cliente Inadimplente — Pedido Bloqueado</p>
+                <p className="text-xs mt-0.5">
+                  Este cliente possui <strong>{comandasPendentesCliente.length} comanda(s) pendentes</strong>.
+                  Novos pedidos são bloqueados a partir de {LIMITE_INADIMPLENCIA}.
+                  Quite as pendências no painel antes de prosseguir.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
             <Button type="button" variant="outline" onClick={handleCloseModal} disabled={mutationCreate.isPending || mutationUpdatePedido.isPending}>
               Cancelar
             </Button>
-            <Button type="submit" className="bg-indigo-600 hover:bg-indigo-700 flex items-center gap-2 px-8" disabled={mutationCreate.isPending || mutationUpdatePedido.isPending}>
+            <Button type="submit" className="bg-gradient-to-r from-fire to-ember text-white flex items-center gap-2 px-8 shadow-md disabled:opacity-40 disabled:cursor-not-allowed" disabled={mutationCreate.isPending || mutationUpdatePedido.isPending || isInadimplente}>
               {(mutationCreate.isPending || mutationUpdatePedido.isPending) ? (
                 <Loader2 className="animate-spin" size={18} />
+              ) : isInadimplente ? (
+                <AlertTriangle size={18} />
               ) : (
                 <Save size={18} />
               )}
-              {editId ? 'Salvar Alterações' : 'Confirmar Pedido'}
+              {isInadimplente ? 'Pedido Bloqueado' : editId ? 'Salvar Alterações' : 'Confirmar Pedido'}
             </Button>
           </div>
         </form>
@@ -693,113 +812,122 @@ export function Vendas() {
         onClose={() => { setSelectedVendaDocs(null); setSelectedContaId(null); }} 
         title="Documentos de Pagamento"
       >
-        <div className="p-4 space-y-6 flex flex-col items-center">
-          <div className="flex bg-slate-100 p-1 rounded-xl w-full">
-            <button 
-              onClick={() => setSelectedVendaDocs(prev => prev ? {...prev, formaPagamento: 1} : null)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${Number(selectedVendaDocs?.formaPagamento) === 1 ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
-            >
-              <PixIcon size={14} /> Pix
-            </button>
-            <button 
-              onClick={() => setSelectedVendaDocs(prev => prev ? {...prev, formaPagamento: 4} : null)}
-              className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${Number(selectedVendaDocs?.formaPagamento) === 4 ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
-            >
-              <FileText size={14} /> Boleto
-            </button>
-          </div>
+        {selectedVendaDocs && (
+          <div className="p-4 space-y-6 flex flex-col items-center">
+            <div className="flex bg-slate-100 p-1 rounded-xl w-full">
+              <button 
+                onClick={() => setAbaDocumento(1)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${abaDocumento === 1 ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                <PixIcon size={14} /> Pix
+              </button>
+              <button 
+                onClick={() => setAbaDocumento(4)}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-bold transition-all ${abaDocumento === 4 ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'}`}
+              >
+                <FileText size={14} /> Boleto
+              </button>
+            </div>
 
-          {Number(selectedVendaDocs?.formaPagamento) === 1 ? (
-            <>
-              {(() => {
-                const contaSelecionada = contasBancarias?.find(c => c.isPadrao);
-                
-                const pixChave = contaSelecionada?.pixChave || empresa?.pixChave || 'CHAVE-PIX-NAO-CONFIGURADA';
+            {abaDocumento === 1 ? (
+              <>
+                {(() => {
+                  const contaSelecionada = contasBancarias?.find(c => c.isPadrao);
+                  
+                  const pixChave = contaSelecionada?.pixChave || empresa?.pixChave || 'CHAVE-PIX-NAO-CONFIGURADA';
 
-                return (
-                  <>
-                    <div className="bg-white p-4 rounded-xl shadow-inner border border-slate-100">
-                      <img 
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(selectedVendaDocs.pixQrCode || `00020126580014BR.GOV.BCB.PIX0136${pixChave}5204000053039865405${selectedVendaDocs.valorTotal.toFixed(2)}5802BR5915SGPF-FABRICA6009SAO PAULO62070503***6304****`)}`} 
-                        alt="QR Code Pix"
-                        className="w-48 h-48 mx-auto"
-                      />
-                    </div>
-                    <div className="text-center space-y-2">
-                      <p className="text-sm text-slate-500">Escaneie o código abaixo para pagar via Pix</p>
-                      <div className="bg-slate-100 p-3 rounded-lg text-[10px] font-mono break-all max-w-xs border border-slate-200">
-                        {selectedVendaDocs.pixQrCode || `00020126580014BR.GOV.BCB.PIX0136${pixChave}5204000053039865405${selectedVendaDocs.valorTotal.toFixed(2)}5802BR5915SGPF-FABRICA6009SAO PAULO62070503***6304****`}
-                      </div>
-                      <Button 
-                        size="sm" 
-                        variant="secondary" 
-                        className="mt-2"
-                        onClick={() => {
-                          navigator.clipboard.writeText(selectedVendaDocs.pixQrCode || `00020126580014BR.GOV.BCB.PIX0136${pixChave}`);
-                          alert('Código Pix copiado!');
-                        }}
-                      >
-                        Copiar Código Pix
-                      </Button>
-                    </div>
-                  </>
-                );
-              })()}
-            </>
-          ) : (
-            <>
-              {(() => {
-                const contaSelecionada = contasBancarias?.find(c => c.isPadrao);
+                  // Gerar Pix dinamicamente para sempre usar a chave de banco atualizada do cadastro
+                  const pixQrCodeDinamico = gerarBrCodePix(
+                    pixChave,
+                    selectedVendaDocs.valorTotal,
+                    empresa?.nomeFantasia || 'SGPF FABRICA'
+                  );
 
-                return (
-                  <div className="w-full bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-4">
-                    <div className="flex justify-between items-start border-b border-slate-100 pb-4">
-                      <div className="font-bold text-lg text-slate-800 uppercase">{contaSelecionada?.bancoNome || empresa?.bancoNome || 'BANCO NÃO CONFIGURADO'}</div>
-                      <div className="text-right">
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">Vencimento</p>
-                        <p className="font-bold text-slate-700">{new Intl.DateTimeFormat('pt-BR').format(new Date(new Date().setDate(new Date().getDate() + 3)))}</p>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-[10px] text-slate-400 font-bold uppercase">Beneficiário</p>
-                      <p className="text-sm font-medium text-slate-700 uppercase">{empresa?.razaoSocial || empresa?.nomeFantasia || 'EMPRESA NÃO CONFIGURADA'}</p>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
-                      <div>
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">Agência / Conta</p>
-                        <p className="text-sm font-medium text-slate-700">
-                          {contaSelecionada?.agencia || '---'} / {contaSelecionada?.numeroConta || '---'}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-[10px] text-slate-400 font-bold uppercase">Valor do Documento</p>
-                        <p className="text-lg font-black text-indigo-600">
-                          {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedVendaDocs?.valorTotal || 0)}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="pt-4 border-t-2 border-black border-dashed">
-                      <div className="w-full flex flex-col items-center gap-2">
+                  return (
+                    <>
+                      <div className="bg-white p-4 rounded-xl shadow-inner border border-slate-100">
                         <img 
-                          src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${selectedVendaDocs?.boletoCodigoBarras?.replace(/\D/g, '') || '341917900101043510047910201500085950200000'}&scale=2&height=15&includetext`} 
-                          alt="Código de Barras Boleto"
-                          className="w-full max-h-24 object-contain"
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixQrCodeDinamico)}`} 
+                          alt="QR Code Pix"
+                          className="w-48 h-48 mx-auto"
                         />
-                        <p className="text-[10px] font-bold font-mono tracking-widest text-slate-800">
-                          {selectedVendaDocs?.boletoCodigoBarras || '34191.79001 01043.510047 91020.150008 5 950200000'}
-                        </p>
+                      </div>
+                      <div className="text-center space-y-2">
+                        <p className="text-sm text-slate-500">Escaneie o código abaixo para pagar via Pix</p>
+                        <div className="bg-slate-100 p-3 rounded-lg text-[10px] font-mono break-all max-w-xs border border-slate-200">
+                          {pixQrCodeDinamico}
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="secondary" 
+                          className="mt-2"
+                          onClick={() => {
+                            navigator.clipboard.writeText(pixQrCodeDinamico);
+                            alert('Código Pix copiado!');
+                          }}
+                        >
+                          Copiar Código Pix
+                        </Button>
+                      </div>
+                    </>
+                  );
+                })()}
+              </>
+            ) : (
+              <>
+                {(() => {
+                  const contaSelecionada = contasBancarias?.find(c => c.isPadrao);
+
+                  return (
+                    <div className="w-full bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-4">
+                      <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                        <div className="font-bold text-lg text-slate-800 uppercase">{contaSelecionada?.bancoNome || empresa?.bancoNome || 'BANCO NÃO CONFIGURADO'}</div>
+                        <div className="text-right">
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Vencimento</p>
+                          <p className="font-bold text-slate-700">{new Intl.DateTimeFormat('pt-BR').format(new Date(new Date().setDate(new Date().getDate() + 3)))}</p>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">Beneficiário</p>
+                        <p className="text-sm font-medium text-slate-700 uppercase">{empresa?.razaoSocial || empresa?.nomeFantasia || 'EMPRESA NÃO CONFIGURADA'}</p>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-4">
+                        <div>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Agência / Conta</p>
+                          <p className="text-sm font-medium text-slate-700">
+                            {contaSelecionada?.agencia || '---'} / {contaSelecionada?.numeroConta || '---'}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-[10px] text-slate-400 font-bold uppercase">Valor do Documento</p>
+                          <p className="text-lg font-black text-indigo-600">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedVendaDocs?.valorTotal || 0)}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="pt-4 border-t-2 border-black border-dashed">
+                        <div className="w-full flex flex-col items-center gap-2">
+                          <img 
+                            src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${selectedVendaDocs?.boletoCodigoBarras?.replace(/\D/g, '') || '341917900101043510047910201500085950200000'}&scale=2&height=15&includetext`} 
+                            alt="Código de Barras Boleto"
+                            className="w-full max-h-24 object-contain"
+                          />
+                          <p className="text-[10px] font-bold font-mono tracking-widest text-slate-800">
+                            {selectedVendaDocs?.boletoCodigoBarras || '34191.79001 01043.510047 91020.150008 5 950200000'}
+                          </p>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              })()}
-              <Button onClick={() => window.print()} className="w-full flex items-center justify-center gap-2">
-                 <FileText size={18} /> Imprimir Boleto
-              </Button>
-            </>
-          )}
-          <p className="text-[10px] text-slate-400 text-center">Referente ao Pedido: {selectedVendaDocs?.numeroPedido}</p>
-        </div>
+                  );
+                })()}
+                <Button onClick={() => window.print()} className="w-full flex items-center justify-center gap-2">
+                   <FileText size={18} /> Imprimir Boleto
+                </Button>
+              </>
+            )}
+            <p className="text-[10px] text-slate-400 text-center">Referente ao Pedido: {selectedVendaDocs?.numeroPedido}</p>
+          </div>
+        )}
       </Modal>
     </div>
   );
