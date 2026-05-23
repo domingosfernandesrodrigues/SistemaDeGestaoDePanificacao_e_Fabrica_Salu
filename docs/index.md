@@ -42,15 +42,15 @@ Este documento é o mapa mestre do Sistema de Gestão de Panificação e Fábric
 - [Valor de Venda (Valuation)](7-gestao/valor-venda-sistema.md) - Precificação e Mercado.
 - [Manual do Administrador](7-gestao/manual-administrador.md) - Guia de implantação e operação.
 
-## 📌 Status Atual do Sistema (14/05/2026)
-O sistema SGP-F encontra-se em estado de **Produção — Estabilidade, Performance e Identidade Visual Otimizada**.
+## 📌 Status Atual do Sistema (23/05/2026)
+O sistema SGP-F encontra-se em estado de **Produção — Estabilidade, Segurança Comercial e Geração Dinâmica de Faturamento**.
 
-- **Performance na Folha de Pagamento:** Implementado sistema de **Cache de Logo** (Frontend e Backend), reduzindo o tempo de download de contracheques de segundos para milissegundos.
-- **Otimização de Identidade Visual:** Implementada compressão automática de imagens no upload da logo da empresa, garantindo que o banco de dados e as requisições permaneçam leves e rápidas.
-- **Salu Branding Integrado:** Finalizada a transição visual para a marca "Salú", com paleta de cores Fire/Ember/Amber em todos os módulos operacionais.
-- **Perfil Motorista/Entregador:** Implementado novo perfil de acesso com isolamento de dados, permitindo que motoristas visualizem apenas suas rotas e entregas, além de registrarem trocas e abastecimentos diretamente pelo celular.
-- **Rastreabilidade Logística:** Adicionado suporte para atribuição de motoristas em Pedidos de Venda e registros de Troca/Avaria, com patches SQL automatizados para integridade do banco.
-- **Responsividade Pro Max:** Auditados e corrigidos todos os módulos para exibição perfeita no iPhone 14 Pro Max, incluindo o uso de "Card View" para tabelas densas.
+- **Faturamento Pix 100% Dinâmico (EMV):** Implementado gerador dinâmico de Pix BR Code no frontend com cálculo real de `CRC16-CCITT`, garantindo compatibilidade e leitura instantânea com qualquer banco. A geração é feita na hora usando a chave Pix ativa cadastrada em "Contas Bancárias e Saldos", mesmo para pedidos antigos.
+- **Prevenção Automatizada de Inadimplência:** O Painel de Vendas B2B agora bloqueia automaticamente a criação ou gravação de novos pedidos para clientes que possuam 3 ou mais comandas/pedidos com status pendente de pagamento (não pagos e não cancelados), blindando o fluxo de caixa.
+- **Logomarca nas Comandas:** A comanda em PDF emitida a partir do Painel de Vendas B2B agora exibe dinamicamente a logomarca da empresa configurada em "Configurações da Empresa".
+- **Filtro de Motoristas no B2B:** Adicionado select dinâmico e responsivo na barra de filtros do Painel B2B para filtragem instantânea de pedidos por motorista encarregado da rota.
+- **Edição Completa de Pedidos:** Corrigido o processo de sincronização e persistência no backend (`AtualizarPedidoAsync`), mapeando corretamente a Forma de Pagamento e o Motorista selecionados durante a edição do pedido e regenerando as informações de cobrança.
+- **Filtro Seguro de Recursos Humanos:** Refatorado defensivamente o filtro de busca de Funcionários para prevenir crashes por campos nulos (`nome`, `cpf`, `cargo`) e buscas vazias em JavaScript.
 
 ---
 ## 🚀 Execução do Projeto

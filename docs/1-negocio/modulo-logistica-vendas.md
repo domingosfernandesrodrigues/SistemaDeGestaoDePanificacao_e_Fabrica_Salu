@@ -11,9 +11,16 @@
 - **Fluxo Drag-and-Drop:** 
   - Ao mover para `Em Separação`: O sistema aprova o pedido e realiza a **Reserva de Estoque** automática.
   - Ao mover para `Entregues`: O sistema efetiva a saída real do estoque e gera o título no **Financeiro (Contas a Receber)**.
-- **Gestão Ágil:**
-  - **Edição:** Permitida enquanto o pedido está em Aprovação ou Separação. Realiza o estorno da reserva antiga e reaplica a nova.
+- **Gestão Ágil e Edição Completa:**
+  - **Edição:** Permitida enquanto o pedido está em Aprovação ou Separação. Realiza o estorno da reserva antiga, reaplica a nova, mapeia a Forma de Pagamento e o Motorista encarregados, e regenera as credenciais de cobrança (Boleto/Pix).
   - **Cancelamento:** Reverte todas as movimentações de estoque e deleta contas a receber pendentes.
+- **Prevenção Automatizada de Inadimplência:**
+  - O sistema realiza um bloqueio comercial automático na tela de Novo Pedido. Se o cliente selecionado possuir **3 ou mais comandas/pedidos pendentes** (não pagos e não cancelados), o formulário é bloqueado contra gravações ou novas compras até a devida quitação do débito.
+- **Faturamento Dinâmico (Boleto & Pix EMV):**
+  - **Geração de Pix Real-Time:** O QR Code Pix e a chave Copia e Cola são gerados sob demanda diretamente no frontend usando um algoritmo próprio de `CRC16-CCITT`. Isso garante compatibilidade total com os aplicativos bancários reais e garante que qualquer alteração de chave Pix em "Contas Bancárias e Saldos" se reflita instantaneamente no faturamento de todos os pedidos (inclusive os antigos).
+  - **Impressão de Comanda:** O PDF de comanda impresso traz de forma dinâmica a logomarca da empresa cadastrada no módulo de Configurações da Empresa, fortalecendo o branding da marca "Salú".
+- **Filtros e Logística:**
+  - Barra de filtros com limpeza rápida que permite localizar pedidos por Cliente, Data Específica, Mês/Ano, Status de Pagamento e por **Motorista/Entregador** encarregado.
 - **Responsividade:** Layout otimizado para iPhone 14 Pro Max, com ações rápidas via botões de acesso direto no cartão do pedido.
  
 ## 3. Módulo de Compras e Entradas (Mercadoria)
