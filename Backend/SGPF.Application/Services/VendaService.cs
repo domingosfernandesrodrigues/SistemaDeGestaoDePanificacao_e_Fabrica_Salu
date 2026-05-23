@@ -56,8 +56,26 @@ public class VendaService : IVendaService
 
     public async Task<PedidoVenda> CriarPedidoAsync(PedidoVenda pedido)
     {
+        // Verificação de Inadimplência: bloquear se cliente tiver 3 ou mais comandas pendentes
+        var comandasPendentes = await _contaReceberRepo.FindAsync(c =>
+            c.ClienteId == pedido.ClienteId &&
+            c.Status == StatusContaReceber.Pendente);
+
+        var totalPendentes = comandasPendentes.Count();
+        if (totalPendentes >= 3)
+        {
+            var cliente = await _clienteRepo.GetByIdAsync(pedido.ClienteId);
+            var nomeCliente = cliente?.NomeFantasia ?? "Cliente";
+            throw new Exception(
+                $"INADIMPLÊNCIA: O cliente '{nomeCliente}' possui {totalPendentes} comanda(s) pendente(s). " +
+                $"Não é permitido criar novos pedidos até que as pendências sejam quitadas.");
+        }
+
         pedido.Status = StatusPedidoVenda.Separacao;
         pedido.ValorTotal = 0;
+
+        var movimentacoes = new List<MovimentacaoEstoque>();
+        var produtosAtualizados = new List<Produto>();
 
         foreach (var item in pedido.Itens)
         {
@@ -70,20 +88,22 @@ public class VendaService : IVendaService
             item.PrecoUnitario = produto.PrecoVenda;
             pedido.ValorTotal += item.Subtotal;
 
-            // Fazer a Reserva de Estoque
-            var mov = new MovimentacaoEstoque
+            movimentacoes.Add(new MovimentacaoEstoque
             {
                 ProdutoId = produto.Id,
                 Tipo = TipoMovimentacao.Reserva,
                 Quantidade = item.Quantidade,
                 Origem = pedido.NumeroPedido,
                 Observacao = "Reserva de Venda"
-            };
-            await _estoqueRepo.AddAsync(mov);
+            });
 
             produto.QuantidadeEstoque -= item.Quantidade; // Reduz o saldo disponível
-            await _produtoRepo.UpdateAsync(produto);
+            produtosAtualizados.Add(produto);
         }
+
+        if (movimentacoes.Any()) await _estoqueRepo.AddRangeAsync(movimentacoes);
+        if (produtosAtualizados.Any()) await _produtoRepo.UpdateRangeAsync(produtosAtualizados);
+
 
         // Buscar conta bancária padrão para gerar dados de pagamento
         var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
@@ -97,7 +117,8 @@ public class VendaService : IVendaService
         else if (pedido.FormaPagamento == FormaPagamento.Pix)
         {
             var chave = contaPadrao?.PixChave ?? empresa?.PixChave ?? "sgpf-fabrica-pix-key-12345";
-            pedido.PixQrCode = $"00020126580014BR.GOV.BCB.PIX0136{chave}5204000053039865405{pedido.ValorTotal:F2}5802BR5915SGP-F_FABRICA6009Sao_Paulo62070503***6304";
+            var nomeRecebedor = (empresa?.NomeFantasia ?? "SGPF FABRICA").ToUpper();
+            pedido.PixQrCode = GerarBrCodePix(chave, pedido.ValorTotal, nomeRecebedor);
         }
 
         await _pedidoRepo.AddAsync(pedido);
@@ -152,6 +173,9 @@ public class VendaService : IVendaService
         if (pedido == null || pedido.Status != StatusPedidoVenda.Novo)
             throw new Exception("Pedido não pode ser aprovado.");
 
+        var movimentacoes = new List<MovimentacaoEstoque>();
+        var produtosAtualizados = new List<Produto>();
+
         foreach (var item in pedido.Itens)
         {
             var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
@@ -161,9 +185,9 @@ public class VendaService : IVendaService
                     throw new Exception($"Estoque insuficiente para o produto {produto.Nome}. Disponível: {produto.QuantidadeEstoque}");
 
                 produto.QuantidadeEstoque -= item.Quantidade;
-                await _produtoRepo.UpdateAsync(produto);
+                produtosAtualizados.Add(produto);
 
-                await _estoqueRepo.AddAsync(new MovimentacaoEstoque
+                movimentacoes.Add(new MovimentacaoEstoque
                 {
                     ProdutoId = produto.Id,
                     Tipo = TipoMovimentacao.Reserva,
@@ -173,6 +197,10 @@ public class VendaService : IVendaService
                 });
             }
         }
+
+        if (movimentacoes.Any()) await _estoqueRepo.AddRangeAsync(movimentacoes);
+        if (produtosAtualizados.Any()) await _produtoRepo.UpdateRangeAsync(produtosAtualizados);
+
 
         pedido.Status = StatusPedidoVenda.Separacao;
         await _pedidoRepo.UpdateAsync(pedido);
@@ -190,6 +218,16 @@ public class VendaService : IVendaService
         };
         await _contaReceberRepo.AddAsync(conta);
 
+        if (pedido.Pago)
+        {
+            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+            if (contaPadrao != null)
+            {
+                contaPadrao.SaldoAtual += pedido.ValorTotal;
+                await _contaBancariaRepo.UpdateAsync(contaPadrao);
+            }
+        }
+
         return pedido;
     }
 
@@ -199,9 +237,11 @@ public class VendaService : IVendaService
         if (pedido == null || pedido.Status == StatusPedidoVenda.Entregue)
             throw new Exception("Pedido inválido ou já entregue.");
 
+        var movimentacoes = new List<MovimentacaoEstoque>();
+
         foreach (var item in pedido.Itens)
         {
-            await _estoqueRepo.AddAsync(new MovimentacaoEstoque
+            movimentacoes.Add(new MovimentacaoEstoque
             {
                 ProdutoId = item.ProdutoId,
                 Tipo = TipoMovimentacao.Saida,
@@ -210,6 +250,9 @@ public class VendaService : IVendaService
                 Observacao = "Venda Concluída"
             });
         }
+        
+        if (movimentacoes.Any()) await _estoqueRepo.AddRangeAsync(movimentacoes);
+
 
         pedido.Status = StatusPedidoVenda.Entregue;
         pedido.DataEntregaRealizada = DateTime.UtcNow;
@@ -240,15 +283,18 @@ public class VendaService : IVendaService
         // Reverter Logística
         if (pedido.Status != StatusPedidoVenda.Novo && pedido.Status != StatusPedidoVenda.Cancelado)
         {
+            var movimentacoes = new List<MovimentacaoEstoque>();
+            var produtosAtualizados = new List<Produto>();
+
             foreach (var item in pedido.Itens)
             {
                 var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
                 if (produto != null)
                 {
                     produto.QuantidadeEstoque += item.Quantidade;
-                    await _produtoRepo.UpdateAsync(produto);
+                    produtosAtualizados.Add(produto);
 
-                    await _estoqueRepo.AddAsync(new MovimentacaoEstoque
+                    movimentacoes.Add(new MovimentacaoEstoque
                     {
                         ProdutoId = item.ProdutoId,
                         Tipo = TipoMovimentacao.Entrada,
@@ -258,14 +304,32 @@ public class VendaService : IVendaService
                     });
                 }
             }
+
+            if (movimentacoes.Any()) await _estoqueRepo.AddRangeAsync(movimentacoes);
+            if (produtosAtualizados.Any()) await _produtoRepo.UpdateRangeAsync(produtosAtualizados);
         }
 
         // Reverter Financeiro
         var contasFinanceiro = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedido.Id);
+        decimal valorEstorno = 0;
         foreach (var conta in contasFinanceiro)
         {
+            if (conta.Status == StatusContaReceber.Recebido)
+            {
+                valorEstorno += conta.Valor;
+            }
             conta.Status = StatusContaReceber.Cancelado;
             await _contaReceberRepo.UpdateAsync(conta);
+        }
+
+        if (valorEstorno > 0)
+        {
+            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+            if (contaPadrao != null)
+            {
+                contaPadrao.SaldoAtual -= valorEstorno;
+                await _contaBancariaRepo.UpdateAsync(contaPadrao);
+            }
         }
 
         pedido.Status = StatusPedidoVenda.Cancelado;
@@ -284,15 +348,17 @@ public class VendaService : IVendaService
         // 1. Reverter estoque atual (Reservas)
         if (pedidoExistente.Status == StatusPedidoVenda.Separacao)
         {
+            var produtosEstorno = new List<Produto>();
             foreach (var item in pedidoExistente.Itens)
             {
                 var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
                 if (produto != null)
                 {
                     produto.QuantidadeEstoque += item.Quantidade;
-                    await _produtoRepo.UpdateAsync(produto);
+                    produtosEstorno.Add(produto);
                 }
             }
+            if (produtosEstorno.Any()) await _produtoRepo.UpdateRangeAsync(produtosEstorno);
         }
 
         // 2. Limpar itens antigos
@@ -306,6 +372,9 @@ public class VendaService : IVendaService
         pedidoExistente.ClienteId = pedidoAtualizado.ClienteId;
         pedidoExistente.ValorTotal = 0;
 
+        var itensNovos = new List<PedidoVendaItem>();
+        var produtosNovosAtualizados = new List<Produto>();
+
         foreach (var item in pedidoAtualizado.Itens)
         {
             var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
@@ -318,13 +387,38 @@ public class VendaService : IVendaService
             item.PrecoUnitario = produto.PrecoVenda;
             pedidoExistente.ValorTotal += item.Subtotal;
             
-            await _itemRepo.AddAsync(item);
+            itensNovos.Add(item);
 
             if (pedidoExistente.Status == StatusPedidoVenda.Separacao)
             {
                 produto.QuantidadeEstoque -= item.Quantidade;
-                await _produtoRepo.UpdateAsync(produto);
+                produtosNovosAtualizados.Add(produto);
             }
+        }
+
+        if (itensNovos.Any()) await _itemRepo.AddRangeAsync(itensNovos);
+        if (produtosNovosAtualizados.Any()) await _produtoRepo.UpdateRangeAsync(produtosNovosAtualizados);
+
+        // Atualizar Forma de Pagamento e Motorista que estavam esquecidos
+        pedidoExistente.FormaPagamento = pedidoAtualizado.FormaPagamento;
+        pedidoExistente.MotoristaId = pedidoAtualizado.MotoristaId;
+
+        // Limpar e regenerar dados de faturamento (Pix/Boleto)
+        pedidoExistente.BoletoCodigoBarras = null;
+        pedidoExistente.PixQrCode = null;
+
+        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+        var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
+
+        if (pedidoExistente.FormaPagamento == FormaPagamento.Boleto)
+        {
+            pedidoExistente.BoletoCodigoBarras = $"34191.79001 01043.510047 91020.150008 5 950200000{pedidoExistente.ValorTotal:0000}";
+        }
+        else if (pedidoExistente.FormaPagamento == FormaPagamento.Pix)
+        {
+            var chave = contaPadrao?.PixChave ?? empresa?.PixChave ?? "sgpf-fabrica-pix-key-12345";
+            var nomeRecebedor = (empresa?.NomeFantasia ?? "SGPF FABRICA").ToUpper();
+            pedidoExistente.PixQrCode = GerarBrCodePix(chave, pedidoExistente.ValorTotal, nomeRecebedor);
         }
 
         await _pedidoRepo.UpdateAsync(pedidoExistente);
@@ -351,9 +445,15 @@ public class VendaService : IVendaService
         await _pedidoRepo.DeleteAsync(id);
     }
 
-    public async Task<IEnumerable<PedidoVenda>> GetPedidosAsync()
+    public async Task<IEnumerable<PedidoVenda>> GetPedidosAsync(Guid? motoristaId = null)
     {
         var pedidos = await _pedidoRepo.GetAllAsync();
+        
+        if (motoristaId.HasValue)
+        {
+            pedidos = pedidos.Where(p => p.MotoristaId == motoristaId.Value);
+        }
+
         foreach (var p in pedidos)
         {
             p.Cliente = await _clienteRepo.GetByIdAsync(p.ClienteId);
@@ -510,6 +610,24 @@ public class VendaService : IVendaService
 
         QuestPDF.Settings.License = LicenseType.Community;
 
+        byte[]? logoBytes = null;
+        if (!string.IsNullOrEmpty(empresa?.LogoUrl))
+        {
+            try
+            {
+                var base64Data = empresa.LogoUrl;
+                if (base64Data.Contains(","))
+                {
+                    base64Data = base64Data.Split(',')[1];
+                }
+                logoBytes = Convert.FromBase64String(base64Data);
+            }
+            catch
+            {
+                // Ignora se não for base64 válido
+            }
+        }
+
         return Document.Create(container =>
         {
             container.Page(page =>
@@ -522,6 +640,11 @@ public class VendaService : IVendaService
 
                 page.Header().Column(col =>
                 {
+                    if (logoBytes != null)
+                    {
+                        col.Item().AlignCenter().Width(50).Image(logoBytes);
+                        col.Item().PaddingVertical(2);
+                    }
                     col.Item().AlignCenter().Text(nomeEmpresa).FontSize(12).SemiBold();
                     col.Item().AlignCenter().Text("--------------------------------");
                     col.Item().AlignCenter().Text("COMPROVANTE DE PEDIDO").SemiBold();
@@ -565,5 +688,50 @@ public class VendaService : IVendaService
                 });
             });
         }).GeneratePdf();
+    }
+    // Gera um BR Code Pix válido conforme especificação do Banco Central (EMV QR Code)
+    private static string GerarBrCodePix(string chavePixUrl, decimal valor, string nomeRecebedor)
+    {
+        // Trunca nome para máx 25 chars (limite da spec)
+        nomeRecebedor = nomeRecebedor.Length > 25 ? nomeRecebedor[..25].Trim() : nomeRecebedor;
+
+        // Campo 26: Merchant Account Info (Pix)
+        var pixKey   = $"0014BR.GOV.BCB.PIX01{chavePixUrl.Length:00}{chavePixUrl}";
+        var mai      = $"26{pixKey.Length:00}{pixKey}";
+
+        // Campo 54: Valor
+        var valorStr = valor.ToString("F2", System.Globalization.CultureInfo.InvariantCulture);
+        var valorField = $"54{valorStr.Length:00}{valorStr}";
+
+        // Monta payload sem CRC
+        var payload =
+            "000201"         +  // Payload Format Indicator
+            "010212"         +  // Point of Initiation Method (12 = QR rústico)
+            mai              +  // Merchant Account Info
+            "52040000"       +  // MCC
+            "5303986"        +  // Transaction Currency (BRL)
+            valorField       +  // Amount
+            "5802BR"         +  // Country Code
+            $"59{nomeRecebedor.Length:00}{nomeRecebedor}" + // Merchant Name (max 25)
+            "6009SAO PAULO"  +  // Merchant City
+            "62070503***"    +  // Additional Data (txid ***)
+            "6304";             // CRC placeholder (4 zeros serão somados)
+
+        // Calcula CRC16-CCITT sobre o payload inteiro (incluindo "6304")
+        var crc = Crc16Ccitt(payload);
+        return payload + crc.ToString("X4");
+    }
+
+    private static ushort Crc16Ccitt(string str)
+    {
+        const ushort poly = 0x1021;
+        ushort crc = 0xFFFF;
+        foreach (var c in System.Text.Encoding.UTF8.GetBytes(str))
+        {
+            crc ^= (ushort)(c << 8);
+            for (var i = 0; i < 8; i++)
+                crc = (ushort)((crc & 0x8000) != 0 ? (crc << 1) ^ poly : crc << 1);
+        }
+        return crc;
     }
 }
