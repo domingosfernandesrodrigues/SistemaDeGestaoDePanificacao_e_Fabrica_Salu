@@ -7,18 +7,27 @@ using SGPF.Domain.Interfaces;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Microsoft.Extensions.Logging;
 
 namespace SGPF.Application.Services;
 
 public class AuthService : IAuthService
 {
     private readonly IRepository<Usuario> _usuarioRepository;
+    private readonly IRepository<Funcionario> _funcionarioRepository;
     private readonly IConfiguration _configuration;
+    private readonly ILogger<AuthService> _logger;
 
-    public AuthService(IRepository<Usuario> usuarioRepository, IConfiguration configuration)
+    public AuthService(
+        IRepository<Usuario> usuarioRepository, 
+        IRepository<Funcionario> funcionarioRepository,
+        IConfiguration configuration, 
+        ILogger<AuthService> logger)
     {
         _usuarioRepository = usuarioRepository;
+        _funcionarioRepository = funcionarioRepository;
         _configuration = configuration;
+        _logger = logger;
     }
 
     public async Task<LoginResponseDto?> LoginAsync(LoginRequestDto request)
@@ -26,7 +35,11 @@ public class AuthService : IAuthService
         var usuarios = await _usuarioRepository.FindAsync(u => u.Email == request.Email);
         var usuario = usuarios.FirstOrDefault();
 
-        if (usuario == null) return null;
+        if (usuario == null) 
+        {
+            _logger.LogWarning("Tentativa de login falhou: Usuário não encontrado. Email: {Email}", request.Email);
+            return null;
+        }
         
         // Backward compatibility: If the hash starts with $2a$, $2b$, $2x$, or $2y$, it's BCrypt. Otherwise, it might be plain text.
         bool isPasswordValid = false;
@@ -39,22 +52,35 @@ public class AuthService : IAuthService
             isPasswordValid = (usuario.SenhaHash == request.Senha);
         }
 
-        if (!isPasswordValid) return null;
+        if (!isPasswordValid) 
+        {
+            _logger.LogWarning("Tentativa de login falhou: Senha inválida para o usuário {Email}", request.Email);
+            return null;
+        }
 
-        if (!usuario.Ativo) return null;
+        if (!usuario.Ativo) 
+        {
+            _logger.LogWarning("Tentativa de login falhou: Usuário inativo {Email}", request.Email);
+            return null;
+        }
+
+        _logger.LogInformation("Usuário {Email} logado com sucesso.", request.Email);
+
+        var funcionario = (await _funcionarioRepository.FindAsync(f => f.UsuarioId == usuario.Id)).FirstOrDefault();
 
         return new LoginResponseDto
         {
-            Token = GenerateJwtToken(usuario),
+            Token = GenerateJwtToken(usuario, funcionario?.Id),
             Nome = usuario.Nome,
             Email = usuario.Email,
             Role = usuario.Role,
             ClienteId = usuario.ClienteId,
+            FuncionarioId = funcionario?.Id,
             PrecisaTrocarSenha = usuario.PrecisaTrocarSenha
         };
     }
 
-    private string GenerateJwtToken(Usuario usuario)
+    private string GenerateJwtToken(Usuario usuario, Guid? funcionarioId)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var key = Encoding.ASCII.GetBytes(_configuration["JwtSettings:Secret"] ?? "MySuperSecretKey_SGPF_2026_Minimum32Chars!!");
@@ -70,6 +96,11 @@ public class AuthService : IAuthService
         if (usuario.ClienteId.HasValue)
         {
             claims.Add(new Claim("ClienteId", usuario.ClienteId.Value.ToString()));
+        }
+
+        if (funcionarioId.HasValue)
+        {
+            claims.Add(new Claim("FuncionarioId", funcionarioId.Value.ToString()));
         }
 
         var tokenDescriptor = new SecurityTokenDescriptor

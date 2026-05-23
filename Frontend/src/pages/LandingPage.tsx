@@ -4,12 +4,13 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Lock, Mail, Eye, EyeOff, ShieldCheck,
-  ChefHat, BarChart3, Users, Package, Truck,
-  ClipboardList, DollarSign, Phone, MapPin, Menu, X,
-  ArrowRight, CheckCircle, Star
+  ChefHat, Wheat, Sprout, PlusCircle,
+  MapPin, Phone, Clock, ArrowRight,
+  Menu, X, Star, CheckCircle2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { LogoSalu } from '../components/LogoSalu';
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -37,34 +38,23 @@ const passwordRequirements = [
 type LoginForm = z.infer<typeof loginSchema>;
 type TrocarForm = z.infer<typeof trocarSchema>;
 
-const features = [
-  { icon: BarChart3, title: 'Dashboard Executivo', desc: 'KPIs em tempo real, DRE automático e análise de rentabilidade por produto.', color: 'bg-blue-500' },
-  { icon: ClipboardList, title: 'Gestão de Vendas', desc: 'Kanban de pedidos, documentos de pagamento (Pix/Boleto) e portal B2B.', color: 'bg-emerald-500' },
-  { icon: Package, title: 'Controle de Estoque', desc: 'Rastreabilidade completa, ordens de produção e ficha técnica de receitas.', color: 'bg-amber-500' },
-  { icon: Users, title: 'Gestão de RH', desc: 'Folha de pagamento CLT, ponto eletrônico e controle de afastamentos.', color: 'bg-rose-500' },
-  { icon: Truck, title: 'Logística e Frota', desc: 'Rastreamento de entregas, manutenção de veículos e gestão de trocas/avarias.', color: 'bg-indigo-500' },
-  { icon: DollarSign, title: 'Financeiro Completo', desc: 'Contas a pagar/receber, conciliação bancária automática e fluxo de caixa.', color: 'bg-teal-500' },
-];
-
-const stats = [
-  { value: '100%', label: 'Digital e na Nuvem' },
-  { value: '6+', label: 'Módulos Integrados' },
-  { value: '24/7', label: 'Disponibilidade' },
-  { value: '0', label: 'Papelada' },
-];
-
 export function LandingPage() {
   const navigate = useNavigate();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showPass, setShowPass] = useState(false);
   const [requireChange, setRequireChange] = useState(false);
   const [tempToken, setTempToken] = useState('');
   const [tempUser, setTempUser] = useState<any>(null);
   const [loginError, setLoginError] = useState('');
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({ resolver: zodResolver(loginSchema) });
-  const { register: rT, handleSubmit: hT, watch: wT, formState: { errors: eT, isSubmitting: isT } } = useForm<TrocarForm>({ resolver: zodResolver(trocarSchema) });
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginForm>({ 
+    resolver: zodResolver(loginSchema) 
+  });
+  
+  const { register: rT, handleSubmit: hT, watch: wT, formState: { errors: eT, isSubmitting: isT } } = useForm<TrocarForm>({ 
+    resolver: zodResolver(trocarSchema) 
+  });
   
   const novaSenha = wT('novaSenha') || '';
 
@@ -74,6 +64,7 @@ export function LandingPage() {
     localStorage.setItem('sgpf_user_name', data.nome);
     localStorage.setItem('sgpf_user_email', data.email);
     if (data.clienteId) localStorage.setItem('sgpf_cliente_id', data.clienteId);
+    if (data.funcionarioId) localStorage.setItem('sgpf_funcionario_id', data.funcionarioId);
     navigate('/dashboard');
   };
 
@@ -95,54 +86,75 @@ export function LandingPage() {
 
   const onTrocar = async (data: TrocarForm) => {
     try {
-      await api.post('/Auth/trocar-senha', { novaSenha: data.novaSenha }, { headers: { Authorization: `Bearer ${tempToken}` } });
+      await api.post('/Auth/trocar-senha', { novaSenha: data.novaSenha }, { 
+        headers: { Authorization: `Bearer ${tempToken}` } 
+      });
       finalize(tempUser);
     } catch { alert('Erro ao trocar a senha.'); }
   };
 
   const scrollTo = (id: string) => {
     document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
-    setMobileOpen(false);
+    setMobileMenuOpen(false);
   };
 
   return (
-    <div className="min-h-screen bg-white font-sans">
+    <div className="min-h-screen bg-cream font-sans text-salu-text selection:bg-ember selection:text-white">
       {/* ─── NAVBAR ─── */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur border-b border-amber-100 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 flex items-center justify-between h-16">
-          <div className="flex items-center gap-2">
-            <div className="bg-amber-500 p-2 rounded-xl">
-              <ChefHat size={22} className="text-white" />
-            </div>
-            <span className="text-xl font-black text-slate-800">SGP<span className="text-amber-500">-F</span></span>
+      <nav className="sticky top-0 z-[100] bg-charcoal flex items-center justify-between px-6 md:px-12 h-[62px] border-b-2 border-ember">
+        <div className="flex items-center gap-3">
+          <LogoSalu size={48} className="shrink-0" />
+          <div className="font-serif text-cream text-[1.35rem] font-bold tracking-wider">
+            Salú <span className="text-ember-light">Representação</span>
           </div>
-
-          <div className="hidden md:flex items-center gap-8 text-sm font-medium text-slate-600">
-            <button onClick={() => scrollTo('sobre')} className="hover:text-amber-600 transition-colors">Quem Somos</button>
-            <button onClick={() => scrollTo('funcionalidades')} className="hover:text-amber-600 transition-colors">Funcionalidades</button>
-            <button onClick={() => scrollTo('contato')} className="hover:text-amber-600 transition-colors">Contato</button>
-          </div>
-
-          <div className="hidden md:flex items-center gap-3">
-            <button
-              onClick={() => setLoginOpen(true)}
-              className="px-5 py-2 text-sm font-bold text-amber-700 bg-amber-50 hover:bg-amber-100 rounded-xl transition-all"
-            >
-              Acessar Sistema
-            </button>
-          </div>
-
-          <button className="md:hidden p-2" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
         </div>
 
-        {mobileOpen && (
-          <div className="md:hidden bg-white border-t border-slate-100 px-4 py-4 flex flex-col gap-4">
-            <button onClick={() => scrollTo('sobre')} className="text-left text-slate-700 font-medium">Quem Somos</button>
-            <button onClick={() => scrollTo('funcionalidades')} className="text-left text-slate-700 font-medium">Funcionalidades</button>
-            <button onClick={() => scrollTo('contato')} className="text-left text-slate-700 font-medium">Contato</button>
-            <button onClick={() => { setLoginOpen(true); setMobileOpen(false); }} className="bg-amber-500 text-white py-3 rounded-xl font-bold">
+        {/* Desktop Links */}
+        <ul className="hidden md:flex items-center gap-8 list-none">
+          {['quem-somos', 'mvv', 'produtos', 'regiao', 'contato'].map((item) => (
+            <li key={item}>
+              <button 
+                onClick={() => scrollTo(item)} 
+                className="text-[#D4B89A] text-[0.78rem] font-medium tracking-[0.1em] uppercase hover:text-ember-light transition-colors"
+              >
+                {item.replace('-', ' ')}
+              </button>
+            </li>
+          ))}
+          <li>
+            <button 
+              onClick={() => setLoginOpen(true)}
+              className="bg-ember hover:bg-ember-light text-charcoal px-5 py-2 rounded-md font-bold text-[0.78rem] uppercase tracking-wider transition-all"
+            >
+              Entrar
+            </button>
+          </li>
+        </ul>
+
+        {/* Mobile Toggle */}
+        <button 
+          className="md:hidden text-cream"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+        >
+          {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+
+        {/* Mobile Menu Overlay */}
+        {mobileMenuOpen && (
+          <div className="absolute top-[62px] left-0 right-0 bg-charcoal border-b border-ember p-6 flex flex-col gap-4 md:hidden animate-in slide-in-from-top duration-300">
+            {['quem-somos', 'mvv', 'produtos', 'regiao', 'contato'].map((item) => (
+              <button 
+                key={item}
+                onClick={() => scrollTo(item)} 
+                className="text-[#D4B89A] text-left font-medium uppercase tracking-wider hover:text-ember-light"
+              >
+                {item.replace('-', ' ')}
+              </button>
+            ))}
+            <button 
+              onClick={() => { setLoginOpen(true); setMobileMenuOpen(false); }}
+              className="bg-ember text-charcoal py-3 rounded-lg font-bold uppercase tracking-wider"
+            >
               Acessar Sistema
             </button>
           </div>
@@ -150,269 +162,363 @@ export function LandingPage() {
       </nav>
 
       {/* ─── HERO ─── */}
-      <section className="relative min-h-screen flex items-center pt-16 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-stone-900 to-amber-950" />
-        <div className="absolute inset-0 opacity-10"
-          style={{ backgroundImage: 'radial-gradient(circle at 25% 50%, #f59e0b 0%, transparent 60%), radial-gradient(circle at 75% 20%, #d97706 0%, transparent 50%)' }} />
+      <section id="home" className="relative min-h-[560px] bg-dark flex items-center px-6 md:px-12 py-24 overflow-hidden">
+        {/* Animated Hero Background */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_60%_50%_at_80%_50%,rgba(224,98,26,0.22)_0%,transparent_70%),radial-gradient(ellipse_40%_60%_at_20%_80%,rgba(192,57,10,0.18)_0%,transparent_60%)]" />
+          <div className="absolute right-0 top-0 bottom-0 w-full md:w-[45%] bg-[repeating-linear-gradient(90deg,transparent,transparent_39px,rgba(212,134,11,0.07)_39px,rgba(212,134,11,0.07)_40px)]" />
+        </div>
 
-        {/* floating bakery elements */}
-        <div className="absolute top-24 right-10 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-10 w-48 h-48 bg-orange-400/10 rounded-full blur-3xl" />
-
-        <div className="relative max-w-7xl mx-auto px-4 py-24 grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 bg-amber-500/20 text-amber-300 text-xs font-bold px-4 py-2 rounded-full mb-6 border border-amber-500/30">
-              <Star size={12} /> Sistema de Gestão para Panificação e Fábricas
-            </div>
-            <h1 className="text-4xl md:text-6xl font-black text-white leading-tight mb-6">
-              Gerencie sua<br />
-              <span className="text-amber-400">Padaria</span> com<br />
-              inteligência
-            </h1>
-            <p className="text-slate-300 text-lg leading-relaxed mb-8 max-w-md">
-              O SGP-F é o ERP completo para panificadoras e fábricas de alimentos. Controle produção, vendas, estoque, RH e financeiro em um só lugar.
-            </p>
-            <div className="flex flex-wrap gap-4">
-              <button
-                onClick={() => setLoginOpen(true)}
-                className="flex items-center gap-2 bg-amber-500 hover:bg-amber-400 text-white font-bold px-8 py-4 rounded-2xl transition-all shadow-lg shadow-amber-500/30 hover:shadow-amber-400/40 hover:-translate-y-0.5"
-              >
-                Acessar o Sistema <ArrowRight size={18} />
-              </button>
-              <button
-                onClick={() => scrollTo('funcionalidades')}
-                className="flex items-center gap-2 bg-white/10 hover:bg-white/20 text-white font-bold px-8 py-4 rounded-2xl transition-all border border-white/20"
-              >
-                Ver Funcionalidades
-              </button>
-            </div>
+        <div className="relative z-10 max-w-[620px]">
+          <div className="inline-flex items-center gap-2 bg-ember/15 border border-ember/40 text-ember-light text-[0.72rem] font-bold tracking-[0.13em] uppercase px-4 py-1.5 rounded-full mb-6">
+            <span className="w-1.5 h-1.5 bg-ember-light rounded-full animate-pulse shadow-[0_0_8px_rgba(244,146,85,0.8)]" />
+            Distribuição em Rondônia & Amazonas
           </div>
+          
+          <h1 className="font-serif text-4xl md:text-6xl text-cream leading-[1.1] font-bold mb-6">
+            Qualidade que sai do forno e chega até <span className="text-ember-light font-normal italic">você</span> <br />
+            <strong className="block bg-gradient-to-r from-gold-light to-ember-light bg-clip-text text-transparent mt-2">
+              com tradição e força
+            </strong>
+          </h1>
 
-          {/* Stats card */}
-          <div className="grid grid-cols-2 gap-4">
-            {stats.map((s, i) => (
-              <div key={i} className="bg-white/10 backdrop-blur border border-white/10 rounded-2xl p-6 text-center hover:bg-white/15 transition-all">
-                <p className="text-4xl font-black text-amber-400 mb-1">{s.value}</p>
-                <p className="text-slate-300 text-sm font-medium">{s.label}</p>
-              </div>
-            ))}
+          <p className="text-[#D4B89A] text-lg mb-10 max-w-[480px] font-light leading-relaxed">
+            Representamos as melhores marcas de panificação e distribuímos com agilidade, pontualidade e comprometimento por toda a região Norte.
+          </p>
+
+          <div className="flex flex-wrap gap-4">
+            <button 
+              onClick={() => scrollTo('produtos')}
+              className="bg-gradient-to-br from-fire to-ember text-white px-8 py-4 rounded-lg font-bold text-[0.88rem] tracking-wider shadow-[0_4px_20px_rgba(192,57,10,0.4)] hover:-translate-y-0.5 transition-all"
+            >
+              Conheça os Produtos
+            </button>
+            <button 
+              onClick={() => scrollTo('contato')}
+              className="border-[1.5px] border-gold-light/50 text-gold-light px-8 py-4 rounded-lg font-medium text-[0.88rem] tracking-wider hover:bg-gold-light/5 transition-all"
+            >
+              Fale Conosco
+            </button>
           </div>
         </div>
       </section>
+
+      {/* ─── COVERAGE BANNER ─── */}
+      <div className="bg-gradient-to-r from-fire-deep via-fire to-ember py-4 px-6 overflow-hidden">
+        <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12 animate-in fade-in duration-1000">
+          <div className="flex items-center gap-3 text-[#FFE8D0] text-[0.82rem] font-bold uppercase tracking-wider">
+            <Star size={14} className="text-gold-light" /> Todo o Estado de Rondônia
+          </div>
+          <div className="hidden md:block text-[#FFE8D0]/30 text-xl">|</div>
+          <div className="flex items-center gap-3 text-[#FFE8D0] text-[0.82rem] font-bold uppercase tracking-wider">
+            <Star size={14} className="text-gold-light" /> Parcialmente o Estado do Amazonas
+          </div>
+          <div className="hidden md:block text-[#FFE8D0]/30 text-xl">|</div>
+          <div className="flex items-center gap-3 text-[#FFE8D0] text-[0.82rem] font-bold uppercase tracking-wider">
+            <Star size={14} className="text-gold-light" /> Entrega pontual e garantida
+          </div>
+        </div>
+      </div>
 
       {/* ─── QUEM SOMOS ─── */}
-      <section id="sobre" className="py-24 bg-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div>
-              <span className="text-amber-600 font-bold text-sm uppercase tracking-widest">Quem Somos</span>
-              <h2 className="text-4xl font-black text-slate-800 mt-3 mb-6 leading-tight">
-                Nascemos para<br /><span className="text-amber-500">digitalizar</span> a padaria brasileira
-              </h2>
-              <p className="text-slate-500 text-lg leading-relaxed mb-6">
-                O <strong>SGP-F (Sistema de Gestão para Panificação e Fábrica)</strong> foi desenvolvido 
-                especificamente para os desafios únicos do setor de panificação. Sabemos que gerir 
-                uma padaria vai muito além de assar pão — envolve logística, RH, finanças e muito mais.
-              </p>
-              <p className="text-slate-500 leading-relaxed mb-8">
-                Nossa missão é simplificar toda a operação para que o dono de padaria possa focar 
-                no que faz de melhor: produzir produtos de qualidade para seus clientes.
-              </p>
-              <div className="space-y-3">
-                {['Desenvolvimento focado no setor alimentício', 'Suporte técnico especializado', 'Atualizações constantes e sem custo adicional', 'Dados seguros e sempre disponíveis'].map(item => (
-                  <div key={item} className="flex items-center gap-3">
-                    <CheckCircle size={18} className="text-emerald-500 shrink-0" />
-                    <span className="text-slate-600 text-sm">{item}</span>
-                  </div>
-                ))}
-              </div>
+      <section id="quem-somos" className="bg-warm py-24 px-6 md:px-12">
+        <div className="max-w-[900px] mx-auto">
+          <div className="text-[0.7rem] font-bold tracking-[0.16em] uppercase text-ember mb-2">Quem Somos</div>
+          <h2 className="font-serif text-3xl md:text-[2.8rem] text-dark leading-[1.15] mb-8 font-bold">
+            Uma empresa que conecta qualidade ao varejo regional
+          </h2>
+          
+          <div className="grid md:grid-cols-[3fr_2fr] gap-12 md:gap-16 items-center mt-10">
+            <div className="space-y-4 text-mid text-[0.97rem] leading-relaxed">
+              <p>A <strong>Salú Representação Ltda</strong> atua como representante comercial de produtos de panificação de alta qualidade, conectando indústrias selecionadas ao varejo de Rondônia e Amazonas com eficiência e confiança.</p>
+              <p>Desde supermercados a padarias e mercearias, levamos uma linha completa de pães — de forma, integral, centeio, polvilho e mais — garantindo frescor e variedade para cada tipo de cliente e consumidor.</p>
+              <p>Nossa equipe conhece profundamente o mercado local e atua de forma consultiva, construindo parcerias sólidas e duradouras com cada cliente atendido.</p>
             </div>
-
-            <div className="relative">
-              <div className="absolute -top-4 -left-4 w-full h-full bg-amber-100 rounded-3xl" />
-              <div className="relative bg-gradient-to-br from-amber-500 to-orange-600 rounded-3xl p-10 text-white shadow-2xl">
-                <ChefHat size={48} className="mb-6 opacity-80" />
-                <h3 className="text-2xl font-black mb-4">Nossa Visão</h3>
-                <p className="text-amber-100 leading-relaxed text-lg">
-                  "Ser o sistema de gestão mais completo e acessível para panificadoras, transformando 
-                  operações tradicionais em negócios modernos, eficientes e lucrativos."
-                </p>
-                <div className="mt-8 pt-8 border-t border-amber-400/40 grid grid-cols-3 gap-4 text-center">
-                  <div><p className="text-3xl font-black">100%</p><p className="text-amber-200 text-xs">Web</p></div>
-                  <div><p className="text-3xl font-black">24/7</p><p className="text-amber-200 text-xs">Online</p></div>
-                  <div><p className="text-3xl font-black">∞</p><p className="text-amber-200 text-xs">Usuários</p></div>
+            
+            <div className="flex flex-col gap-1">
+              {[
+                { n: '2 Estados', d: 'Rondônia e Amazonas cobertos' },
+                { n: '7+ Linhas', d: 'de produtos representados' },
+                { n: '100%', d: 'foco em qualidade e pontualidade' }
+              ].map((stat, i) => (
+                <div key={i} className={`bg-dark border-l-4 border-ember p-6 ${i === 0 ? 'rounded-t-xl' : ''} ${i === 2 ? 'rounded-b-xl' : ''} hover:border-gold-light transition-colors group`}>
+                  <div className="font-serif text-3xl text-ember-light font-bold leading-none mb-1 group-hover:scale-105 transition-transform origin-left">{stat.n}</div>
+                  <div className="text-[#B8906A] text-[0.8rem] font-normal uppercase tracking-wider">{stat.d}</div>
                 </div>
-              </div>
+              ))}
             </div>
           </div>
         </div>
       </section>
 
-      {/* ─── FUNCIONALIDADES ─── */}
-      <section id="funcionalidades" className="py-24 bg-slate-50">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="text-center mb-16">
-            <span className="text-amber-600 font-bold text-sm uppercase tracking-widest">Plataforma Completa</span>
-            <h2 className="text-4xl font-black text-slate-800 mt-3 mb-4">Tudo que sua padaria precisa</h2>
-            <p className="text-slate-500 max-w-xl mx-auto">Módulos integrados que se comunicam entre si, eliminando retrabalho e proporcionando visão 360° do negócio.</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((f) => (
-              <div key={f.title} className="bg-white rounded-2xl p-6 border border-slate-100 hover:shadow-lg hover:-translate-y-1 transition-all group">
-                <div className={`${f.color} p-3 rounded-xl w-fit mb-4 shadow-md group-hover:scale-110 transition-transform`}>
-                  <f.icon size={22} className="text-white" />
-                </div>
-                <h3 className="text-slate-800 font-bold text-lg mb-2">{f.title}</h3>
-                <p className="text-slate-500 text-sm leading-relaxed">{f.desc}</p>
+      {/* ─── MVV ─── */}
+      <section id="mvv" className="bg-charcoal py-24 px-6 md:px-12 text-cream">
+        <div className="max-w-[900px] mx-auto">
+          <div className="text-[0.7rem] font-bold tracking-[0.16em] uppercase text-ember-light mb-2">Nossa Essência</div>
+          <h2 className="font-serif text-3xl md:text-5xl text-cream leading-tight mb-12 font-bold">Missão, Visão e Valores</h2>
+          
+          <div className="grid md:grid-cols-3 gap-px bg-ember/20 border border-ember/20 rounded-2xl overflow-hidden mt-10">
+            {[
+              { num: '01', tag: 'Missão', title: 'Por que existimos', desc: 'Representar com excelência marcas de panificação de qualidade, conectando indústria e varejo em Rondônia e Amazonas com agilidade, honestidade e dedicação — gerando valor real para cada parceiro.' },
+              { num: '02', tag: 'Visão', title: 'Para onde vamos', desc: 'Ser reconhecida como a principal representação comercial de panificação da região Norte, referência em atendimento, cobertura de mercado e relacionamento de longo prazo com clientes e fornecedores.' },
+              { num: '03', tag: 'Valores', title: 'Como agimos', desc: <> <strong className="text-ember-light">Honestidade</strong> — transparência em cada negociação.<br /><strong className="text-ember-light">Qualidade</strong> — só representamos o que acreditamos.<br /><strong className="text-ember-light">Comprometimento</strong> — cumprimos o que prometemos.<br /><strong className="text-ember-light">Parceria</strong> — crescemos juntos.</> }
+            ].map((item, i) => (
+              <div key={i} className="bg-dark p-10 hover:bg-[#2E1500] transition-all group">
+                <div className="font-serif text-[3.5rem] text-ember/20 font-bold leading-none mb-2 group-hover:text-ember/30 transition-colors">{item.num}</div>
+                <div className="inline-block bg-ember/15 border border-ember/30 text-ember-light text-[0.68rem] font-bold tracking-widest uppercase px-3 py-1 rounded mb-4">{item.tag}</div>
+                <h3 className="font-serif text-xl text-ember-light font-semibold mb-4">{item.title}</h3>
+                <div className="text-[#B8906A] text-[0.88rem] leading-relaxed">{item.desc}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ─── CTA ─── */}
-      <section className="py-24 bg-gradient-to-r from-amber-500 to-orange-500">
-        <div className="max-w-3xl mx-auto px-4 text-center">
-          <h2 className="text-4xl font-black text-white mb-4">Pronto para modernizar sua padaria?</h2>
-          <p className="text-amber-100 text-lg mb-8">Acesse agora e comece a transformar a gestão do seu negócio hoje mesmo.</p>
-          <button
-            onClick={() => setLoginOpen(true)}
-            className="inline-flex items-center gap-3 bg-white text-amber-600 font-black px-10 py-4 rounded-2xl hover:shadow-2xl hover:-translate-y-1 transition-all text-lg"
-          >
-            <ChefHat size={22} /> Acessar o SGP-F Agora
-          </button>
+      {/* ─── PRODUTOS ─── */}
+      <section id="produtos" className="bg-warm py-24 px-6 md:px-12">
+        <div className="max-w-[900px] mx-auto">
+          <div className="text-[0.7rem] font-bold tracking-[0.16em] uppercase text-ember mb-2">Portfólio</div>
+          <h2 className="font-serif text-3xl md:text-5xl text-dark mb-12 font-bold">Nossos Produtos</h2>
+          
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4 mt-10">
+            {[
+              { icon: ChefHat, name: 'Pão de Forma Comum', pill: 'Clássico' },
+              { icon: Wheat, name: 'Pão Integral 100%', pill: 'Saudável' },
+              { icon: ChefHat, name: 'Pão Integral de Forma', pill: 'Saudável' },
+              { icon: Star, name: 'Pão de Centeio 100%', pill: 'Especial' },
+              { icon: Sprout, name: 'Polvilho Tradicional', pill: 'Crocante' },
+              { icon: PlusCircle, name: 'E muito mais...', pill: 'Consulte' }
+            ].map((p, i) => (
+              <div key={i} className="bg-cream border-[1.5px] border-surface rounded-2xl p-6 text-center hover:border-ember-light hover:-translate-y-1 hover:shadow-xl transition-all relative overflow-hidden group">
+                <div className="flex justify-center mb-4 text-ember group-hover:scale-110 transition-transform">
+                  <p.icon size={36} strokeWidth={1.5} />
+                </div>
+                <div className="text-dark text-[0.9rem] font-bold leading-tight mb-2">{p.name}</div>
+                <span className="inline-block bg-surface text-mid text-[0.65rem] font-bold uppercase tracking-widest px-3 py-1 rounded-full">{p.pill}</span>
+                <div className="absolute bottom-0 left-0 right-0 h-[3px] bg-gradient-to-r from-fire to-ember scale-x-0 group-hover:scale-x-100 transition-transform origin-left" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── REGIÃO ─── */}
+      <section id="regiao" className="bg-dark py-24 px-6 md:px-12">
+        <div className="max-w-[900px] mx-auto">
+          <div className="text-[0.7rem] font-bold tracking-[0.16em] uppercase text-ember-light mb-2">Área de Atuação</div>
+          <h2 className="font-serif text-3xl md:text-5xl text-cream mb-12 font-bold">Nossa cobertura regional</h2>
+          
+          <div className="grid md:grid-cols-2 gap-6 mt-10">
+            {/* Rondônia */}
+            <div className="bg-gradient-to-br from-fire/25 to-ember/10 border-[1.5px] border-ember/40 rounded-2xl p-8 hover:bg-fire/20 transition-all">
+              <span className="inline-block bg-ember/20 border border-ember/40 text-ember-light text-[0.68rem] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4">Cobertura Total</span>
+              <h3 className="font-serif text-2xl text-cream font-bold mb-2">Estado de Rondônia</h3>
+              <p className="text-[#D4B89A] text-[0.88rem] mb-6">Atendemos todo o estado de Rondônia com distribuição completa, chegando em municípios de grande e pequeno porte com regularidade.</p>
+              <div className="flex flex-wrap gap-2">
+                {['Porto Velho', 'Ji-Paraná', 'Ariquemes', 'Cacoal', 'Vilhena'].map(c => (
+                  <span key={c} className="bg-ember/15 text-ember-light text-[0.72rem] font-medium px-3 py-1 rounded-full">{c}</span>
+                ))}
+                <span className="bg-ember/15 text-ember-light text-[0.72rem] font-medium px-3 py-1 rounded-full italic">+ demais municípios</span>
+              </div>
+            </div>
+
+            {/* Amazonas */}
+            <div className="bg-white/5 border-[1.5px] border-white/10 rounded-2xl p-8 hover:bg-white/10 transition-all">
+              <span className="inline-block bg-white/7 border border-white/15 text-[#B8906A] text-[0.68rem] font-bold uppercase tracking-widest px-3 py-1 rounded-full mb-4">Cobertura Parcial</span>
+              <h3 className="font-serif text-2xl text-[#D4B89A] font-bold mb-2">Estado do Amazonas</h3>
+              <p className="text-[#9B7653] text-[0.88rem] mb-6">Atuamos parcialmente no estado do Amazonas, atendendo municípios estratégicos com logística dedicada e atendimento especializado.</p>
+              <div className="flex flex-wrap gap-2">
+                <span className="bg-white/6 text-[#9B7653] text-[0.72rem] font-medium px-4 py-1.5 rounded-full border border-white/10">Consulte cidades atendidas</span>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* ─── CONTATO ─── */}
-      <section id="contato" className="py-24 bg-slate-900 text-white">
-        <div className="max-w-7xl mx-auto px-4">
-          <div className="grid md:grid-cols-3 gap-12">
-            <div className="md:col-span-1">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="bg-amber-500 p-2 rounded-xl"><ChefHat size={22} className="text-white" /></div>
-                <span className="text-xl font-black">SGP<span className="text-amber-400">-F</span></span>
-              </div>
-              <p className="text-slate-400 leading-relaxed text-sm">
-                Sistema de Gestão para Panificação e Fábricas. Desenvolvido com tecnologia de ponta para o setor alimentício brasileiro.
-              </p>
-            </div>
-
-            <div className="md:col-span-2 grid sm:grid-cols-2 gap-8">
-              <div>
-                <h4 className="font-bold text-amber-400 mb-4 uppercase text-xs tracking-widest">Módulos do Sistema</h4>
-                <ul className="space-y-2 text-slate-400 text-sm">
-                  {['Dashboard & BI', 'Vendas & Pedidos', 'Produção & Estoque', 'Financeiro', 'RH & Folha', 'Logística & Frota'].map(m => (
-                    <li key={m} className="flex items-center gap-2"><ArrowRight size={12} className="text-amber-500" />{m}</li>
-                  ))}
-                </ul>
-              </div>
-              <div>
-                <h4 className="font-bold text-amber-400 mb-4 uppercase text-xs tracking-widest">Contato</h4>
-                <div className="space-y-3 text-slate-400 text-sm">
-                  <div className="flex items-center gap-3"><Mail size={16} className="text-amber-500 shrink-0" /><span>contato@sgpf.com.br</span></div>
-                  <div className="flex items-center gap-3"><Phone size={16} className="text-amber-500 shrink-0" /><span>(11) 9 0000-0000</span></div>
-                  <div className="flex items-start gap-3"><MapPin size={16} className="text-amber-500 shrink-0 mt-0.5" /><span>São Paulo - SP, Brasil</span></div>
+      <section id="contato" className="bg-warm py-24 px-6 md:px-12">
+        <div className="max-w-[900px] mx-auto">
+          <div className="text-[0.7rem] font-bold tracking-[0.16em] uppercase text-ember mb-2">Contato</div>
+          <h2 className="font-serif text-3xl md:text-5xl text-dark mb-12 font-bold">Fale com nossa equipe</h2>
+          
+          <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-5 mt-10">
+            {[
+              { icon: MapPin, label: 'Endereço', val: 'Porto Velho, RO', sub: 'Rondônia — Brasil' },
+              { icon: Phone, label: 'Telefone & WhatsApp', val: '(69) 9 0000-0000', sub: 'Seg–Sex, 8h às 18h' },
+              { icon: Mail, label: 'E-mail', val: 'contato@salu.com.br', sub: 'Respondemos em até 24h' },
+              { icon: Clock, label: 'Horário', val: 'Segunda a Sexta', sub: '08:00h às 18:00h' }
+            ].map((card, i) => (
+              <div key={i} className="bg-cream border-[1.5px] border-surface rounded-2xl p-6 hover:border-ember-light hover:-translate-y-1 transition-all">
+                <div className="w-11 h-11 bg-gradient-to-br from-fire to-ember rounded-lg flex items-center justify-center text-white mb-4 shadow-lg shadow-fire/20">
+                  <card.icon size={20} />
                 </div>
+                <div className="text-[0.72rem] font-bold tracking-widest uppercase text-muted mb-1">{card.label}</div>
+                <div className="text-[0.95rem] font-bold text-dark mb-1">{card.val}</div>
+                <div className="text-[0.82rem] text-muted">{card.sub}</div>
               </div>
-            </div>
-          </div>
-
-          <div className="mt-16 pt-8 border-t border-slate-800 text-center text-slate-500 text-xs">
-            © {new Date().getFullYear()} SGP-F — Sistema de Gestão para Panificação e Fábrica. Todos os direitos reservados.
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ─── MODAL DE LOGIN ─── */}
+      {/* ─── FOOTER ─── */}
+      <footer className="bg-charcoal py-16 px-6 md:px-12 text-center">
+        <div className="font-serif text-3xl text-ember-light font-bold tracking-wider mb-2">Salú Representação Ltda</div>
+        <div className="text-[#7A4820] text-sm font-light tracking-wide mb-8">Qualidade de ponta a ponta — Rondônia & Amazonas</div>
+        
+        <div className="flex justify-center flex-wrap gap-x-8 gap-y-4 mb-8">
+          {['quem-somos', 'mvv', 'produtos', 'regiao', 'contato'].map((item) => (
+            <button 
+              key={item}
+              onClick={() => scrollTo(item)}
+              className="text-[#7A4820] text-[0.78rem] font-medium tracking-widest uppercase hover:text-ember-light transition-colors"
+            >
+              {item.replace('-', ' ')}
+            </button>
+          ))}
+          <button 
+            onClick={() => setLoginOpen(true)}
+            className="text-[#7A4820] text-[0.78rem] font-medium tracking-widest uppercase hover:text-ember-light transition-colors"
+          >
+            Acessar Sistema
+          </button>
+        </div>
+
+        <div className="flex justify-center gap-6 mb-10">
+          {/* Social icons removed due to library compatibility issues */}
+        </div>
+
+        <hr className="border-none border-t border-ember/15 mb-6" />
+        
+        <p className="text-[#4A2410] text-[0.8rem] mb-1">© 2025 Salú Representação Ltda — Todos os direitos reservados</p>
+        <p className="text-[#4A2410] text-[0.75rem]">CNPJ: 00.000.000/0001-00 — Porto Velho, RO</p>
+      </footer>
+
+      {/* ─── MODAL DE LOGIN (Integrated React Logic) ─── */}
       {loginOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={(e) => { if (e.target === e.currentTarget) { setLoginOpen(false); setRequireChange(false); setLoginError(''); } }}>
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-md overflow-hidden animate-in slide-in-from-bottom-4 duration-300">
+        <div 
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-[#120700]/80 backdrop-blur-sm animate-in fade-in duration-300"
+          onClick={(e) => { if (e.target === e.currentTarget) setLoginOpen(false); }}
+        >
+          <div 
+            className="bg-dark border border-ember/30 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden relative animate-in zoom-in-95 duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Accent Line */}
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-fire via-ember to-gold-light" />
             
-            {/* Header do modal */}
-            <div className="bg-gradient-to-r from-amber-500 to-orange-500 p-6 text-white text-center relative">
-              <button onClick={() => { setLoginOpen(false); setRequireChange(false); setLoginError(''); }} className="absolute right-4 top-4 p-1 hover:bg-white/20 rounded-lg transition-all">
-                <X size={20} />
-              </button>
-              <div className="bg-white/20 w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3">
-                {requireChange ? <ShieldCheck size={28} /> : <ChefHat size={28} />}
-              </div>
-              <h2 className="text-xl font-black">{requireChange ? 'Defina sua Senha' : 'Acessar SGP-F'}</h2>
-              <p className="text-amber-100 text-sm mt-1">
-                {requireChange ? 'Crie uma senha segura para sua conta' : 'Insira suas credenciais para continuar'}
-              </p>
-            </div>
+            <button 
+              onClick={() => { setLoginOpen(false); setRequireChange(false); setLoginError(''); }}
+              className="absolute right-4 top-4 text-[#4A2410] hover:text-cream transition-colors p-2"
+            >
+              <X size={20} />
+            </button>
 
-            <div className="p-6">
+            <div className="p-10">
               {!requireChange ? (
-                <form onSubmit={handleSubmit(onLogin)} className="space-y-4">
-                  {loginError && (
-                    <div className="bg-red-50 text-red-600 text-sm p-3 rounded-xl border border-red-100">{loginError}</div>
-                  )}
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-[34px] h-4 w-4 text-slate-400" />
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">E-mail</label>
-                    <input
-                      type="email"
-                      placeholder="seu@email.com"
-                      {...register('email')}
-                      className="w-full h-11 pl-9 pr-4 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
-                    />
-                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>}
+                <>
+                  <div className="mb-8 text-center">
+                    <div className="flex justify-center mb-4">
+                      <LogoSalu size={80} />
+                    </div>
+                    <h3 className="font-serif text-3xl text-cream font-bold mb-1">Salú Representação</h3>
+                    <p className="text-[#7A4820] text-sm">Insira suas credenciais para continuar</p>
                   </div>
 
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400" />
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Senha</label>
-                    <input
-                      type={showPass ? 'text' : 'password'}
-                      placeholder="••••••••"
-                      {...register('senha')}
-                      className="w-full h-11 pl-9 pr-10 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
-                    />
-                    <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-[34px] text-slate-400">
-                      {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                  <form onSubmit={handleSubmit(onLogin)} className="space-y-5">
+                    {loginError && (
+                      <div className="bg-red-500/10 text-red-500 text-xs p-3 rounded-lg border border-red-500/20">{loginError}</div>
+                    )}
+                    
+                    <div className="space-y-1.5">
+                      <label htmlFor="login-email" className="block text-[0.72rem] font-bold text-[#9B7653] tracking-widest uppercase">E-mail</label>
+                      <div className="relative">
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A2410] pointer-events-none" />
+                        <input
+                          id="login-email"
+                          type="email"
+                          placeholder="seu@email.com.br"
+                          {...register('email')}
+                          className="w-full bg-black/20 border-[1.5px] border-ember/40 rounded-lg py-3 pl-10 pr-4 text-cream text-[0.93rem] outline-none focus:border-ember transition-colors placeholder:text-[#9B7653]/60"
+                        />
+                      </div>
+                      {errors.email && <p className="text-red-500 text-[10px] mt-1">{errors.email.message}</p>}
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label htmlFor="login-senha" className="block text-[0.72rem] font-bold text-[#9B7653] tracking-widest uppercase">Senha</label>
+                      <div className="relative">
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A2410] pointer-events-none" />
+                        <input
+                          id="login-senha"
+                          type={showPass ? 'text' : 'password'}
+                          placeholder="••••••••"
+                          {...register('senha')}
+                          className="w-full bg-black/20 border-[1.5px] border-ember/40 rounded-lg py-3 pl-10 pr-12 text-cream text-[0.93rem] outline-none focus:border-ember transition-colors placeholder:text-[#9B7653]/60"
+                        />
+                        <button 
+                          type="button" 
+                          onClick={() => setShowPass(!showPass)}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A2410] hover:text-ember-light transition-colors"
+                        >
+                          {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                        </button>
+                      </div>
+                      {errors.senha && <p className="text-red-500 text-[10px] mt-1">{errors.senha.message}</p>}
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={isSubmitting}
+                      className="w-full bg-gradient-to-r from-fire to-ember text-white py-4 rounded-lg font-bold text-[0.95rem] tracking-wide mt-4 shadow-[0_4px_20px_rgba(192,57,10,0.4)] hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
+                    >
+                      {isSubmitting ? 'Verificando...' : 'Entrar no Sistema'}
                     </button>
-                    {errors.senha && <p className="text-red-500 text-xs mt-1">{errors.senha.message}</p>}
-                  </div>
 
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all flex items-center justify-center gap-2 mt-2"
-                  >
-                    {isSubmitting ? 'Entrando...' : <><ArrowRight size={18} /> Entrar no Sistema</>}
-                  </button>
-                </form>
+                    <div className="text-center pt-4 text-[0.82rem] text-[#7A4820]">
+                      <button 
+                        type="button" 
+                        onClick={() => alert('Por favor, entre em contato com a administração para recuperar sua senha.')}
+                        className="hover:text-ember-light transition-colors font-medium underline underline-offset-4"
+                      >
+                        Esqueceu sua senha?
+                      </button> 
+                    </div>
+                  </form>
+                </>
               ) : (
-                <form onSubmit={hT(onTrocar)} className="space-y-4">
-                  <div className="bg-amber-50 p-3 rounded-xl border border-amber-100 text-xs text-amber-800">
-                    Primeiro acesso detectado. Crie uma senha segura para proteger sua conta.
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400" />
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Nova Senha</label>
-                    <input
-                      type={showPass ? 'text' : 'password'}
-                      placeholder="Mínimo 8 caracteres"
-                      {...rT('novaSenha')}
-                      className="w-full h-11 pl-9 pr-10 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
-                    />
-                    <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-[34px] text-slate-400">
-                      {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
-                    {eT.novaSenha && <p className="text-red-500 text-xs mt-1">{eT.novaSenha.message}</p>}
+                <form onSubmit={hT(onTrocar)} className="space-y-5">
+                  <div className="mb-8">
+                    <h3 className="font-serif text-3xl text-cream font-bold mb-1">Primeiro Acesso</h3>
+                    <p className="text-[#7A4820] text-sm">Crie uma senha segura para sua conta</p>
                   </div>
 
-                  {/* Checklist de Requisitos em Tempo Real */}
-                  <div className="bg-slate-50 p-3 rounded-lg border border-slate-100 grid grid-cols-2 gap-2">
+                  <div className="space-y-1.5">
+                    <label htmlFor="nova-senha" className="block text-[0.72rem] font-bold text-[#9B7653] tracking-widest uppercase">Nova Senha</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A2410] pointer-events-none" />
+                      <input
+                        id="nova-senha"
+                        type={showPass ? 'text' : 'password'}
+                        placeholder="Mínimo 8 caracteres"
+                        {...rT('novaSenha')}
+                        className="w-full bg-white/5 border-[1.5px] border-ember/20 rounded-lg py-3 pl-10 pr-12 text-cream text-[0.93rem] outline-none focus:border-ember transition-colors"
+                      />
+                      <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A2410]">
+                        {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    {eT.novaSenha && <p className="text-red-500 text-[10px] mt-1">{eT.novaSenha.message}</p>}
+                  </div>
+
+                  {/* Checklist de Requisitos */}
+                  <div className="bg-white/5 p-4 rounded-xl border border-ember/10 grid grid-cols-2 gap-y-2">
                     {passwordRequirements.map((req, idx) => {
                       const isMet = req.test(novaSenha);
                       return (
-                        <div key={idx} className={`flex items-center gap-2 text-[10px] ${isMet ? 'text-emerald-600 font-bold' : 'text-slate-400'}`}>
-                          <div className={`w-3 h-3 rounded-full flex items-center justify-center ${isMet ? 'bg-emerald-100' : 'bg-slate-200'}`}>
-                            {isMet ? '✓' : ''}
+                        <div key={idx} className={`flex items-center gap-2 text-[10px] ${isMet ? 'text-ember-light font-bold' : 'text-[#4A2410]'}`}>
+                          <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border ${isMet ? 'bg-ember/20 border-ember-light' : 'border-[#4A2410]'}`}>
+                            {isMet && <CheckCircle2 size={10} />}
                           </div>
                           {req.label}
                         </div>
@@ -420,21 +526,25 @@ export function LandingPage() {
                     })}
                   </div>
 
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400" />
-                    <label className="block text-sm font-semibold text-slate-700 mb-1">Confirmar Senha</label>
-                    <input
-                      type={showPass ? 'text' : 'password'}
-                      placeholder="Repita a senha"
-                      {...rT('confirmarSenha')}
-                      className="w-full h-11 pl-9 pr-10 rounded-xl border border-slate-200 text-sm focus:ring-2 focus:ring-amber-500 outline-none"
-                    />
-                    {eT.confirmarSenha && <p className="text-red-500 text-xs mt-1">{eT.confirmarSenha.message}</p>}
+                  <div className="space-y-1.5">
+                    <label htmlFor="confirmar-senha" className="block text-[0.72rem] font-bold text-[#9B7653] tracking-widest uppercase">Confirmar Senha</label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A2410] pointer-events-none" />
+                      <input
+                        id="confirmar-senha"
+                        type={showPass ? 'text' : 'password'}
+                        placeholder="Repita a nova senha"
+                        {...rT('confirmarSenha')}
+                        className="w-full bg-white/5 border-[1.5px] border-ember/20 rounded-lg py-3 pl-10 pr-4 text-cream text-[0.93rem] outline-none focus:border-ember transition-colors"
+                      />
+                    </div>
+                    {eT.confirmarSenha && <p className="text-red-500 text-[10px] mt-1">{eT.confirmarSenha.message}</p>}
                   </div>
+
                   <button
                     type="submit"
                     disabled={isT}
-                    className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white font-bold py-3 rounded-xl transition-all"
+                    className="w-full bg-gradient-to-r from-fire to-ember text-white py-4 rounded-lg font-bold text-[0.95rem] tracking-wide mt-4 shadow-lg shadow-fire/30 hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50"
                   >
                     {isT ? 'Salvando...' : 'Salvar Senha e Entrar'}
                   </button>

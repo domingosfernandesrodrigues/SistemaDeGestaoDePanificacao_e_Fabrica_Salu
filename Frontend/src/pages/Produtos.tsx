@@ -127,7 +127,7 @@ export function Produtos() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-indigo-600" size={32} />
+        <Loader2 className="animate-spin text-ember" size={32} />
       </div>
     );
   }
@@ -139,7 +139,7 @@ export function Produtos() {
           <h2 className="text-2xl font-bold text-slate-800">Cadastro de Produtos</h2>
           <p className="text-slate-500">Gerencie todos os insumos, produtos fabricados e de revenda.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-indigo-600">
+        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember">
           <PackagePlus size={18} />
           Novo Produto
         </Button>
@@ -205,7 +205,7 @@ export function Produtos() {
                   <td className="px-6 py-4">
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                       produto.tipo === 0 ? 'bg-amber-100 text-amber-800' : 
-                      produto.tipo === 1 ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                      produto.tipo === 1 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'
                     }`}>
                       {produto.tipo === 0 ? 'Insumo' : produto.tipo === 1 ? 'Fabricado' : 'Revenda'}
                     </span>
@@ -236,7 +236,7 @@ export function Produtos() {
                       </button>
                       <button 
                         onClick={() => handleEdit(produto)}
-                        className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                        className="p-1.5 text-slate-500 hover:text-ember hover:bg-ember/5 rounded-lg transition-colors"
                         title="Editar"
                       >
                         <Edit2 size={16} />
@@ -291,6 +291,7 @@ export function Produtos() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Input 
             label="Nome do Produto" 
+            required
             placeholder="Ex: Pão Francês 50g"
             {...register('nome')}
             error={errors.nome?.message}
@@ -298,7 +299,7 @@ export function Produtos() {
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium text-slate-700">Tipo de Produto</label>
+              <label className="text-sm font-medium text-slate-700">Tipo de Produto <span className="text-red-500">*</span></label>
               <select 
                 {...register('tipo')}
                 className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
@@ -310,6 +311,7 @@ export function Produtos() {
             </div>
             <Input 
               label="Unidade (Ex: Kg, Un)" 
+              required
               placeholder="Un"
               {...register('unidadeMedida')}
               error={errors.unidadeMedida?.message}
@@ -342,7 +344,7 @@ export function Produtos() {
           />
 
           <div className="flex items-center gap-2 py-2">
-            <input type="checkbox" {...register('ativo')} id="ativo" className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500" />
+            <input type="checkbox" {...register('ativo')} id="ativo" className="rounded border-slate-300 text-ember focus:ring-ember/30" />
             <label htmlFor="ativo" className="text-sm font-medium text-slate-700">Produto Ativo</label>
           </div>
 
@@ -357,7 +359,7 @@ export function Produtos() {
             </Button>
             <Button 
               type="submit" 
-              className="flex-1 flex items-center justify-center gap-2 bg-indigo-600 text-white"
+              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-fire to-ember text-white"
               disabled={mutationSave.isPending}
             >
               {mutationSave.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}
@@ -375,7 +377,7 @@ export function Produtos() {
         <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
           {isLoadingHistory ? (
             <div className="flex justify-center py-8">
-              <Loader2 className="animate-spin text-indigo-600" />
+              <Loader2 className="animate-spin text-ember" />
             </div>
           ) : historyData?.length === 0 ? (
             <div className="text-center py-8 text-slate-400">
@@ -387,7 +389,7 @@ export function Produtos() {
                 <div key={h.id} className="p-3 rounded-lg border border-slate-100 bg-slate-50/50 space-y-2">
                   <div className="flex justify-between items-start">
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      h.tipo === 0 ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                      h.tipo === 0 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'
                     }`}>
                       {h.tipo === 0 ? 'Preço de Custo' : 'Preço de Venda'}
                     </span>

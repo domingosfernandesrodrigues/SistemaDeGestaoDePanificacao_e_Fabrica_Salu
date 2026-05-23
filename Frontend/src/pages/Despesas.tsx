@@ -110,7 +110,7 @@ export default function Despesas() {
   const totalPaginas = Math.ceil(despesasFiltradas.length / itensPorPagina) || 1;
   const despesasPaginadas = despesasFiltradas.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina);
 
-  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-ember" size={32} /></div>;
 
   return (
     <div className="space-y-6">
@@ -119,7 +119,7 @@ export default function Despesas() {
           <h2 className="text-2xl font-bold text-slate-800">Controle de Despesas</h2>
           <p className="text-slate-500">Registre gastos operacionais da sua panificadora.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 h-11 px-6 shadow-md shadow-indigo-100">
+        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember h-11 px-6 shadow-md">
           <Plus size={18} /> Nova Despesa
         </Button>
       </div>
@@ -226,7 +226,7 @@ export default function Despesas() {
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-2">
-                      <button onClick={() => handleEdit(d)} className="p-1.5 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors">
+                      <button onClick={() => handleEdit(d)} className="p-1.5 text-slate-400 hover:text-ember hover:bg-ember/5 rounded-md transition-colors">
                         <Edit2 size={16} />
                       </button>
                       <button onClick={() => confirm('Excluir despesa?') && mutationDelete.mutate(d.id)} className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors">
@@ -259,7 +259,7 @@ export default function Despesas() {
                   </div>
                 </div>
                 <div className="flex gap-1">
-                  <button onClick={() => handleEdit(d)} className="p-2 text-indigo-600 bg-indigo-50 rounded-lg"><Edit2 size={18} /></button>
+                  <button onClick={() => handleEdit(d)} className="p-2 text-slate-500 hover:text-ember bg-slate-50 hover:bg-ember/5 rounded-lg"><Edit2 size={18} /></button>
                   <button onClick={() => confirm('Excluir despesa?') && mutationDelete.mutate(d.id)} className="p-2 text-red-600 bg-red-50 rounded-lg"><Trash2 size={18} /></button>
                 </div>
               </div>
@@ -270,7 +270,7 @@ export default function Despesas() {
                 </div>
                 <div className="text-right">
                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Valor</p>
-                  <p className="text-lg font-black text-indigo-600">{Number(d.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
+                  <p className="text-lg font-bold text-fire">{Number(d.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</p>
                 </div>
               </div>
             </div>
@@ -310,11 +310,11 @@ export default function Despesas() {
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editId ? 'Editar Despesa' : 'Nova Despesa'}>
         <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
-          <Input label="Descrição da Despesa" placeholder="Ex: Conta de Energia" {...register('descricao')} error={errors.descricao?.message} />
+          <Input label="Descrição da Despesa" required placeholder="Ex: Conta de Energia" {...register('descricao')} error={errors.descricao?.message} />
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium text-slate-700">Categoria</label>
+              <label className="text-sm font-medium text-slate-700">Categoria <span className="text-red-500">*</span></label>
               <select 
                 {...register('categoria')}
                 className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
@@ -328,7 +328,7 @@ export default function Despesas() {
             </div>
             <div className="grid grid-cols-2 gap-2">
               <div className="space-y-1">
-                <label className="text-sm font-medium text-slate-700">Mês</label>
+                <label className="text-sm font-medium text-slate-700">Mês <span className="text-red-500">*</span></label>
                 <select 
                   {...register('mes')}
                   className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
@@ -338,7 +338,7 @@ export default function Despesas() {
                 </select>
               </div>
               <div className="space-y-1">
-                <label className="text-sm font-medium text-slate-700">Ano</label>
+                <label className="text-sm font-medium text-slate-700">Ano <span className="text-red-500">*</span></label>
                 <select 
                   {...register('ano')}
                   className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all"
@@ -351,13 +351,13 @@ export default function Despesas() {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-             <Input label="Valor (R$)" type="number" step="0.01" placeholder="0,00" {...register('valor')} error={errors.valor?.message} />
+             <Input label="Valor (R$)" required type="number" step="0.01" placeholder="0,00" {...register('valor')} error={errors.valor?.message} />
              <Input label="Data de Vencimento" type="date" {...register('dataVencimento')} error={errors.dataVencimento?.message} />
           </div>
           
           <div className="pt-4 flex gap-3">
             <Button type="button" variant="secondary" className="flex-1" onClick={handleCloseModal}>Cancelar</Button>
-            <Button type="submit" className="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white flex justify-center gap-2" disabled={mutation.isPending}>
+            <Button type="submit" className="flex-1 bg-gradient-to-r from-fire to-ember text-white flex justify-center gap-2" disabled={mutation.isPending}>
               {mutation.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Salvar
             </Button>
           </div>

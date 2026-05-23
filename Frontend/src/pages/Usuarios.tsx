@@ -198,8 +198,8 @@ export default function Usuarios() {
                         !ativo ? 'bg-slate-100 text-slate-400' :
                         u.role === 'Admin' ? 'bg-red-50 text-red-600' : 
                         u.role === 'Gestor' ? 'bg-indigo-50 text-indigo-600' : 
-                        u.role === 'Motorista' ? 'bg-amber-50 text-amber-600' : 
-                        u.role === 'Operador' ? 'bg-blue-50 text-blue-600' : 'bg-slate-100 text-slate-600'
+                        u.role === 'Gestor' ? 'bg-amber-50 text-amber-700' : 
+                        u.role === 'Operador' ? 'bg-slate-100 text-slate-600' : 'bg-slate-100 text-slate-600'
                       }`}>
                         {u.role === 'Motorista' ? 'Motorista / Entregador' : u.role}
                       </span>
@@ -229,7 +229,7 @@ export default function Usuarios() {
                             <KeyRound size={16} />
                           </button>
                         )}
-                        <button onClick={() => handleEdit(u)} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-md" title="Editar">
+                        <button onClick={() => handleEdit(u)} className="p-1.5 text-slate-400 hover:text-ember rounded-md" title="Editar">
                           <Edit2 size={16} />
                         </button>
                         <button onClick={() => confirm('Excluir usuário permanentemente?') && mutationDelete.mutate(u.id)} className="p-1.5 text-slate-400 hover:text-red-600 rounded-md" title="Excluir">
@@ -269,7 +269,7 @@ export default function Usuarios() {
               </div>
 
               <button 
-                className={`flex items-center gap-1 px-3 h-9 rounded-lg text-sm font-bold transition-all ${paginaAtual === totalPaginas ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-md'}`}
+                className={`flex items-center gap-1 px-3 h-9 rounded-lg text-sm font-bold transition-all ${paginaAtual === totalPaginas ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-ember text-white hover:bg-fire shadow-md'}`}
                 onClick={() => setPaginaAtual(p => Math.min(totalPaginas, p + 1))} 
                 disabled={paginaAtual === totalPaginas}
               >

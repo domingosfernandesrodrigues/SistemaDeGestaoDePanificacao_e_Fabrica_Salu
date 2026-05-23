@@ -125,6 +125,41 @@ namespace SGPF.Infrastructure.Migrations
                     b.ToTable("AgendaEventos");
                 });
 
+            modelBuilder.Entity("SGPF.Domain.Entities.AuditLog", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Action")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("KeyValues")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TableName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AuditLogs");
+                });
+
             modelBuilder.Entity("SGPF.Domain.Entities.Cliente", b =>
                 {
                     b.Property<Guid>("Id")
@@ -223,6 +258,56 @@ namespace SGPF.Infrastructure.Migrations
                     b.ToTable("CompraItems");
                 });
 
+            modelBuilder.Entity("SGPF.Domain.Entities.ContaBancaria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Agencia")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Ativa")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("BancoNome")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("DataAbertura")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("GatewayToken")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsPadrao")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NumeroConta")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PixChave")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("SaldoAtual")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("SaldoInicial")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Tipo")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ContasBancarias");
+                });
+
             modelBuilder.Entity("SGPF.Domain.Entities.ContaPagar", b =>
                 {
                     b.Property<Guid>("Id")
@@ -311,6 +396,15 @@ namespace SGPF.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("BancoAgencia")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BancoConta")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("BancoNome")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("CNPJ")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -323,6 +417,9 @@ namespace SGPF.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("GatewayToken")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("InscricaoEstadual")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -332,6 +429,9 @@ namespace SGPF.Infrastructure.Migrations
 
                     b.Property<string>("NomeFantasia")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PixChave")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RazaoSocial")
@@ -737,6 +837,9 @@ namespace SGPF.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
+                    b.Property<string>("BoletoCodigoBarras")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<Guid>("ClienteId")
                         .HasColumnType("uniqueidentifier");
 
@@ -749,8 +852,17 @@ namespace SGPF.Infrastructure.Migrations
                     b.Property<DateTime>("DataPedido")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("FormaPagamento")
+                        .HasColumnType("int");
+
                     b.Property<string>("NumeroPedido")
                         .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("Pago")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("PixQrCode")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")

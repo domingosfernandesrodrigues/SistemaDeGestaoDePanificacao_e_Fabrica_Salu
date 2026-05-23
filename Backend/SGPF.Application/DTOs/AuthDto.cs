@@ -13,6 +13,7 @@ public class LoginResponseDto
     public string Email { get; set; } = string.Empty;
     public string Role { get; set; } = string.Empty;
     public Guid? ClienteId { get; set; }
+    public Guid? FuncionarioId { get; set; }
     public bool PrecisaTrocarSenha { get; set; }
 }
 

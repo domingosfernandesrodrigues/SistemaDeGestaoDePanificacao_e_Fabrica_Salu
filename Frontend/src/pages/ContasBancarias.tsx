@@ -130,7 +130,7 @@ export function ContasBancarias() {
   const getTipoIcon = (tipo: number) => {
     switch(tipo) {
       case 0: return <Wallet className="text-amber-500" size={18} />;
-      case 1: return <Building2 className="text-blue-500" size={18} />;
+      case 1: return <Building2 className="text-amber-500" size={18} />;
       case 2: return <TrendingUp className="text-emerald-500" size={18} />;
       default: return <CreditCard className="text-slate-500" size={18} />;
     }
@@ -167,8 +167,8 @@ export function ContasBancarias() {
         </div>
         <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Building2 className="text-blue-600" size={20} />
+            <div className="p-2 bg-amber-50 rounded-lg">
+              <Building2 className="text-amber-600" size={20} />
             </div>
             <span className="text-sm font-medium text-slate-500">Contas Ativas</span>
           </div>
@@ -250,7 +250,7 @@ export function ContasBancarias() {
                           {conta.ativa ? 'Ativa' : 'Inativa'}
                         </span>
                         {conta.isPadrao && (
-                          <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[9px] font-black uppercase rounded-full w-fit">Padrão</span>
+                          <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[9px] font-black uppercase rounded-full w-fit">Padrão</span>
                         )}
                       </div>
                     </td>
@@ -265,7 +265,7 @@ export function ContasBancarias() {
                         </button>
                         <button 
                           onClick={() => handleEdit(conta)}
-                          className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                          className="p-2 text-slate-400 hover:text-ember hover:bg-ember/5 rounded-lg transition-all"
                           title="Editar"
                         >
                           <Pencil size={16} />
@@ -287,15 +287,16 @@ export function ContasBancarias() {
         title={editId ? 'Editar Conta / Caixa' : 'Nova Conta / Caixa'}
       >
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-          <div className="bg-blue-50 p-4 rounded-xl border border-blue-100 flex gap-3 mb-2">
-            <AlertCircle className="text-blue-600 shrink-0" size={20} />
-            <p className="text-xs text-blue-800 leading-relaxed">
+          <div className="bg-amber-50 p-4 rounded-xl border border-amber-100 flex gap-3 mb-2">
+            <AlertCircle className="text-amber-600 shrink-0" size={20} />
+            <p className="text-xs text-amber-800 leading-relaxed">
               Informe o <strong>Saldo Inicial</strong> da sua conta. Esse valor representa o montante exato que você possui no banco ou em mãos neste momento.
             </p>
           </div>
 
           <Input 
             label="Nome da Conta"
+            required
             placeholder="Ex: Banco do Brasil, Itaú, Caixa Geral..."
             {...register('nome')}
             error={errors.nome?.message}
@@ -303,7 +304,7 @@ export function ContasBancarias() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium text-slate-700">Tipo de Conta</label>
+              <label className="text-sm font-medium text-slate-700">Tipo de Conta <span className="text-red-500">*</span></label>
               <select 
                 {...register('tipo')}
                 className="w-full h-11 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-emerald-500 outline-none"
@@ -317,6 +318,7 @@ export function ContasBancarias() {
 
             <Input 
               label="Saldo Inicial (R$)"
+              required
               type="number"
               step="0.01"
               placeholder="0,00"
@@ -325,29 +327,29 @@ export function ContasBancarias() {
             />
           </div>
 
-          <div className="flex flex-wrap items-center gap-4 pt-2">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-2">
+            <div className="flex items-center gap-3 bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-lg border border-slate-100 sm:border-0">
               <input 
                 type="checkbox" 
                 id="ativa" 
                 {...register('ativa')}
-                className="w-4 h-4 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
+                className="w-5 h-5 text-emerald-600 border-slate-300 rounded focus:ring-emerald-500"
               />
-              <label htmlFor="ativa" className="text-sm text-slate-600">Conta Ativa</label>
+              <label htmlFor="ativa" className="text-sm font-medium text-slate-700">Conta Ativa</label>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3 bg-slate-50 sm:bg-transparent p-3 sm:p-0 rounded-lg border border-slate-100 sm:border-0">
               <input 
                 type="checkbox" 
                 id="isPadrao" 
                 {...register('isPadrao')}
-                className="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500"
+                className="w-5 h-5 text-ember border-slate-300 rounded focus:ring-ember/30"
               />
-              <label htmlFor="isPadrao" className="text-sm text-slate-600">Conta Padrão para Recebimentos</label>
+              <label htmlFor="isPadrao" className="text-sm font-medium text-slate-700">Conta Padrão</label>
             </div>
           </div>
 
           <div className="pt-4 space-y-4 border-t border-slate-100">
-            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">Configurações de Recebimento</h4>
+            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Configurações de Recebimento</h4>
             
             <Input 
               label="Chave Pix"
@@ -355,7 +357,7 @@ export function ContasBancarias() {
               {...register('pixChave')}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <Input 
                 label="Nome do Banco"
                 placeholder="Ex: Itaú, Nubank..."
@@ -374,18 +376,18 @@ export function ContasBancarias() {
             />
             <Input 
               label="Token de API do Gateway (Opcional)"
-              placeholder="Token para integração com gateway de pagamento"
+              placeholder="Token para integração"
               {...register('gatewayToken')}
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-6 border-t border-slate-100">
-            <Button type="button" variant="outline" onClick={handleCloseModal}>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-6 border-t border-slate-100">
+            <Button type="button" variant="outline" onClick={handleCloseModal} className="w-full sm:w-auto">
               Cancelar
             </Button>
             <Button 
               type="submit" 
-              className="bg-emerald-600 hover:bg-emerald-700 flex items-center gap-2 px-8"
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 flex items-center justify-center gap-2 px-8"
               disabled={mutationCreate.isPending || mutationUpdate.isPending}
             >
               {(mutationCreate.isPending || mutationUpdate.isPending) ? (
@@ -403,60 +405,63 @@ export function ContasBancarias() {
       <Modal
         isOpen={isMovimentacaoOpen}
         onClose={() => setIsMovimentacaoOpen(false)}
-        title={`Lançar Movimentação - ${selectedContaMov?.nome}`}
+        title={`Movimentação - ${selectedContaMov?.nome}`}
       >
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-5">
+          <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => setMovData({ ...movData, tipo: 'entrada' })}
-              className={`flex items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${
+              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${
                 movData.tipo === 'entrada' 
-                ? 'border-emerald-500 bg-emerald-50 text-emerald-700' 
-                : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'
+                ? 'border-emerald-500 bg-emerald-50 text-emerald-700 shadow-sm shadow-emerald-100' 
+                : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'
               }`}
             >
-              <ArrowUpCircle size={20} />
-              <span className="font-bold">Entrada</span>
+              <ArrowUpCircle size={24} />
+              <span className="text-xs font-black uppercase">Entrada</span>
             </button>
             <button
               onClick={() => setMovData({ ...movData, tipo: 'saida' })}
-              className={`flex items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${
+              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-xl border-2 transition-all ${
                 movData.tipo === 'saida' 
-                ? 'border-red-500 bg-red-50 text-red-700' 
-                : 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'
+                ? 'border-red-500 bg-red-50 text-red-700 shadow-sm shadow-red-100' 
+                : 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'
               }`}
             >
-              <ArrowDownCircle size={20} />
-              <span className="font-bold">Saída</span>
+              <ArrowDownCircle size={24} />
+              <span className="text-xs font-black uppercase">Saída</span>
             </button>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Valor da Movimentação (R$)</label>
-            <input
-              type="number"
-              step="0.01"
-              value={movData.valor}
-              onChange={(e) => setMovData({ ...movData, valor: Number(e.target.value) })}
-              className="w-full h-11 px-4 rounded-lg border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-lg font-bold"
-              placeholder="0,00"
-            />
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Valor do Lançamento (R$)</label>
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-lg">R$</span>
+              <input
+                type="number"
+                step="0.01"
+                value={movData.valor}
+                onChange={(e) => setMovData({ ...movData, valor: Number(e.target.value) })}
+                className="w-full h-14 pl-12 pr-4 rounded-xl border border-slate-200 focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none text-2xl font-black text-slate-800 transition-all"
+                placeholder="0,00"
+              />
+            </div>
           </div>
 
-          <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Descrição / Motivo</label>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Descrição / Motivo</label>
             <textarea
               value={movData.descricao}
               onChange={(e) => setMovData({ ...movData, descricao: e.target.value })}
-              className="w-full p-3 rounded-lg border border-slate-200 focus:ring-2 focus:ring-emerald-500 outline-none text-sm min-h-[100px]"
-              placeholder="Ex: Reforço de caixa, Pagamento de pequena despesa, Sangria..."
+              className="w-full p-4 rounded-xl border border-slate-200 bg-slate-50 focus:bg-white focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 outline-none text-sm min-h-[120px] transition-all"
+              placeholder="Ex: Reforço de caixa, Sangria, Pequena despesa..."
             />
           </div>
 
-          <div className="flex justify-end gap-3 pt-4">
-            <Button variant="outline" onClick={() => setIsMovimentacaoOpen(false)}>Cancelar</Button>
+          <div className="flex flex-col-reverse sm:flex-row justify-end gap-3 pt-4 border-t border-slate-100">
+            <Button variant="outline" onClick={() => setIsMovimentacaoOpen(false)} className="w-full sm:w-auto">Cancelar</Button>
             <Button 
-              className={`${movData.tipo === 'entrada' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'} px-8`}
+              className={`w-full sm:w-auto ${movData.tipo === 'entrada' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-red-600 hover:bg-red-700'} px-8 h-12 shadow-md`}
               onClick={() => mutationMovimentar.mutate({ id: selectedContaMov.id, data: movData })}
               disabled={mutationMovimentar.isPending || movData.valor <= 0}
             >

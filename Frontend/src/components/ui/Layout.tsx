@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { Package, ChefHat, Factory, LayoutDashboard, LogOut, Clock, FileText, ShoppingCart, Truck, ArrowRightLeft, Users, Menu, X, KeyRound, Loader2, Save, Lock, Eye, EyeOff, FlaskConical, Wallet } from 'lucide-react';
+import { ThemeToggle } from '../ThemeToggle';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Input } from './Input';
@@ -72,10 +73,10 @@ export function Layout() {
   ];
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'Gestor', 'Operador'] },
+    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'Gestor', 'Operador', 'Motorista'] },
     { name: 'Portal do Cliente', path: '/portal-cliente', icon: ShoppingCart, roles: ['Cliente'] },
     { name: 'CRM & Reuniões', path: '/crm', icon: Users, roles: ['Admin', 'Gestor'] },
-    { name: 'Vendas (B2B)', path: '/vendas', icon: ShoppingCart, roles: ['Admin', 'Gestor', 'Cliente'] },
+    { name: 'Vendas (B2B)', path: '/vendas', icon: ShoppingCart, roles: ['Admin', 'Gestor', 'Cliente', 'Motorista'] },
     { name: 'Compras e Entradas', path: '/compras', icon: Package, roles: ['Admin', 'Gestor'] },
     { name: 'Entrada de Insumos', path: '/entrada-insumos', icon: FlaskConical, roles: ['Admin', 'Gestor'] },
     { name: 'Gestão de Clientes', path: '/clientes', icon: Users, roles: ['Admin', 'Gestor'] },
@@ -83,13 +84,13 @@ export function Layout() {
     { name: 'Produtos e Insumos', path: '/produtos', icon: Package, roles: ['Admin', 'Gestor', 'Operador'] },
     { name: 'Fichas Técnicas (BOM)', path: '/fichas-tecnicas', icon: ChefHat, roles: ['Admin', 'Gestor', 'Operador'] },
     { name: 'Fornecedores', path: '/fornecedores', icon: Truck, roles: ['Admin', 'Gestor'] },
-    { name: 'Gestão de Frota', path: '/frota', icon: Truck, roles: ['Admin', 'Gestor', 'Operador'] },
-    { name: 'Trocas e Avarias', path: '/trocas', icon: ArrowRightLeft, roles: ['Admin', 'Gestor', 'Operador'] },
-    { name: 'Controle de Ponto', path: '/rh/ponto', icon: Clock, roles: ['Admin', 'Gestor', 'Operador'] },
+    { name: 'Gestão de Frota', path: '/frota', icon: Truck, roles: ['Admin', 'Gestor', 'Operador', 'Motorista'] },
+    { name: 'Trocas e Avarias', path: '/trocas', icon: ArrowRightLeft, roles: ['Admin', 'Gestor', 'Operador', 'Motorista'] },
+    { name: 'Controle de Ponto', path: '/rh/ponto', icon: Clock, roles: ['Admin', 'Gestor', 'Operador', 'Motorista'] },
     { name: 'Afastamentos (RH)', path: '/rh/afastamentos', icon: FileText, roles: ['Admin', 'Gestor'] },
     { name: 'Funcionários (RH)', path: '/rh/funcionarios', icon: Users, roles: ['Admin', 'Gestor'] },
     { name: 'Folha de Pagamento', path: '/rh/folha', icon: FileText, roles: ['Admin', 'Gestor'] },
-    { name: 'Meus Contracheques', path: '/rh/meus-contracheques', icon: FileText, roles: ['Admin', 'Gestor', 'Operador', 'Funcionario'] },
+    { name: 'Meus Contracheques', path: '/rh/meus-contracheques', icon: FileText, roles: ['Admin', 'Gestor', 'Operador', 'Funcionario', 'Motorista'] },
     { name: 'Despesas Gerais', path: '/financeiro/despesas', icon: FileText, roles: ['Admin', 'Gestor'] },
     { name: 'Contas e Saldos', path: '/financeiro/contas', icon: Wallet, roles: ['Admin', 'Gestor'] },
     { name: 'Usuários do Sistema', path: '/usuarios', icon: Users, roles: ['Admin', 'Gestor'] },
@@ -119,35 +120,38 @@ export function Layout() {
   };
 
   return (
-    <div className="h-screen bg-slate-50 flex flex-col md:flex-row overflow-hidden">
+    <div className="h-screen bg-bg-page flex flex-col md:flex-row overflow-hidden">
       {/* Mobile Header - Optimized for Safe Areas */}
-      <div className="md:hidden bg-slate-900 text-white px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-lg border-b border-white/5 shrink-0">
+      <div className="md:hidden bg-charcoal text-cream px-4 py-3 flex items-center justify-between sticky top-0 z-50 shadow-lg border-b border-ember/20 shrink-0">
         <div className="flex items-center gap-2 text-lg font-bold">
-          <div className="bg-blue-600 text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-inner">S</div>
-          <span className="tracking-tight">SGP-F</span>
+          <div className="bg-gradient-to-br from-fire to-ember text-white w-8 h-8 rounded-lg flex items-center justify-center shadow-lg shadow-fire/20">S</div>
+          <span className="tracking-tight font-serif">SGP-F</span>
         </div>
-        <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-          className="p-2 hover:bg-slate-800 rounded-full active:scale-90 transition-all"
-          aria-label="Menu"
-        >
-          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-        </button>
+        <div className="flex items-center gap-2">
+          <ThemeToggle />
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+            className="p-2 hover:bg-white/5 rounded-full active:scale-90 transition-all text-ember-light"
+            aria-label="Menu"
+          >
+            {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </div>
       </div>
 
       {/* Sidebar / Overlay Menu - Modern Side Drawer Pattern */}
       <div className={`
-        fixed inset-y-0 left-0 z-[60] w-[280px] sm:w-[320px] md:relative md:flex md:w-64 bg-slate-900 text-white flex-col transition-transform duration-300 ease-out shadow-2xl md:shadow-none
+        fixed inset-y-0 left-0 z-[60] w-[280px] sm:w-[320px] md:relative md:flex md:w-64 bg-charcoal text-cream flex-col transition-transform duration-300 ease-out shadow-2xl md:shadow-none border-r border-ember/10
         ${isMobileMenuOpen ? 'flex translate-x-0' : '-translate-x-full md:translate-x-0'}
       `}>
         {/* Branding Area */}
         <div className="p-6 pb-2">
           <div className="flex items-center gap-3 text-xl font-bold">
-            <div className="bg-blue-600 text-white w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-blue-500/20">S</div>
+            <div className="bg-gradient-to-br from-fire to-ember text-white w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-fire/30">S</div>
             <div className="flex flex-col">
-              <span className="leading-tight">SGP-Fábrica</span>
+              <span className="leading-tight font-serif text-cream">Salu <span className="text-ember-light font-sans text-xs">ERP</span></span>
               {nomeEmpresa && (
-                <span className="text-[10px] text-slate-400 font-medium truncate max-w-[160px] uppercase tracking-widest mt-0.5" title={nomeEmpresa}>
+                <span className="text-[10px] text-muted font-medium truncate max-w-[160px] uppercase tracking-widest mt-0.5" title={nomeEmpresa}>
                   {nomeEmpresa}
                 </span>
               )}
@@ -156,20 +160,20 @@ export function Layout() {
         </div>
 
         {/* User Profile Info - Visible on both Mobile & Desktop Sidebar */}
-        <div className="px-6 py-6 border-b border-white/5">
+        <div className="px-6 py-6 border-b border-ember/10 bg-dark/20">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center text-blue-400 font-bold border border-white/10 shadow-lg">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-dark to-charcoal flex items-center justify-center text-ember-light font-bold border border-ember/20 shadow-lg">
               {userName.charAt(0)}
             </div>
             <div className="overflow-hidden">
-              <p className="text-sm font-bold text-white truncate leading-none mb-1.5">{userName}</p>
+              <p className="text-sm font-bold text-cream truncate leading-none mb-1.5">{userName}</p>
               <div className="flex items-center gap-1.5">
-                <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-400 text-[9px] font-bold uppercase tracking-widest rounded border border-blue-500/20">
+                <span className="px-1.5 py-0.5 bg-ember/10 text-ember-light text-[9px] font-bold uppercase tracking-widest rounded border border-ember/20">
                   {userRole}
                 </span>
               </div>
               {/* Email visible on mobile menu for context */}
-              <p className="text-[10px] text-slate-500 truncate mt-1.5 md:hidden">{userEmail}</p>
+              <p className="text-[10px] text-muted truncate mt-1.5 md:hidden">{userEmail}</p>
             </div>
           </div>
         </div>
@@ -185,24 +189,24 @@ export function Layout() {
                 onClick={closeMenu}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${
                   isActive 
-                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/50 scale-[1.02]' 
-                    : 'text-slate-400 hover:text-white hover:bg-slate-800/50'
+                    ? 'bg-gradient-to-r from-fire to-ember text-white shadow-lg shadow-fire/20 scale-[1.02]' 
+                    : 'text-[#B8906A] hover:text-cream hover:bg-white/5'
                 }`}
               >
-                <Icon size={20} className={isActive ? 'text-white' : 'text-slate-500 group-hover:text-blue-400 transition-colors'} />
+                <Icon size={20} className={isActive ? 'text-white' : 'text-[#7A3B10] group-hover:text-ember-light transition-colors'} />
                 <span className="text-[15px] md:text-sm font-medium">{item.name}</span>
               </Link>
             );
           })}
         </nav>
         
-        <div className="p-4 border-t border-white/5 bg-slate-900/50 backdrop-blur-xl space-y-1 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-          <button onClick={() => { closeMenu(); setIsPasswordModalOpen(true); }} className="w-full flex items-center gap-3 px-3 py-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors">
-            <KeyRound size={20} />
+        <div className="p-4 border-t border-ember/10 bg-dark/20 backdrop-blur-xl space-y-1 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+          <button onClick={() => { closeMenu(); setIsPasswordModalOpen(true); }} className="w-full flex items-center gap-3 px-3 py-2 text-[#B8906A] hover:text-cream hover:bg-white/5 rounded-lg transition-colors group">
+            <KeyRound size={20} className="group-hover:text-ember-light transition-colors" />
             <span>Alterar Senha</span>
           </button>
-          <a href="#" onClick={handleLogout} className="flex items-center gap-3 px-3 py-2 text-red-400 hover:text-red-300 hover:bg-slate-800 rounded-lg transition-colors">
-            <LogOut size={20} />
+          <a href="#" onClick={handleLogout} className="flex items-center gap-3 px-3 py-2 text-red-400/80 hover:text-red-400 hover:bg-red-500/5 rounded-lg transition-colors group">
+            <LogOut size={20} className="group-hover:scale-110 transition-transform" />
             <span>Sair</span>
           </a>
         </div>
@@ -218,16 +222,17 @@ export function Layout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden">
-        <header className="bg-white border-b border-slate-200 h-16 hidden md:flex items-center justify-between px-8 shadow-sm shrink-0">
+        <header className="bg-bg-card border-b border-border-subtle h-16 hidden md:flex items-center justify-between px-8 shadow-sm shrink-0">
           <h1 className="text-xl font-semibold text-slate-800">
             {navItems.find(i => location.pathname.startsWith(i.path))?.name || 'Sistema'}
           </h1>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-bold text-slate-800">{userName}</p>
-              <p className="text-xs text-slate-500">{userEmail}</p>
+              <p className="text-sm font-bold text-text-main">{userName}</p>
+              <p className="text-xs text-text-dim">{userEmail}</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-blue-600 font-bold border border-slate-200 cursor-pointer hover:bg-slate-200 transition-colors" onClick={() => setIsPasswordModalOpen(true)}>
+            <div className="w-10 h-10 rounded-full bg-bg-page flex items-center justify-center text-blue-600 font-bold border border-border-subtle cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors" onClick={() => setIsPasswordModalOpen(true)}>
               {userName.charAt(0)}
             </div>
           </div>
@@ -235,10 +240,10 @@ export function Layout() {
         <main className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 md:pb-8 pb-safe">
           {/* Header page indicator for mobile */}
           <div className="md:hidden mb-4">
-            <h1 className="text-xl font-bold text-slate-800">
+            <h1 className="text-xl font-bold text-text-main">
               {navItems.find(i => location.pathname.startsWith(i.path))?.name || 'Sistema'}
             </h1>
-            <div className="h-1 w-12 bg-blue-600 rounded-full mt-1" />
+            <div className="h-1 w-12 bg-ember rounded-full mt-1" />
           </div>
           <Outlet />
         </main>
@@ -247,8 +252,9 @@ export function Layout() {
       <Modal isOpen={isPasswordModalOpen} onClose={() => { setIsPasswordModalOpen(false); reset(); }} title="Alterar Senha">
         <form onSubmit={handleSubmit(onSubmitTrocarSenha)} className="space-y-4">
           <div className="relative">
-            <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400" />
+            <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400 pointer-events-none" />
             <Input
+              id="layout-nova-senha"
               label="Nova Senha"
               type={showPassword ? 'text' : 'password'}
               placeholder="Mínimo 8 caracteres"
@@ -281,8 +287,9 @@ export function Layout() {
           </div>
 
           <div className="relative">
-            <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400" />
+            <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400 pointer-events-none" />
             <Input
+              id="layout-confirmar-senha"
               label="Confirme a Nova Senha"
               type={showPassword ? 'text' : 'password'}
               placeholder="Repita a senha"

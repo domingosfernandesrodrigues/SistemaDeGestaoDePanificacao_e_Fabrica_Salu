@@ -39,7 +39,7 @@ export function Ponto() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileName, setFileName] = useState('');
   const [selectedFuncId, setSelectedFuncId] = useState<string>('');
-  
+
   const userRole = localStorage.getItem('sgpf_role') || 'Operador';
   const isAdminOrGestor = userRole === 'Admin' || userRole === 'Gestor';
 
@@ -68,7 +68,7 @@ export function Ponto() {
   const { data: historico, isLoading: loadingHistorico } = useQuery<any[]>({
     queryKey: ['ponto-historico', mes, ano, selectedFuncId],
     queryFn: async () => {
-      const url = isAdminOrGestor && selectedFuncId 
+      const url = isAdminOrGestor && selectedFuncId
         ? `/Ponto/historico-funcionario/${selectedFuncId}?mes=${mes}&ano=${ano}`
         : `/Ponto/historico?mes=${mes}&ano=${ano}`;
       return (await api.get(url)).data;
@@ -109,6 +109,15 @@ export function Ponto() {
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao registrar afastamento')
   });
 
+  const mutationRecalcular = useMutation({
+    mutationFn: () => api.post(`/Ponto/recalculo-manual?funcionarioId=${selectedFuncId}&mes=${mes}&ano=${ano}`),
+    onSuccess: (data: any) => {
+      queryClient.invalidateQueries({ queryKey: ['ponto-historico'] });
+      alert(data.data.message);
+    },
+    onError: (err: any) => alert(err.response?.data?.message || 'Erro ao recalcular histórico')
+  });
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -130,7 +139,7 @@ export function Ponto() {
   const registroAberto = registros?.find(r => !r.dataHoraSaida);
 
   const totalHoras = historico?.reduce((acc, r) => acc + Number(r.totalHorasTrabalhadas || 0), 0) || 0;
-  
+
   // Calcular horas extras agrupando por DIA para precisão total (mesma lógica da folha)
   const extrasPorDia = historico?.reduce((acc: Record<string, number>, r) => {
     const date = new Date(r.dataHoraEntrada).toDateString();
@@ -141,7 +150,7 @@ export function Ponto() {
   const totalExtras = Object.values(extrasPorDia || {}).reduce((acc: number, totalDia: number) => {
     return acc + (totalDia > 8 ? totalDia - 8 : 0);
   }, 0);
-  
+
   // Contar dias únicos trabalhados
   const diasTrabalhados = new Set(
     historico?.filter(r => r.dataHoraSaida).map(r => new Date(r.dataHoraEntrada).toDateString())
@@ -186,7 +195,7 @@ export function Ponto() {
       {tab === 'ponto' && (
         <>
           <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-10 text-center flex flex-col items-center">
-            <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-6">
+            <div className="w-20 h-20 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mb-6">
               <Clock size={40} />
             </div>
             <h2 className="text-3xl font-light text-slate-800 mb-1">Relógio de Ponto</h2>
@@ -235,13 +244,13 @@ export function Ponto() {
                         </div>
                         <div className="flex justify-between items-center pt-1">
                           <span className="text-xs text-slate-500">Total trabalhado</span>
-                          <span className="text-sm font-bold text-indigo-600">{formatarHoras(Number(reg.totalHorasTrabalhadas))}</span>
+                          <span className="text-sm font-bold text-fire">{formatarHoras(Number(reg.totalHorasTrabalhadas))}</span>
                         </div>
                       </>
                     ) : (
-                      <div className="flex items-center justify-between p-2 rounded-lg border border-dashed border-blue-300 bg-blue-50">
-                        <span className="text-sm text-blue-600 animate-pulse">Em andamento...</span>
-                        <CheckCircle2 size={16} className="text-blue-400" />
+                      <div className="flex items-center justify-between p-2 rounded-lg border border-dashed border-amber-300 bg-amber-50">
+                        <span className="text-sm text-amber-600 animate-pulse">Em andamento...</span>
+                        <CheckCircle2 size={16} className="text-amber-400" />
                       </div>
                     )}
                   </div>
@@ -257,9 +266,9 @@ export function Ponto() {
 
       {tab === 'historico' && (
         <div className="space-y-6">
-          <div className="flex items-center gap-3 flex-wrap bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
             {isAdminOrGestor && (
-              <div className="flex-1 min-w-[200px]">
+              <div className="flex-1">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Filtrar por Funcionário</label>
                 <select
                   value={selectedFuncId}
@@ -273,102 +282,180 @@ export function Ponto() {
                 </select>
               </div>
             )}
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Mês</label>
-              <select
-                value={mes}
-                onChange={(e) => setMes(Number(e.target.value))}
-                className="h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              >
-                {meses.map((m, i) => (
-                  <option key={i + 1} value={i + 1}>{m}</option>
-                ))}
-              </select>
+            <div className="grid grid-cols-2 gap-3 flex-shrink-0">
+              <div className="min-w-[120px]">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Mês</label>
+                <select
+                  value={mes}
+                  onChange={(e) => setMes(Number(e.target.value))}
+                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {meses.map((m, i) => (
+                    <option key={i + 1} value={i + 1}>{m}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="min-w-[100px]">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Ano</label>
+                <select
+                  value={ano}
+                  onChange={(e) => setAno(Number(e.target.value))}
+                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                >
+                  {[2024, 2025, 2026, 2027].map(a => (
+                    <option key={a} value={a}>{a}</option>
+                  ))}
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-1">Ano</label>
-              <select
-                value={ano}
-                onChange={(e) => setAno(Number(e.target.value))}
-                className="h-10 px-3 rounded-lg border border-slate-200 bg-slate-50 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+            {isAdminOrGestor && selectedFuncId && (
+              <Button 
+                onClick={() => {
+                  if (confirm("Deseja recalcular todas as horas trabalhadas e extras deste funcionário no mês selecionado?")) {
+                    mutationRecalcular.mutate();
+                  }
+                }}
+                variant="secondary"
+                disabled={mutationRecalcular.isPending}
+                className="flex items-center gap-2 bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 h-10 px-4"
               >
-                {[2024, 2025, 2026, 2027].map(a => (
-                  <option key={a} value={a}>{a}</option>
-                ))}
-              </select>
-            </div>
+                {mutationRecalcular.isPending ? <Loader2 className="animate-spin" size={16} /> : <Timer size={16} />} 
+                Recalcular Valores
+              </Button>
+            )}
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
-              <CalendarDays className="text-indigo-500 mx-auto mb-2" size={22} />
-              <p className="text-2xl font-bold text-slate-800">{diasTrabalhados}</p>
-              <p className="text-xs text-slate-500">Dias trabalhados</p>
+          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+            <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 text-center">
+              <CalendarDays className="text-ember mx-auto mb-1.5 sm:mb-2" size={20} />
+              <p className="text-xl sm:text-2xl font-bold text-slate-800">{diasTrabalhados}</p>
+              <p className="text-[10px] sm:text-xs text-slate-500">Dias</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
-              <Timer className="text-green-500 mx-auto mb-2" size={22} />
-              <p className="text-2xl font-bold text-slate-800">{formatarHoras(totalHoras)}</p>
-              <p className="text-xs text-slate-500">Total de horas</p>
+            <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 text-center">
+              <Timer className="text-green-500 mx-auto mb-1.5 sm:mb-2" size={20} />
+              <p className="text-xl sm:text-2xl font-bold text-slate-800">{formatarHoras(totalHoras)}</p>
+              <p className="text-[10px] sm:text-xs text-slate-500">Horas</p>
             </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-4 text-center">
-              <TrendingUp className="text-amber-500 mx-auto mb-2" size={22} />
-              <p className="text-2xl font-bold text-slate-800">{formatarHoras(totalExtras)}</p>
-              <p className="text-xs text-slate-500">Horas extras</p>
+            <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 text-center">
+              <TrendingUp className="text-amber-500 mx-auto mb-1.5 sm:mb-2" size={20} />
+              <p className="text-xl sm:text-2xl font-bold text-slate-800">{formatarHoras(totalExtras)}</p>
+              <p className="text-[10px] sm:text-xs text-slate-500">Extras</p>
             </div>
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-            <table className="w-full text-left text-sm">
-              <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
-                <tr>
-                  <th className="px-4 py-3 font-medium">Data</th>
-                  <th className="px-4 py-3 font-medium">Entrada</th>
-                  <th className="px-4 py-3 font-medium">Saída</th>
-                  <th className="px-4 py-3 font-medium text-right">Horas</th>
-                  <th className="px-4 py-3 font-medium text-right">Extras</th>
-                  <th className="px-4 py-3 font-medium text-center">Status</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {loadingHistorico ? (
-                  <tr><td colSpan={6} className="py-8 text-center"><Loader2 className="animate-spin mx-auto text-indigo-500" /></td></tr>
-                ) : historico?.map((reg) => (
-                  <tr key={reg.id} className="hover:bg-slate-50">
-                    <td className="px-4 py-3 font-medium text-slate-800">
-                      {new Date(reg.dataHoraEntrada).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', weekday: 'short' })}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-slate-700">
-                      {new Date(reg.dataHoraEntrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                    <td className="px-4 py-3 font-mono text-slate-700">
-                      {reg.dataHoraSaida
-                        ? new Date(reg.dataHoraSaida).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
-                        : <span className="text-blue-500 text-xs animate-pulse">Em aberto</span>
-                      }
-                    </td>
-                    <td className="px-4 py-3 text-right font-medium text-slate-800">
-                      {reg.totalHorasTrabalhadas ? formatarHoras(Number(reg.totalHorasTrabalhadas)) : '-'}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {reg.totalHorasExtras > 0
-                        ? <span className="text-amber-600 font-medium">+{formatarHoras(Number(reg.totalHorasExtras))}</span>
-                        : <span className="text-slate-400">-</span>
-                      }
-                    </td>
-                    <td className="px-4 py-3 text-center">
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        reg.status === 'Aberto' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-700'
-                      }`}>
-                        {reg.status}
-                      </span>
-                    </td>
+            {/* Desktop Table View */}
+            <div className="hidden md:block overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+                  <tr>
+                    <th className="px-4 py-3 font-medium">Data</th>
+                    <th className="px-4 py-3 font-medium">Entrada</th>
+                    <th className="px-4 py-3 font-medium">Saída</th>
+                    <th className="px-4 py-3 font-medium text-right">Horas</th>
+                    <th className="px-4 py-3 font-medium text-right">Extras</th>
+                    <th className="px-4 py-3 font-medium text-center">Status</th>
                   </tr>
-                ))}
-                {!loadingHistorico && historico?.length === 0 && (
-                  <tr><td colSpan={6} className="py-10 text-center text-slate-400 italic">Nenhum registro no período selecionado.</td></tr>
-                )}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {loadingHistorico ? (
+                    <tr><td colSpan={6} className="py-8 text-center"><Loader2 className="animate-spin mx-auto text-ember" /></td></tr>
+                  ) : historico?.map((reg) => (
+                    <tr key={reg.id} className="hover:bg-slate-50">
+                      <td className="px-4 py-3 font-medium text-slate-800">
+                        {new Date(reg.dataHoraEntrada).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', weekday: 'short' })}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-slate-700">
+                        {new Date(reg.dataHoraEntrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </td>
+                      <td className="px-4 py-3 font-mono text-slate-700">
+                        {reg.dataHoraSaida
+                          ? new Date(reg.dataHoraSaida).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                          : <span className="text-amber-500 text-xs animate-pulse">Em aberto</span>
+                        }
+                      </td>
+                      <td className="px-4 py-3 text-right font-medium text-slate-800">
+                        {reg.totalHorasTrabalhadas ? formatarHoras(Number(reg.totalHorasTrabalhadas)) : '-'}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        {reg.totalHorasExtras > 0
+                          ? <span className="text-amber-600 font-medium">+{formatarHoras(Number(reg.totalHorasExtras))}</span>
+                          : <span className="text-slate-400">-</span>
+                        }
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${reg.status === 'Aberto' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                          }`}>
+                          {reg.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {!loadingHistorico && historico?.length === 0 && (
+                    <tr><td colSpan={6} className="py-10 text-center text-slate-400 italic">Nenhum registro no período selecionado.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden divide-y divide-slate-100">
+              {loadingHistorico ? (
+                <div className="py-8 text-center"><Loader2 className="animate-spin mx-auto text-ember" /></div>
+              ) : historico?.map((reg) => (
+                <div key={reg.id} className="p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="font-bold text-slate-800">
+                      {new Date(reg.dataHoraEntrada).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', weekday: 'long' })}
+                    </span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${reg.status === 'Aberto' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                      }`}>
+                      {reg.status}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase">Entrada</p>
+                      <p className="text-sm font-mono font-bold text-slate-700">
+                        {new Date(reg.dataHoraEntrada).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                      </p>
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-lg border border-slate-100">
+                      <p className="text-[10px] text-slate-400 font-bold uppercase">Saída</p>
+                      <p className="text-sm font-mono font-bold text-slate-700">
+                        {reg.dataHoraSaida
+                          ? new Date(reg.dataHoraSaida).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                          : <span className="text-amber-500 text-xs animate-pulse font-sans">Aberto</span>
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-between items-center pt-1">
+                    <div className="flex gap-4">
+                      <div>
+                        <p className="text-[10px] text-slate-400 font-bold uppercase">Horas</p>
+                        <p className="text-sm font-bold text-slate-800">
+                          {reg.totalHorasTrabalhadas ? formatarHoras(Number(reg.totalHorasTrabalhadas)) : '-'}
+                        </p>
+                      </div>
+                      {reg.totalHorasExtras > 0 && (
+                        <div>
+                          <p className="text-[10px] text-amber-500 font-bold uppercase">Extras</p>
+                          <p className="text-sm font-bold text-amber-600">
+                            +{formatarHoras(Number(reg.totalHorasExtras))}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              {!loadingHistorico && historico?.length === 0 && (
+                <div className="py-10 text-center text-slate-400 italic">Nenhum registro encontrado.</div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -425,7 +512,7 @@ export function Ponto() {
                 return;
               }
               setIsModalOpen(true);
-            }} className="flex items-center gap-2 bg-indigo-600 h-12 px-6">
+            }} className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember h-12 px-6">
               <Plus size={16} /> Solicitar Novo Afastamento
             </Button>
           </div>
@@ -433,16 +520,16 @@ export function Ponto() {
           <div className="space-y-4">
             {loadingAfastamentos ? (
               <div className="flex flex-col items-center justify-center py-12 space-y-4">
-                <Loader2 className="animate-spin text-indigo-600" size={32} />
+                <Loader2 className="animate-spin text-ember" size={32} />
                 <p className="text-slate-500 text-sm">Carregando registros...</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {afastamentosFiltrados?.map((af: any) => (
-                  <div key={af.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-indigo-300 transition-all group">
+                  <div key={af.id} className="bg-white rounded-2xl border border-slate-200 p-5 shadow-sm hover:border-ember/40 transition-all group">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-indigo-50 group-hover:text-indigo-600 transition-colors">
+                        <div className="w-10 h-10 rounded-xl bg-slate-50 flex items-center justify-center text-slate-400 group-hover:bg-ember/5 group-hover:text-ember transition-colors">
                           <FileText size={20} />
                         </div>
                         <div>
@@ -450,11 +537,10 @@ export function Ponto() {
                           <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wider">{af.nomeFuncionario}</p>
                         </div>
                       </div>
-                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight ${
-                        af.status === 'Aprovado' ? 'bg-emerald-100 text-emerald-800' :
-                        af.status === 'Reprovado' ? 'bg-rose-100 text-rose-800' :
-                        'bg-amber-100 text-amber-800'
-                      }`}>
+                      <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tight ${af.status === 'Aprovado' ? 'bg-emerald-100 text-emerald-800' :
+                          af.status === 'Reprovado' ? 'bg-rose-100 text-rose-800' :
+                            'bg-amber-100 text-amber-800'
+                        }`}>
                         {af.status}
                       </span>
                     </div>
@@ -476,13 +562,13 @@ export function Ponto() {
                         Criado em {new Date(af.dataCriacao).toLocaleDateString()}
                       </div>
                       {af.anexoNome && (
-                        <div className="flex items-center gap-1 text-[11px] text-indigo-600 font-bold">
+                        <div className="flex items-center gap-1 text-[11px] text-ember font-bold">
                           <CheckCircle2 size={14} />
                           Com Anexo
                         </div>
                       )}
                     </div>
-                    
+
                     {af.observacao && (
                       <div className="mt-3 p-2.5 bg-slate-50 rounded-lg text-xs text-slate-500 italic">
                         "{af.observacao}"
@@ -507,14 +593,15 @@ export function Ponto() {
           <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setFileName(''); reset(); }} title="Solicitar Afastamento">
             <form onSubmit={handleSubmit((data) => mutationAfastamento.mutate(data))} className="space-y-4">
               <div className="space-y-1">
-                <label className="text-sm font-medium text-slate-700">Motivo do Afastamento</label>
+                <label className="text-sm font-medium text-slate-700">Motivo do Afastamento <span className="text-red-500">*</span></label>
                 <select
                   {...register('motivo')}
                   className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 >
                   <option value="">Selecione...</option>
-                  
+
                   <optgroup label="Afastamentos por saúde">
+                    <option value="Atestado Médico">Atestado Médico</option>
                     <option value="Licença médica (auxílio-doença)">Licença médica (auxílio-doença)</option>
                     <option value="Acidente de trabalho">Acidente de trabalho</option>
                     <option value="Doença ocupacional">Doença ocupacional</option>
@@ -560,8 +647,8 @@ export function Ponto() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <Input label="Data Inicial" type="date" {...register('dataInicio')} error={errors.dataInicio?.message} />
-                <Input label="Data Final" type="date" {...register('dataFim')} error={errors.dataFim?.message} />
+                <Input label="Data Inicial" required type="date" {...register('dataInicio')} error={errors.dataInicio?.message} />
+                <Input label="Data Final" required type="date" {...register('dataFim')} error={errors.dataFim?.message} />
               </div>
 
               <div className="space-y-1">
@@ -584,7 +671,7 @@ export function Ponto() {
 
               <div className="pt-4 flex gap-3">
                 <Button type="button" variant="secondary" className="flex-1" onClick={() => { setIsModalOpen(false); setFileName(''); reset(); }}>Cancelar</Button>
-                <Button type="submit" className="flex-1 bg-indigo-600 flex justify-center" disabled={mutationAfastamento.isPending}>
+                <Button type="submit" className="flex-1 bg-gradient-to-r from-fire to-ember flex justify-center" disabled={mutationAfastamento.isPending}>
                   {mutationAfastamento.isPending ? <Loader2 className="animate-spin" size={18} /> : 'Solicitar'}
                 </Button>
               </div>

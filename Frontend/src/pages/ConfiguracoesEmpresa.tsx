@@ -66,7 +66,7 @@ export function ConfiguracoesEmpresa() {
     setValue('inscricaoEstadual', value, { shouldValidate: true });
   };
 
-  const compressImage = (base64Str: string, maxWidth: number = 400, maxHeight: number = 400): Promise<string> => {
+  const compressImage = (base64Str: string, maxWidth: number = 150, maxHeight: number = 150): Promise<string> => {
     return new Promise((resolve) => {
       const img = new Image();
       img.src = base64Str;
@@ -90,8 +90,13 @@ export function ConfiguracoesEmpresa() {
         canvas.width = width;
         canvas.height = height;
         const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', 0.7));
+        if (ctx) {
+          // Preenche fundo com branco para manter transparências limpas no JPEG
+          ctx.fillStyle = '#FFFFFF';
+          ctx.fillRect(0, 0, width, height);
+          ctx.drawImage(img, 0, 0, width, height);
+        }
+        resolve(canvas.toDataURL('image/jpeg', 0.8));
       };
     });
   };
@@ -247,8 +252,8 @@ export function ConfiguracoesEmpresa() {
                       const reader = new FileReader();
                       reader.onloadend = async () => {
                         const base64 = reader.result as string;
-                        // Comprime para max 400px e 70% qualidade
-                        const compressed = await compressImage(base64, 400, 400);
+                        // Comprime para no máximo 150px (tamanho ideal e leve de logo)
+                        const compressed = await compressImage(base64, 150, 150);
                         setValue('logoUrl', compressed, { shouldDirty: true });
                         setIsCompressing(false);
                       };

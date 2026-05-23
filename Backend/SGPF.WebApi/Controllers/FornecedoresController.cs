@@ -68,11 +68,11 @@ public class FornecedoresController : ControllerBase
     [HttpDelete("{id}")]
     public async Task<IActionResult> Delete(Guid id, [FromServices] SGPF.Infrastructure.Data.AppDbContext context)
     {
-        // Verificar histórico vinculado ao fornecedor
-        // Por enquanto verifica se há pedidos de venda ou contas a pagar associados
-        var temHistorico = await context.ContasPagar.AnyAsync(c => EF.Property<Guid?>(c, "FornecedorId") == id);
+        // Verificar histórico vinculado ao fornecedor em contas a pagar ou compras/entradas
+        var temContasPagar = await context.ContasPagar.AnyAsync(c => c.FornecedorId == id);
+        var temCompras = await context.Compras.AnyAsync(c => c.FornecedorId == id);
         
-        if (temHistorico)
+        if (temContasPagar || temCompras)
         {
             return BadRequest(new { message = "Não é possível excluir um fornecedor que já possui histórico de movimentações. Tente inativá-lo." });
         }

@@ -87,6 +87,7 @@ export default function AfastamentosRH() {
         >
           <option value="">Todos os Motivos</option>
           <optgroup label="Afastamentos por saúde">
+            <option value="Atestado Médico">Atestado Médico</option>
             <option value="Licença médica (auxílio-doença)">Licença médica (auxílio-doença)</option>
             <option value="Acidente de trabalho">Acidente de trabalho</option>
             <option value="Doença ocupacional">Doença ocupacional</option>
@@ -171,7 +172,8 @@ export default function AfastamentosRH() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <table className="w-full text-left text-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm min-w-[900px]">
           <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
             <tr>
               <th className="px-4 py-3 font-medium">Funcionário</th>
@@ -185,7 +187,7 @@ export default function AfastamentosRH() {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {isLoading ? (
-              <tr><td colSpan={7} className="py-8 text-center"><Loader2 className="animate-spin mx-auto text-indigo-500" /></td></tr>
+              <tr><td colSpan={7} className="py-8 text-center"><Loader2 className="animate-spin mx-auto text-ember" /></td></tr>
             ) : paginatedAfastamentos?.map((af) => (
               <tr key={af.id} className="hover:bg-slate-50">
                 <td className="px-4 py-3 font-medium text-slate-800">{af.nomeFuncionario}</td>
@@ -201,7 +203,7 @@ export default function AfastamentosRH() {
                     <a
                       href={af.anexoBase64}
                       download={af.anexoNome || 'anexo'}
-                      className="text-indigo-600 hover:text-indigo-800 flex items-center gap-1 text-xs font-medium"
+                      className="text-ember hover:text-fire flex items-center gap-1 text-xs font-medium"
                       title={af.anexoNome}
                     >
                       <FileText size={14} />
@@ -253,6 +255,7 @@ export default function AfastamentosRH() {
           </tbody>
         </table>
       </div>
+    </div>
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between bg-white px-4 py-3 sm:px-6 rounded-xl border border-slate-200 shadow-sm">
@@ -294,7 +297,7 @@ export default function AfastamentosRH() {
                     onClick={() => setCurrentPage(page)}
                     className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
                       currentPage === page 
-                      ? 'bg-indigo-600 text-white' 
+                      ? 'bg-ember text-white' 
                       : 'text-slate-600 hover:bg-slate-100'
                     }`}
                   >

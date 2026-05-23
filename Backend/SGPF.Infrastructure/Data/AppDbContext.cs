@@ -47,6 +47,9 @@ public class AppDbContext : DbContext
     public DbSet<HistoricoPrecoProduto> HistoricoPrecos { get; set; }
     public DbSet<ContaBancaria> ContasBancarias { get; set; }
 
+    // Auditoria
+    public DbSet<AuditLog> AuditLogs { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
@@ -110,6 +113,12 @@ public class AppDbContext : DbContext
             .HasOne(pvi => pvi.Produto)
             .WithMany()
             .HasForeignKey(pvi => pvi.ProdutoId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PedidoVenda>()
+            .HasOne(p => p.Motorista)
+            .WithMany()
+            .HasForeignKey(p => p.MotoristaId)
             .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<ContaReceber>().Property(c => c.Valor).HasPrecision(18, 2);

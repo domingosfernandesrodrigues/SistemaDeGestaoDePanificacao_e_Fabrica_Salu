@@ -180,7 +180,10 @@ public class DashboardService : IDashboardService
         foreach(var t in trocas)
         {
             var p = todosProdutos.FirstOrDefault(prod => prod.Id == t.ProdutoId);
-            if (p != null) totalLoss += t.Quantidade * p.PrecoVenda;
+            if (p != null && p.Tipo == TipoProduto.ProdutoAcabado)
+            {
+                totalLoss += t.Quantidade * p.PrecoVenda;
+            }
         }
         data.Exchanges.TotalLoss = totalLoss;
 

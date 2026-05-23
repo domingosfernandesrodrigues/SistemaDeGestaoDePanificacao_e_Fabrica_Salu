@@ -75,7 +75,7 @@ export function Dashboard() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-screen gap-4">
-        <Loader2 className="animate-spin text-indigo-600" size={48} />
+        <Loader2 className="animate-spin text-ember" size={48} />
         <p className="text-slate-500 font-medium animate-pulse">Consolidando indicadores...</p>
       </div>
     );
@@ -166,7 +166,7 @@ export function Dashboard() {
           
           <button 
             onClick={() => refetch()} 
-            className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all active:scale-95 text-indigo-600"
+            className="p-2 hover:bg-white hover:shadow-sm rounded-lg transition-all active:scale-95 text-ember"
             title="Atualizar Dados"
           >
             <RefreshCw size={18} />
@@ -185,8 +185,8 @@ export function Dashboard() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all whitespace-nowrap ${
                 isActive 
-                  ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-200 scale-105' 
-                  : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'
+                  ? 'bg-gradient-to-r from-fire to-ember text-white shadow-lg shadow-fire/20 scale-105' 
+                  : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
               }`}
             >
               <Icon size={18} />
@@ -201,56 +201,56 @@ export function Dashboard() {
         {activeTab === 'Geral' && (
           <div className="space-y-8 animate-in slide-in-from-bottom-4">
             <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
-              <KPIChip label="Vendas Totais" value={formatCurrency(data?.sales.totalSales || 0)} icon={DollarSign} color="bg-emerald-500" />
-              <KPIChip label="Ordens Finalizadas" value={data?.production.opCount || 0} icon={Factory} color="bg-indigo-500" />
-              <KPIChip label="Produtos em Estoque" value={data?.inventory.totalProducts || 0} icon={Package} color="bg-blue-500" />
-              <KPIChip label="Despesas Gerais" value={formatCurrency(data?.expenses.totalExpenses || 0)} icon={Activity} color="bg-rose-500" />
-              <KPIChip label="Lucro Estimado" value={formatCurrency((data?.sales.totalSales || 0) - (data?.expenses.totalExpenses || 0))} icon={TrendingUp} color="bg-emerald-600" />
+              <KPIChip label="Vendas Totais" value={formatCurrency(data?.sales.totalSales || 0)} icon={DollarSign} color="bg-emerald-600" />
+              <KPIChip label="Ordens Finalizadas" value={data?.production.opCount || 0} icon={Factory} color="bg-ember" />
+              <KPIChip label="Produtos em Estoque" value={data?.inventory.totalProducts || 0} icon={Package} color="bg-mid" />
+              <KPIChip label="Despesas Gerais" value={formatCurrency(data?.expenses.totalExpenses || 0)} icon={Activity} color="bg-fire" />
+              <KPIChip label="Lucro Estimado" value={formatCurrency((data?.sales.totalSales || 0) - (data?.expenses.totalExpenses || 0))} icon={TrendingUp} color="bg-gold" />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 bg-white p-8 rounded-3xl shadow-sm border border-slate-100 overflow-hidden relative">
                 <div className="absolute top-0 right-0 p-12 opacity-5 pointer-events-none">
-                   <TrendingUp size={200} />
+                   <TrendingUp size={200} className="text-orange-400" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-800 mb-6">Eficiência da Produção</h3>
                 <div className="flex items-center gap-8 mb-8">
                   <div className="w-32 h-32 rounded-full border-8 border-slate-100 flex flex-col items-center justify-center relative">
-                    <div className="absolute inset-0 rounded-full border-8 border-indigo-500 border-t-transparent animate-spin-slow"></div>
-                    <span className="text-2xl font-black text-slate-800">{Math.round(data?.production.efficiency || 0)}%</span>
+                    <div className="absolute inset-0 rounded-full border-8 border-orange-500 border-t-transparent animate-spin-slow"></div>
+                    <span className="text-2xl font-bold text-slate-800">{Math.round(data?.production.efficiency || 0)}%</span>
                   </div>
                   <div>
                     <p className="text-slate-500 text-sm max-w-xs leading-relaxed">
                       Sua eficiência é baseada na relação entre o que foi planejado vs o que foi realmente realizado nas Ordens de Produção deste período.
                     </p>
                     <div className="mt-4 flex gap-4">
-                       <div className="bg-indigo-50 px-3 py-1 rounded text-xs font-bold text-indigo-600">Alta Produtividade</div>
-                       <div className="bg-emerald-50 px-3 py-1 rounded text-xs font-bold text-emerald-600">Baixo Desperdício</div>
+                       <div className="bg-orange-50 px-3 py-1 rounded text-xs font-bold text-orange-700">Alta Produtividade</div>
+                       <div className="bg-emerald-50 px-3 py-1 rounded text-xs font-bold text-emerald-700">Baixo Desperdício</div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl shadow-slate-200">
-                <h3 className="text-xl font-bold mb-6">Alertas de Estoque</h3>
+              <div className="bg-slate-800 text-white p-8 rounded-3xl shadow-xl">
+                <h3 className="text-xl font-bold text-white mb-6">Alertas Críticos</h3>
                 <div className="space-y-4">
                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
                       <div className="flex items-center gap-3">
                         <AlertCircle className="text-amber-400" size={24} />
                         <div>
                           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Estoque Crítico</p>
-                          <p className="text-lg font-bold">{data?.inventory.lowStockCount} Itens</p>
+                          <p className="text-lg font-bold text-white">{data?.inventory.lowStockCount} Itens</p>
                         </div>
                       </div>
-                      <ChevronRight size={20} className="text-slate-700" />
+                      <ChevronRight size={20} className="text-slate-500" />
                    </div>
                    
                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-2xl border border-white/10">
                       <div className="flex items-center gap-3">
-                        <Clock className="text-blue-400" size={24} />
+                        <Clock className="text-orange-400" size={24} />
                         <div>
                           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">Entrega Hoje</p>
-                          <p className="text-lg font-bold">{data?.fleet.activeDeliveries} Veículos</p>
+                          <p className="text-lg font-bold text-white">{data?.fleet.activeDeliveries} Veículos</p>
                         </div>
                       </div>
                    </div>
@@ -263,9 +263,9 @@ export function Dashboard() {
         {activeTab === 'Vendas' && (
           <div className="space-y-8 animate-in fade-in duration-300">
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <KPIChip label="Ticket Médio" value={formatCurrency(data?.sales.averageTicket || 0)} icon={Briefcase} color="bg-indigo-500" />
-                <KPIChip label="Total de Pedidos" value={data?.sales.orderCount || 0} icon={ShoppingCart} color="bg-blue-500" />
-                <KPIChip label="Faturamento Total" value={formatCurrency(data?.sales.totalSales || 0)} icon={DollarSign} color="bg-emerald-500" />
+                <KPIChip label="Ticket Médio" value={formatCurrency(data?.sales.averageTicket || 0)} icon={Briefcase} color="bg-fire" />
+                <KPIChip label="Total de Pedidos" value={data?.sales.orderCount || 0} icon={ShoppingCart} color="bg-ember" />
+                <KPIChip label="Faturamento Total" value={formatCurrency(data?.sales.totalSales || 0)} icon={DollarSign} color="bg-emerald-600" />
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <DataCard title="Vendas por Forma de Pagamento" items={(data?.sales.byPaymentMethod || []).map(i => ({
@@ -276,7 +276,7 @@ export function Dashboard() {
                       <TrendingUp size={32} className={(data?.sales.growthMoM || 0) < 0 ? 'rotate-180' : ''} />
                    </div>
                    <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-1">Crescimento (Vs Mês Anterior)</h4>
-                   <p className={`text-3xl font-black ${(data?.sales.growthMoM || 0) >= 0 ? 'text-slate-800' : 'text-rose-500'}`}>
+                   <p className={`text-3xl font-bold ${(data?.sales.growthMoM || 0) >= 0 ? 'text-slate-800' : 'text-rose-500'}`}>
                      {(data?.sales.growthMoM || 0) > 0 ? '+' : ''}{(data?.sales.growthMoM || 0).toFixed(1)}%
                    </p>
                    <p className="text-slate-400 text-xs mt-2 font-bold">Vs Ano Passado: {(data?.sales.growthYoY || 0) > 0 ? '+' : ''}{(data?.sales.growthYoY || 0).toFixed(1)}%</p>
@@ -286,46 +286,36 @@ export function Dashboard() {
              <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100">
                 <div className="flex items-center justify-between mb-8">
                    <h3 className="text-xl font-bold text-slate-800">Ranking de Produtos</h3>
-                   <div className="flex gap-2">
-                      <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase">Top {data?.sales.topProducts?.length || 0}</span>
-                   </div>
+                   <span className="bg-slate-100 text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full uppercase">Top {data?.sales.topProducts?.length || 0}</span>
                 </div>
                 <div className="overflow-x-auto">
                    <table className="w-full text-left border-collapse">
                       <thead>
                          <tr className="border-b border-slate-100">
-                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Pos.</th>
-                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto</th>
-                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Qtd.</th>
-                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Faturamento</th>
-                            <th className="pb-4 text-[10px] font-black text-slate-400 uppercase tracking-widest text-right">Lucro Est.</th>
+                            <th className="pb-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Pos.</th>
+                            <th className="pb-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">Produto</th>
+                            <th className="pb-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Qtd.</th>
+                            <th className="pb-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Faturamento</th>
+                            <th className="pb-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">Lucro Est.</th>
                          </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-50">
                          {data?.sales.topProducts?.map((p, idx) => (
-                            <tr key={idx} className="group hover:bg-slate-50/50 transition-colors">
+                            <tr key={idx} className="group hover:bg-slate-50 transition-colors">
                                <td className="py-4">
-                                  <span className={`w-6 h-6 flex items-center justify-center rounded-lg text-[10px] font-black ${
+                                  <span className={`w-6 h-6 flex items-center justify-center rounded-lg text-[10px] font-bold ${
                                      idx === 0 ? 'bg-amber-100 text-amber-700' : 
-                                     idx === 1 ? 'bg-slate-200 text-slate-700' :
-                                     idx === 2 ? 'bg-orange-100 text-orange-700' : 'bg-slate-50 text-slate-400'
+                                     idx === 1 ? 'bg-slate-200 text-slate-600' :
+                                     idx === 2 ? 'bg-orange-100 text-orange-700' : 'bg-slate-100 text-slate-400'
                                   }`}>
                                      {idx + 1}
                                   </span>
                                </td>
-                               <td className="py-4">
-                                  <p className="text-sm font-bold text-slate-700">{p.name}</p>
-                               </td>
+                               <td className="py-4"><p className="text-sm font-bold text-slate-700">{p.name}</p></td>
+                               <td className="py-4 text-right"><p className="text-sm text-slate-500">{formatNumber(p.quantity)}</p></td>
+                               <td className="py-4 text-right"><p className="text-sm font-bold text-slate-800">{formatCurrency(p.totalRevenue)}</p></td>
                                <td className="py-4 text-right">
-                                  <p className="text-sm font-medium text-slate-600">{formatNumber(p.quantity)}</p>
-                               </td>
-                               <td className="py-4 text-right">
-                                  <p className="text-sm font-bold text-slate-800">{formatCurrency(p.totalRevenue)}</p>
-                               </td>
-                               <td className="py-4 text-right">
-                                  <p className={`text-sm font-bold ${p.totalProfit > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>
-                                     {formatCurrency(p.totalProfit)}
-                                  </p>
+                                  <p className={`text-sm font-bold ${p.totalProfit > 0 ? 'text-emerald-600' : 'text-rose-500'}`}>{formatCurrency(p.totalProfit)}</p>
                                </td>
                             </tr>
                          ))}
@@ -345,9 +335,9 @@ export function Dashboard() {
         {activeTab === 'Produção' && (
           <div className="space-y-8 animate-in fade-in duration-300">
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <KPIChip label="Lead Time Médio" value={`${Math.round(data?.production.averageLeadTimeHours || 0)}h`} icon={Clock} color="bg-amber-500" />
-                <KPIChip label="Volume Produzido" value={formatNumber(data?.production.totalProduced || 0)} icon={Factory} color="bg-indigo-500" />
-                <KPIChip label="Eficiência Geral" value={`${Math.round(data?.production.efficiency || 0)}%`} icon={Activity} color="bg-emerald-500" />
+                <KPIChip label="Lead Time Médio" value={`${Math.round(data?.production.averageLeadTimeHours || 0)}h`} icon={Clock} color="bg-gold" />
+                <KPIChip label="Volume Produzido" value={formatNumber(data?.production.totalProduced || 0)} icon={Factory} color="bg-fire" />
+                <KPIChip label="Eficiência Geral" value={`${Math.round(data?.production.efficiency || 0)}%`} icon={Activity} color="bg-emerald-600" />
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <DataCard title="Status das OPs" items={(data?.production.byStatus || []).map(i => ({
@@ -356,8 +346,8 @@ export function Dashboard() {
                 <div className="bg-white p-8 rounded-3xl shadow-sm border border-slate-100 flex flex-col justify-center items-center text-center">
                    <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-4">Meta de Produção</h4>
                    <div className="w-40 h-40 rounded-full border-[12px] border-slate-100 flex items-center justify-center relative">
-                      <div className="absolute inset-0 rounded-full border-[12px] border-indigo-500 border-t-transparent" style={{transform: `rotate(${((data?.production.efficiency || 0) * 3.6)}deg)`}}></div>
-                      <span className="text-3xl font-black text-slate-800">{Math.round(data?.production.efficiency || 0)}%</span>
+                      <div className="absolute inset-0 rounded-full border-[12px] border-orange-500 border-t-transparent" style={{transform: `rotate(${((data?.production.efficiency || 0) * 3.6)}deg)`}}></div>
+                      <span className="text-3xl font-bold text-slate-800">{Math.round(data?.production.efficiency || 0)}%</span>
                    </div>
                 </div>
              </div>
@@ -367,8 +357,8 @@ export function Dashboard() {
         {activeTab === 'Estoque' && (
           <div className="space-y-8 animate-in fade-in duration-300">
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <KPIChip label="Total em Compras" value={formatCurrency(data?.inventory.totalPurchases || 0)} icon={ShoppingCart} color="bg-blue-500" />
-                <KPIChip label="Valor em Estoque" value={formatCurrency(data?.inventory.inventoryValue || 0)} icon={Package} color="bg-emerald-500" />
+                <KPIChip label="Total em Compras" value={formatCurrency(data?.inventory.totalPurchases || 0)} icon={ShoppingCart} color="bg-fire" />
+                <KPIChip label="Valor em Estoque" value={formatCurrency(data?.inventory.inventoryValue || 0)} icon={Package} color="bg-mid" />
                 <KPIChip label="Alertas de Ruptura" value={data?.inventory.lowStockCount || 0} icon={AlertCircle} color="bg-rose-500" />
              </div>
           </div>
@@ -413,17 +403,17 @@ export function Dashboard() {
         {activeTab === 'Financeiro' && (
           <div className="space-y-8 animate-in fade-in duration-300">
              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <KPIChip label="Folha de Pagamento" value={formatCurrency(data?.expenses.totalPayroll || 0)} icon={Users} color="bg-blue-600" />
-                <KPIChip label="Horas Extras" value={formatCurrency(data?.expenses.totalOvertime || 0)} icon={Clock} color="bg-amber-500" />
-                <KPIChip label="Total Despesas" value={formatCurrency(data?.expenses.totalExpenses || 0)} icon={Activity} color="bg-rose-500" />
+                <KPIChip label="Folha de Pagamento" value={formatCurrency(data?.expenses.totalPayroll || 0)} icon={Users} color="bg-mid" />
+                <KPIChip label="Horas Extras" value={formatCurrency(data?.expenses.totalOvertime || 0)} icon={Clock} color="bg-gold" />
+                <KPIChip label="Total Despesas" value={formatCurrency(data?.expenses.totalExpenses || 0)} icon={Activity} color="bg-fire" />
              </div>
              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <DataCard title="Maiores Gastos por Categoria" items={data?.expenses.byCategory || []} />
-                <div className="bg-slate-900 text-white p-8 rounded-3xl shadow-xl flex flex-col justify-center items-center text-center">
+                <div className="bg-slate-800 text-white p-8 rounded-3xl shadow-xl flex flex-col justify-center items-center text-center">
                    <h4 className="text-slate-400 font-bold uppercase text-[10px] tracking-widest mb-2">Lucratividade Estimada</h4>
-                   <p className="text-4xl font-black text-emerald-400">{Math.round(((data?.sales.totalSales || 0) - (data?.expenses.totalExpenses || 0)) / (data?.sales.totalSales || 1) * 100)}%</p>
+                   <p className="text-4xl font-bold text-emerald-400">{Math.round(((data?.sales.totalSales || 0) - (data?.expenses.totalExpenses || 0)) / (data?.sales.totalSales || 1) * 100)}%</p>
                    <p className="text-xl font-bold text-emerald-500 mt-2">{formatCurrency((data?.sales.totalSales || 0) - (data?.expenses.totalExpenses || 0))}</p>
-                   <p className="text-slate-500 text-xs mt-4">Margem sobre o faturamento bruto</p>
+                   <p className="text-slate-400 text-xs mt-4">Margem sobre o faturamento bruto</p>
                 </div>
              </div>
           </div>
@@ -442,7 +432,7 @@ function KPIChip({ label, value, icon: Icon, color, trend }: any) {
              <Icon size={20} />
           </div>
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{label}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{label}</p>
             <h4 className="text-lg font-bold text-slate-800 leading-none mt-1">{value}</h4>
             {trend && <span className="text-[10px] font-bold text-emerald-600">{trend} vs mês ant.</span>}
           </div>
@@ -465,7 +455,7 @@ function DataCard({ title, items, isNumber }: { title: string; items: any[]; isN
             </div>
             <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
               <div 
-                className={`h-full rounded-full transition-all duration-1000 ${idx % 3 === 0 ? 'bg-indigo-500' : idx % 3 === 1 ? 'bg-blue-500' : 'bg-emerald-500'}`}
+                className={`h-full rounded-full transition-all duration-1000 ${idx % 3 === 0 ? 'bg-orange-500' : idx % 3 === 1 ? 'bg-amber-500' : 'bg-emerald-500'}`}
                 style={{ width: `${(item.value / max) * 100}%` }}
               ></div>
             </div>

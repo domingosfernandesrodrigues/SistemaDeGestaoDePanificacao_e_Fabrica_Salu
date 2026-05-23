@@ -7,6 +7,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
+import { LogoSalu } from '../components/LogoSalu';
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -103,25 +104,34 @@ export function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8 border border-slate-100">
-        
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4">
+      <div className="max-w-md w-full rounded-2xl shadow-2xl overflow-hidden border border-slate-200">
+
+        {/* ── Cabeçalho da marca ── */}
+        <div className="bg-slate-800 px-8 py-7 flex flex-col items-center gap-3">
+          <LogoSalu size={88} />
+          <div className="text-center">
+            <h1 className="text-xl font-bold text-white tracking-wide">Salú Representação</h1>
+            <p className="text-slate-400 text-xs mt-0.5">Sistema de Gestão SGP-F</p>
+          </div>
+        </div>
+
+        {/* ── Corpo do card ── */}
+        <div className="bg-white px-8 py-7">
         {!requirePasswordChange ? (
           <>
-            <div className="text-center mb-8">
-              <div className="bg-blue-600 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-md text-white font-bold text-2xl">
-                SGP
-              </div>
-              <h1 className="text-2xl font-bold text-slate-900">Bem-vindo de volta</h1>
-              <p className="text-slate-500 mt-2">Acesse o Sistema de Gestão SGP-F</p>
+            <div className="text-center mb-6">
+              <h2 className="text-lg font-bold text-slate-800">Bem-vindo de volta</h2>
+              <p className="text-slate-500 text-sm mt-1">Entre com suas credenciais para acessar</p>
             </div>
 
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
               <div className="relative">
-                <Mail className="absolute left-3 top-[34px] h-4 w-4 text-slate-400" />
+                <Mail className="absolute left-3 top-[34px] h-4 w-4 text-slate-400 pointer-events-none" />
                 <Input
-                  id="email"
+                  id="login-page-email"
                   label="E-mail"
+                  required
                   type="email"
                   placeholder="seu@email.com"
                   className="pl-9"
@@ -131,10 +141,11 @@ export function Login() {
               </div>
 
               <div className="relative">
-                <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400" />
+                <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400 pointer-events-none" />
                 <Input
-                  id="senha"
+                  id="login-page-senha"
                   label="Senha"
+                  required
                   type={showPassword ? 'text' : 'password'}
                   placeholder="••••••••"
                   className="pl-9 pr-10"
@@ -150,7 +161,7 @@ export function Login() {
                 </button>
               </div>
 
-              <Button type="submit" className="w-full mt-6" disabled={isSubmitting}>
+              <Button type="submit" className="w-full mt-6 bg-gradient-to-r from-amber-600 to-amber-500 hover:from-amber-700 hover:to-amber-600" disabled={isSubmitting}>
                 {isSubmitting ? 'Entrando...' : 'Entrar'}
               </Button>
             </form>
@@ -167,9 +178,11 @@ export function Login() {
 
             <form onSubmit={handleSubmitTrocar(onSubmitTrocarSenha)} className="space-y-4">
               <div className="relative">
-                <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400" />
+                <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400 pointer-events-none" />
                 <Input
+                  id="nova-senha-login"
                   label="Nova Senha"
+                  required
                   type={showNewPassword ? 'text' : 'password'}
                   placeholder="Mínimo 8 caracteres"
                   className="pl-9 pr-10"
@@ -201,9 +214,11 @@ export function Login() {
               </div>
 
               <div className="relative">
-                <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400" />
+                <Lock className="absolute left-3 top-[34px] h-4 w-4 text-slate-400 pointer-events-none" />
                 <Input
+                  id="confirmar-senha-login"
                   label="Confirme a Nova Senha"
+                  required
                   type={showNewPassword ? 'text' : 'password'}
                   placeholder="Repita a senha"
                   className="pl-9 pr-10"
@@ -218,7 +233,9 @@ export function Login() {
             </form>
           </>
         )}
+        </div>
       </div>
     </div>
   );
 }
+

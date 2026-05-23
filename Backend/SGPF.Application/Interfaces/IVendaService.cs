@@ -13,7 +13,7 @@ public interface IVendaService
     Task ExcluirPedidoAsync(Guid id);
     Task<PedidoVenda> AtualizarPedidoAsync(Guid id, PedidoVenda pedido);
     Task<PedidoVenda?> GetByIdAsync(Guid id);
-    Task<IEnumerable<PedidoVenda>> GetPedidosAsync();
+    Task<IEnumerable<PedidoVenda>> GetPedidosAsync(Guid? motoristaId = null);
     Task<PedidoVenda> TogglePagamentoAsync(Guid id);
     Task<bool> ConfirmarPagamentoAsync(string numeroPedido);
     Task<byte[]> GerarNotaFiscalAsync(Guid pedidoId);

@@ -248,7 +248,7 @@ export function CrmReunioes() {
   const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
   const setToday = () => setCurrentDate(new Date());
 
-  if (loadingReunioes) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+  if (loadingReunioes) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-ember" size={32} /></div>;
 
   return (
     <div className="space-y-6">
@@ -261,20 +261,20 @@ export function CrmReunioes() {
           <div className="bg-slate-100 p-1 rounded-lg flex mr-2">
             <button 
               onClick={() => setViewMode('calendar')}
-              className={`p-2 rounded-md transition-all ${viewMode === 'calendar' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`p-2 rounded-md transition-all ${viewMode === 'calendar' ? 'bg-white shadow-sm text-ember' : 'text-slate-500 hover:text-slate-700'}`}
               title="Visão de Agenda"
             >
               <CalendarIcon size={20} />
             </button>
             <button 
               onClick={() => setViewMode('list')}
-              className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-indigo-600' : 'text-slate-500 hover:text-slate-700'}`}
+              className={`p-2 rounded-md transition-all ${viewMode === 'list' ? 'bg-white shadow-sm text-ember' : 'text-slate-500 hover:text-slate-700'}`}
               title="Visão de Lista"
             >
               <LayoutList size={20} />
             </button>
           </div>
-          <Button onClick={() => { reset(); setIsModalOpen(true); }} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 h-11 px-6 shadow-md shadow-indigo-100">
+          <Button onClick={() => { reset(); setIsModalOpen(true); }} className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember h-11 px-6 shadow-md">
             <CalendarDays size={18} /> Novo Agendamento
           </Button>
         </div>
@@ -296,107 +296,109 @@ export function CrmReunioes() {
             </div>
             
             <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-              <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-indigo-500"></div> REUNIÕES</div>
+              <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-ember"></div> REUNIÕES</div>
               <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500"></div> FERIADOS</div>
               <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-500"></div> REALIZADAS</div>
             </div>
           </div>
 
           {/* Legenda e Dica */}
-          <div className="bg-blue-50/50 p-4 border-b border-blue-100 flex items-start gap-3">
-            <div className="bg-blue-500 text-white p-1.5 rounded-lg shrink-0"><Bell size={16} /></div>
-            <p className="text-xs text-blue-800 leading-relaxed italic">
+          <div className="bg-amber-50/50 p-4 border-b border-amber-100 flex items-start gap-3">
+            <div className="bg-amber-500 text-white p-1.5 rounded-lg shrink-0"><Bell size={16} /></div>
+            <p className="text-xs text-amber-800 leading-relaxed italic">
               <strong>Dica:</strong> Você pode usar os "Lembretes" para marcar dias de manutenção de máquinas ou inventário da fábrica, eles ficarão salvos e visíveis para toda a administração!
             </p>
           </div>
 
           {/* Grid do Calendário */}
-          <div className="grid grid-cols-7 bg-slate-200 gap-px">
-            {['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'].map(dia => (
-              <div key={dia} className="bg-slate-50 p-3 text-center text-[10px] font-black text-slate-400 tracking-widest">{dia}</div>
-            ))}
-            
-            {getDaysInMonth(currentDate).map((day, idx) => {
-              if (!day) return <div key={`empty-${idx}`} className="bg-slate-50/50 min-h-[120px]"></div>;
+          <div className="overflow-x-auto">
+            <div className="grid grid-cols-7 bg-slate-200 gap-px min-w-[800px]">
+              {['DOM', 'SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB'].map(dia => (
+                <div key={dia} className="bg-slate-50 p-3 text-center text-[10px] font-black text-slate-400 tracking-widest">{dia}</div>
+              ))}
               
-              const dateStr = day.toISOString().split('T')[0];
-              const isToday = new Date().toDateString() === day.toDateString();
-              
-              const reunioesNoDia = (reunioes || []).filter(r => 
-                new Date(r.dataHora || r.DataHora).toISOString().split('T')[0] === dateStr
-              );
-              
-              const eventosNoDia = (agendaEventos || []).filter(e => 
-                new Date(e.data || e.Data).toISOString().split('T')[0] === dateStr
-              );
-              
-              const feriadoFixo = getFeriadosNacionais(currentDate.getFullYear()).find(f => f.data === dateStr);
+              {getDaysInMonth(currentDate).map((day, idx) => {
+                if (!day) return <div key={`empty-${idx}`} className="bg-slate-50/50 min-h-[120px]"></div>;
+                
+                const dateStr = day.toISOString().split('T')[0];
+                const isToday = new Date().toDateString() === day.toDateString();
+                
+                const reunioesNoDia = (reunioes || []).filter(r => 
+                  new Date(r.dataHora || r.DataHora).toISOString().split('T')[0] === dateStr
+                );
+                
+                const eventosNoDia = (agendaEventos || []).filter(e => 
+                  new Date(e.data || e.Data).toISOString().split('T')[0] === dateStr
+                );
+                
+                const feriadoFixo = getFeriadosNacionais(currentDate.getFullYear()).find(f => f.data === dateStr);
 
-              return (
-                <div 
-                  key={dateStr} 
-                  className={`bg-white min-h-[120px] p-2 hover:bg-slate-50 transition-colors group cursor-pointer relative ${isToday ? 'bg-indigo-50/30' : ''}`}
-                  onClick={() => {
-                    setSelectedDay(dateStr);
-                    setValue('dataHora', `${dateStr}T10:00`);
-                    setIsEventoModalOpen(true);
-                  }}
-                >
-                  <div className="flex justify-between items-center mb-2">
-                    <span className={`text-sm font-bold ${isToday ? 'bg-indigo-600 text-white w-7 h-7 flex items-center justify-center rounded-full shadow-md' : 'text-slate-400'}`}>
-                      {day.getDate()}
-                    </span>
-                    {feriadoFixo && <span className="text-[9px] font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded leading-none">{feriadoFixo.nome}</span>}
-                  </div>
+                return (
+                  <div 
+                    key={dateStr} 
+                    className={`bg-white min-h-[120px] p-2 hover:bg-slate-50 transition-colors group cursor-pointer relative ${isToday ? 'bg-orange-50/30' : ''}`}
+                    onClick={() => {
+                      setSelectedDay(dateStr);
+                      setValue('dataHora', `${dateStr}T10:00`);
+                      setIsEventoModalOpen(true);
+                    }}
+                  >
+                    <div className="flex justify-between items-center mb-2">
+                      <span className={`text-sm font-bold ${isToday ? 'bg-ember text-white w-7 h-7 flex items-center justify-center rounded-full shadow-md' : 'text-slate-400'}`}>
+                        {day.getDate()}
+                      </span>
+                      {feriadoFixo && <span className="text-[9px] font-black text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded leading-none">{feriadoFixo.nome}</span>}
+                    </div>
 
-                  <div className="space-y-1">
-                    {/* Eventos Dinâmicos do Banco */}
-                    {eventosNoDia.map((ev: any) => (
-                      <div 
-                        key={ev.id || ev.Id} 
-                        className="flex items-center justify-between gap-1 bg-amber-100 border border-amber-200 text-amber-800 text-[9px] px-1.5 py-0.5 rounded font-bold group/ev relative hover:bg-amber-200 transition-colors"
-                        onClick={(e) => { e.stopPropagation(); handleEditEvento(ev); }}
-                      >
-                        <span className="flex items-center gap-1 truncate"><Star size={8} /> {ev.titulo || ev.Titulo}</span>
-                        <button 
-                          onClick={(e) => { 
-                            e.stopPropagation(); 
-                            if(confirm('Excluir este evento?')) mutationDeleteEvento.mutate(ev.id || ev.Id); 
-                          }}
-                          className="opacity-0 group-hover/ev:opacity-100 text-red-600 hover:text-red-800 transition-opacity"
-                        >
-                          <XCircle size={10} />
-                        </button>
-                      </div>
-                    ))}
-
-                    {reunioesNoDia.slice(0, 3).map((r: any) => {
-                      const status = Number(r.status ?? r.Status);
-                      const cliente = clientes?.find(c => c.id === (r.clienteId || r.ClienteId));
-                      return (
+                    <div className="space-y-1">
+                      {/* Eventos Dinâmicos do Banco */}
+                      {eventosNoDia.map((ev: any) => (
                         <div 
-                          key={r.id || r.Id} 
-                          className={`text-[10px] p-1 rounded border truncate font-medium ${
-                            status === 1 ? 'bg-green-50 border-green-200 text-green-700' :
-                            status === 2 ? 'bg-red-50 border-red-200 text-red-700' :
-                            'bg-indigo-50 border-indigo-200 text-indigo-700'
-                          }`}
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleEdit(r);
-                          }}
+                          key={ev.id || ev.Id} 
+                          className="flex items-center justify-between gap-1 bg-amber-100 border border-amber-200 text-amber-800 text-[9px] px-1.5 py-0.5 rounded font-bold group/ev relative hover:bg-amber-200 transition-colors"
+                          onClick={(e) => { e.stopPropagation(); handleEditEvento(ev); }}
                         >
-                          {new Date(r.dataHora || r.DataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} {cliente?.nomeFantasia}
+                          <span className="flex items-center gap-1 truncate"><Star size={8} /> {ev.titulo || ev.Titulo}</span>
+                          <button 
+                            onClick={(e) => { 
+                              e.stopPropagation(); 
+                              if(confirm('Excluir este evento?')) mutationDeleteEvento.mutate(ev.id || ev.Id); 
+                            }}
+                            className="opacity-0 group-hover/ev:opacity-100 text-red-600 hover:text-red-800 transition-opacity"
+                          >
+                            <XCircle size={10} />
+                          </button>
                         </div>
-                      );
-                    })}
-                    {reunioesNoDia.length > 3 && (
-                      <div className="text-[9px] font-bold text-slate-400 text-center">+ {reunioesNoDia.length - 3} reuniões</div>
-                    )}
+                      ))}
+
+                      {reunioesNoDia.slice(0, 3).map((r: any) => {
+                        const status = Number(r.status ?? r.Status);
+                        const cliente = clientes?.find(c => c.id === (r.clienteId || r.ClienteId));
+                        return (
+                          <div 
+                            key={r.id || r.Id} 
+                            className={`text-[10px] p-1 rounded border truncate font-medium ${
+                              status === 1 ? 'bg-green-50 border-green-200 text-green-700' :
+                              status === 2 ? 'bg-red-50 border-red-200 text-red-700' :
+                              'bg-amber-50 border-amber-200 text-amber-700'
+                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEdit(r);
+                            }}
+                          >
+                            {new Date(r.dataHora || r.DataHora).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })} {cliente?.nomeFantasia}
+                          </div>
+                        );
+                      })}
+                      {reunioesNoDia.length > 3 && (
+                        <div className="text-[9px] font-bold text-slate-400 text-center">+ {reunioesNoDia.length - 3} reuniões</div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         </div>
       ) : (
@@ -430,7 +432,7 @@ export function CrmReunioes() {
 
           <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 sm:p-6">
             <h3 className="font-bold text-slate-800 mb-6 flex items-center gap-2">
-              <Users size={20} className="text-indigo-600" /> Histórico de Agendas
+              <Users size={20} className="text-ember" /> Histórico de Agendas
             </h3>
             
             <div className="space-y-4">
@@ -443,7 +445,7 @@ export function CrmReunioes() {
                 return (
                   <div key={reuniao.id || reuniao.Id} className={`flex flex-col sm:flex-row items-start gap-4 p-4 rounded-lg border border-slate-100 hover:bg-slate-50 transition-colors ${status !== 0 ? 'opacity-60 shadow-inner' : 'shadow-sm bg-white'}`}>
                     <div className="flex items-center gap-4 w-full sm:w-auto">
-                      <div className={`${status === 1 ? 'bg-green-50 text-green-700' : status === 2 ? 'bg-red-50 text-red-700' : 'bg-indigo-50 text-indigo-700'} w-14 h-14 sm:w-16 sm:h-16 rounded-lg flex flex-col items-center justify-center shrink-0 border border-current/10`}>
+                      <div className={`${status === 1 ? 'bg-green-50 text-green-700' : status === 2 ? 'bg-red-50 text-red-700' : 'bg-amber-50 text-amber-700'} w-14 h-14 sm:w-16 sm:h-16 rounded-lg flex flex-col items-center justify-center shrink-0 border border-current/10`}>
                         <span className="text-[10px] sm:text-xs font-bold uppercase">{date.toLocaleString('pt-BR', { month: 'short' })}</span>
                         <span className="text-lg sm:text-xl font-black">{date.getDate()}</span>
                       </div>
@@ -472,7 +474,7 @@ export function CrmReunioes() {
 
                     <div className="flex flex-col items-stretch sm:items-end gap-3 w-full sm:w-auto mt-2 sm:mt-0 pt-3 sm:pt-0 border-t sm:border-t-0 border-slate-100">
                       <span className={`hidden sm:block px-3 py-1 rounded-full text-[10px] font-bold uppercase ${
-                        status === 0 ? 'bg-blue-100 text-blue-700' : 
+                        status === 0 ? 'bg-amber-100 text-amber-700' : 
                         status === 1 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                       }`}>
                         {status === 0 ? 'Agendada' : status === 1 ? 'Realizada' : 'Cancelada'}
@@ -480,7 +482,7 @@ export function CrmReunioes() {
                       
                       {status === 0 && (
                         <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2">
-                          <Button size="sm" className="h-9 sm:h-8 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center gap-1 px-3 shadow-sm active:scale-95 transition-transform" onClick={() => handleEdit(reuniao)}><Edit2 size={14} /> <span className="sm:hidden">Editar</span></Button>
+                          <Button size="sm" className="h-9 sm:h-8 bg-ember hover:bg-fire text-white flex items-center justify-center gap-1 px-3 shadow-sm active:scale-95 transition-transform" onClick={() => handleEdit(reuniao)}><Edit2 size={14} /> <span className="sm:hidden">Editar</span></Button>
                           <Button size="sm" className="h-9 sm:h-8 bg-red-600 hover:bg-red-700 text-white flex items-center justify-center gap-1 px-3 shadow-sm active:scale-95 transition-transform" onClick={() => { const id = reuniao.id || reuniao.Id; if(confirm('Deseja realmente cancelar esta reunião?')) { mutationCancel.mutate(id); } }}><XCircle size={14} /> <span className="sm:hidden">Excluir</span></Button>
                           <Button size="sm" className="col-span-2 h-9 sm:h-8 bg-green-600 hover:bg-green-700 text-white flex items-center justify-center gap-1 px-4 shadow-sm active:scale-95 transition-transform" onClick={() => handleAta(reuniao)}><CheckCircle size={14} /> Concluir Reunião</Button>
                         </div>
@@ -508,7 +510,7 @@ export function CrmReunioes() {
                     <Button variant="secondary" size="sm" onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))} disabled={currentPage === 1}>Anterior</Button>
                     <div className="flex gap-1">
                       {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                        <button key={page} onClick={() => setCurrentPage(page)} className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === page ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'}`}>{page}</button>
+                        <button key={page} onClick={() => setCurrentPage(page)} className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${currentPage === page ? 'bg-ember text-white' : 'text-slate-600 hover:bg-slate-100'}`}>{page}</button>
                       ))}
                     </div>
                     <Button variant="secondary" size="sm" onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>Próxima</Button>
@@ -524,18 +526,18 @@ export function CrmReunioes() {
       <Modal isOpen={isModalOpen || isEditModalOpen} onClose={() => { setIsModalOpen(false); setIsEditModalOpen(false); }} title={isEditModalOpen ? "Editar Reunião" : "Agendar Reunião"}>
         <form onSubmit={handleSubmit((data) => isEditModalOpen ? mutationUpdate.mutate(data) : mutationCreate.mutate(data))} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Cliente</label>
+            <label className="text-sm font-medium text-slate-700">Cliente <span className="text-red-500">*</span></label>
             <select {...register('clienteId')} className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm">
               <option value="">Selecione...</option>
               {clientes?.map(c => <option key={c.id} value={c.id}>{c.nomeFantasia}</option>)}
             </select>
           </div>
-          <Input label="Data e Hora" type="datetime-local" {...register('dataHora')} error={errors.dataHora?.message} />
+          <Input label="Data e Hora" required type="datetime-local" {...register('dataHora')} error={errors.dataHora?.message} />
           <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Pauta</label>
+            <label className="text-sm font-medium text-slate-700">Pauta <span className="text-red-500">*</span></label>
             <textarea {...register('pauta')} className="w-full p-3 rounded-lg border border-slate-200 text-sm min-h-24" />
           </div>
-          <Button type="submit" className="w-full bg-indigo-600" disabled={mutationCreate.isPending || mutationUpdate.isPending}>
+          <Button type="submit" className="w-full bg-gradient-to-r from-fire to-ember" disabled={mutationCreate.isPending || mutationUpdate.isPending}>
             <Save size={18} className="mr-2" /> {isEditModalOpen ? 'Salvar Alterações' : 'Confirmar Agendamento'}
           </Button>
         </form>
@@ -545,7 +547,7 @@ export function CrmReunioes() {
       <Modal isOpen={isAtaModalOpen} onClose={() => setIsAtaModalOpen(false)} title="Concluir Reunião - Registro de Ata">
         <div className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">O que foi decidido na reunião?</label>
+            <label className="text-sm font-medium text-slate-700">O que foi decidido na reunião? <span className="text-red-500">*</span></label>
             <textarea value={ataText} onChange={(e) => setAtaText(e.target.value)} className="w-full p-3 rounded-lg border border-slate-200 text-sm min-h-32" placeholder="Digite aqui o resumo da reunião..." />
           </div>
           <Button onClick={() => mutationConcluir.mutate()} className="w-full bg-green-600" disabled={mutationConcluir.isPending}>
@@ -568,7 +570,7 @@ export function CrmReunioes() {
           {!isEditEvento && (
             <div className="p-4 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors flex items-center gap-4"
                 onClick={() => { setIsEventoModalOpen(false); setIsModalOpen(true); }}>
-              <div className="bg-indigo-100 text-indigo-600 p-3 rounded-lg"><CalendarDays size={24} /></div>
+              <div className="bg-amber-100 text-amber-700 p-3 rounded-lg"><CalendarDays size={24} /></div>
               <div>
                 <p className="font-bold text-slate-800">Agendar Nova Reunião</p>
                 <p className="text-xs text-slate-500">Marcar compromisso com um cliente B2B.</p>
@@ -581,7 +583,7 @@ export function CrmReunioes() {
               <Star size={16} className="text-amber-500" /> {isEditEvento ? 'Atualizar Detalhes' : 'Cadastrar Feriado ou Lembrete'}
             </h4>
             <form onSubmit={handleSubEvento((data) => isEditEvento ? mutationUpdateEvento.mutate({ ...data, id: selectedEvento.id || selectedEvento.Id }) : mutationCreateEvento.mutate({ ...data, data: selectedDay }))} className="space-y-3">
-              <Input label="Título do Evento" placeholder="Ex: Feriado Municipal, Inventário..." {...regEvento('titulo', { required: true })} />
+              <Input label="Título do Evento" required placeholder="Ex: Feriado Municipal, Inventário..." {...regEvento('titulo', { required: true })} />
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-slate-500">Tipo</label>

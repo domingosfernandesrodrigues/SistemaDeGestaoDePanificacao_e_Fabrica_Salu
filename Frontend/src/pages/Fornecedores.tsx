@@ -31,7 +31,7 @@ export default function Fornecedores() {
   const [searchTerm, setSearchTerm] = useState('');
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<FornecedorForm>({
+  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<FornecedorForm>({
     resolver: zodResolver(fornecedorSchema)
   });
 
@@ -57,10 +57,6 @@ export default function Fornecedores() {
     return clean;
   };
 
-  const cnpjValue = watch('cnpj');
-  const phoneValue = watch('telefone');
-  const ieValue = watch('inscricaoEstadual');
-
   const { data: fornecedores, isLoading } = useQuery<any[]>({
     queryKey: ['fornecedores'],
     queryFn: async () => (await api.get('/Fornecedores')).data,
@@ -80,23 +76,33 @@ export default function Fornecedores() {
   const mutationDelete = useMutation({
     mutationFn: (id: string) => api.delete(`/Fornecedores/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['fornecedores'] }),
-    onError: (err: any) => alert(err.response?.data?.message || 'Erro ao excluir fornecedor')
+    onError: (err: any, id: string) => {
+      const message = err.response?.data?.message || 'Erro ao excluir fornecedor';
+      if (message.toLowerCase().includes('histórico')) {
+        if (confirm(`${message}\n\nDeseja inativar (arquivar) este fornecedor agora?`)) {
+          mutationToggle.mutate(id);
+        }
+      } else {
+        alert(message);
+      }
+    }
   });
 
   const mutationToggle = useMutation({
     mutationFn: (id: string) => api.patch(`/Fornecedores/${id}/toggle-status`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['fornecedores'] }),
+    onError: (err: any) => alert(err.response?.data?.message || 'Erro ao alterar status do fornecedor')
   });
 
   const handleEdit = (f: any) => {
     setEditId(f.id);
     setValue('nomeFantasia', f.nomeFantasia);
     setValue('razaoSocial', f.razaoSocial);
-    setValue('cnpj', f.cnpj);
-    setValue('contato', f.contato || '');
-    setValue('telefone', f.telefone || '');
+    setValue('cnpj', formatCNPJ(f.cnpj));
+    setValue('contato', formatPhone(f.contato || ''));
+    setValue('telefone', formatPhone(f.telefone || ''));
     setValue('email', f.email || '');
-    setValue('inscricaoEstadual', f.inscricaoEstadual || '');
+    setValue('inscricaoEstadual', formatIE(f.inscricaoEstadual || ''));
     setValue('endereco', f.endereco || '');
     setIsModalOpen(true);
   };
@@ -112,7 +118,7 @@ export default function Fornecedores() {
     f.cnpj.includes(searchTerm)
   );
 
-  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-ember" size={32} /></div>;
 
   return (
     <div className="space-y-6">
@@ -121,7 +127,7 @@ export default function Fornecedores() {
           <h2 className="text-2xl font-bold text-slate-800">Gestão de Fornecedores</h2>
           <p className="text-slate-500">Cadastre e gerencie as empresas que fornecem insumos para a fábrica.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-indigo-600">
+        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember">
           <Plus size={18} /> Novo Fornecedor
         </Button>
       </div>
@@ -143,7 +149,7 @@ export default function Fornecedores() {
               f.ativo ? 'border-slate-200' : 'border-slate-300 opacity-60'
             }`}>
               <div className="flex items-start justify-between">
-                <div className="w-12 h-12 bg-indigo-50 rounded-lg flex items-center justify-center text-indigo-600 mb-4">
+                <div className="w-12 h-12 bg-amber-50 rounded-lg flex items-center justify-center text-amber-700 mb-4">
                   <Truck size={24} />
                 </div>
                 <div className="flex flex-col items-end gap-1">
@@ -152,7 +158,7 @@ export default function Fornecedores() {
                   }`}>
                     {f.ativo ? 'Ativo' : 'Inativo'}
                   </span>
-                  <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                     <button 
                       onClick={() => mutationToggle.mutate(f.id)} 
                       className={`p-1.5 rounded-md hover:bg-slate-50 ${ f.ativo ? 'text-slate-400 hover:text-amber-600' : 'text-green-600 hover:text-green-700' }`}
@@ -167,7 +173,7 @@ export default function Fornecedores() {
                     >
                       <Trash2 size={16} />
                     </button>
-                    <button onClick={() => handleEdit(f)} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-md hover:bg-slate-50">
+                    <button onClick={() => handleEdit(f)} className="p-1.5 text-slate-400 hover:text-ember rounded-md hover:bg-slate-50">
                       <Edit2 size={16} />
                     </button>
                   </div>
@@ -201,35 +207,57 @@ export default function Fornecedores() {
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editId ? 'Editar Fornecedor' : 'Novo Fornecedor'}>
         <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
-          <Input label="Nome Fantasia" {...register('nomeFantasia')} error={errors.nomeFantasia?.message} />
-          <Input label="Razão Social" {...register('razaoSocial')} error={errors.razaoSocial?.message} />
+          <Input label="Nome Fantasia" required {...register('nomeFantasia')} error={errors.nomeFantasia?.message} />
+          <Input label="Razão Social" required {...register('razaoSocial')} error={errors.razaoSocial?.message} />
           <Input 
             label="CNPJ" 
+            required
             placeholder="00.000.000/0000-00" 
-            {...register('cnpj')} 
-            value={formatCNPJ(cnpjValue || '')}
-            onChange={(e) => setValue('cnpj', e.target.value.replace(/\D/g, ''))}
+            {...register('cnpj', {
+              onChange: (e) => {
+                const clean = e.target.value.replace(/\D/g, '').slice(0, 14);
+                e.target.value = formatCNPJ(clean);
+              }
+            })} 
             error={errors.cnpj?.message} 
           />
           <div className="grid grid-cols-2 gap-4">
             <Input 
               label="Telefone" 
+              required
               placeholder="(00) 00000-0000"
-              {...register('telefone')} 
-              value={formatPhone(phoneValue || '')}
-              onChange={(e) => setValue('telefone', e.target.value.replace(/\D/g, ''))}
+              {...register('telefone', {
+                onChange: (e) => {
+                  const clean = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  e.target.value = formatPhone(clean);
+                }
+              })} 
               error={errors.telefone?.message}
             />
-            <Input label="Pessoa de Contato" {...register('contato')} error={errors.contato?.message} />
+            <Input 
+              label="Pessoa de Contato" 
+              required 
+              placeholder="(00) 00000-0000"
+              {...register('contato', {
+                onChange: (e) => {
+                  const clean = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  e.target.value = formatPhone(clean);
+                }
+              })} 
+              error={errors.contato?.message} 
+            />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Input label="E-mail" {...register('email')} error={errors.email?.message} />
+            <Input label="E-mail" required {...register('email')} error={errors.email?.message} />
             <Input 
               label="Inscrição Estadual" 
               placeholder="Opcional" 
-              {...register('inscricaoEstadual')} 
-              value={formatIE(ieValue || '')}
-              onChange={(e) => setValue('inscricaoEstadual', e.target.value.replace(/\D/g, ''))}
+              {...register('inscricaoEstadual', {
+                onChange: (e) => {
+                  const clean = e.target.value.replace(/\D/g, '').slice(0, 14);
+                  e.target.value = formatIE(clean);
+                }
+              })} 
               error={errors.inscricaoEstadual?.message} 
             />
           </div>
@@ -237,7 +265,7 @@ export default function Fornecedores() {
           
           <div className="pt-4 flex gap-3">
             <Button type="button" variant="secondary" className="flex-1" onClick={handleCloseModal}>Cancelar</Button>
-            <Button type="submit" className="flex-1 bg-indigo-600 flex justify-center gap-2" disabled={mutation.isPending}>
+            <Button type="submit" className="flex-1 bg-gradient-to-r from-fire to-ember flex justify-center gap-2" disabled={mutation.isPending}>
               {mutation.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Salvar
             </Button>
           </div>

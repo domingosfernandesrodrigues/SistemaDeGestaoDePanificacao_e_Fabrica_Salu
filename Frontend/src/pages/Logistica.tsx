@@ -20,6 +20,7 @@ const veiculoSchema = z.object({
 const trocaSchema = z.object({
   clienteId: z.string().min(1, 'Selecione o cliente'),
   produtoId: z.string().min(1, 'Selecione o produto'),
+  motoristaId: z.string().optional().nullable(),
   quantidade: z.coerce.number().min(1),
   motivo: z.string().min(1, 'Informe o motivo'),
 });
@@ -138,7 +139,7 @@ export function Frota() {
     setIsManuModalOpen(true);
   };
 
-  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-ember" size={32} /></div>;
 
   return (
     <div className="space-y-6">
@@ -155,7 +156,7 @@ export function Frota() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {veiculos?.map((veiculo) => (
-          <div key={veiculo.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex items-start gap-6">
+          <div key={veiculo.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
             <div className="w-20 h-20 bg-slate-100 rounded-xl flex items-center justify-center flex-shrink-0">
               <Truck size={32} className="text-slate-400" />
             </div>
@@ -190,7 +191,7 @@ export function Frota() {
                     </button>
                   </div>
                   <div className="text-right">
-                    <span className="text-2xl font-bold text-indigo-600">{veiculo.quilometragemAtual}</span>
+                    <span className="text-2xl font-bold text-fire">{veiculo.quilometragemAtual}</span>
                     <span className="text-slate-500 text-sm ml-1">Km</span>
                   </div>
                 </div>
@@ -200,7 +201,7 @@ export function Frota() {
                 <Button 
                   variant="secondary" 
                   size="sm" 
-                  className="flex-1 bg-blue-50 text-blue-700 hover:bg-blue-100 border-none"
+                  className="flex-1 bg-amber-50 text-amber-700 hover:bg-amber-100 border-none"
                   onClick={() => openAbast(veiculo)}
                 >
                   <Droplet size={14} className="mr-2" /> Abastecer
@@ -221,9 +222,9 @@ export function Frota() {
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Cadastrar Veículo">
         <form onSubmit={handleV((data) => mutation.mutate(data))} className="space-y-4">
-          <Input label="Modelo do Veículo" placeholder="Ex: Renault Master" {...regV('modelo')} error={errV.modelo?.message as string} />
-          <Input label="Placa" placeholder="ABC1D23" {...regV('placa')} error={errV.placa?.message as string} />
-          <Input label="Km Atual" type="number" {...regV('quilometragemAtual')} error={errV.quilometragemAtual?.message as string} />
+          <Input label="Modelo do Veículo" required placeholder="Ex: Renault Master" {...regV('modelo')} error={errV.modelo?.message as string} />
+          <Input label="Placa" required placeholder="ABC1D23" {...regV('placa')} error={errV.placa?.message as string} />
+          <Input label="Km Atual" required type="number" {...regV('quilometragemAtual')} error={errV.quilometragemAtual?.message as string} />
           <Button type="submit" className="w-full flex justify-center gap-2" disabled={mutation.isPending}>
             {mutation.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Salvar Veículo
           </Button>
@@ -233,11 +234,11 @@ export function Frota() {
       <Modal isOpen={isAbastModalOpen} onClose={() => setIsAbastModalOpen(false)} title={`Abastecer: ${selectedVeiculo?.modelo}`}>
         <form onSubmit={handleA((data) => mutationAbast.mutate(data))} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Quilometragem Atual (Km)" type="number" {...regA('quilometragemRegistrada')} error={errA.quilometragemRegistrada?.message as string} />
-            <Input label="Litros" type="number" step="0.01" {...regA('litros')} error={errA.litros?.message as string} />
+            <Input label="Quilometragem Atual (Km)" required type="number" {...regA('quilometragemRegistrada')} error={errA.quilometragemRegistrada?.message as string} />
+            <Input label="Litros" required type="number" step="0.01" {...regA('litros')} error={errA.litros?.message as string} />
           </div>
-          <Input label="Valor Total (R$)" type="number" step="0.01" {...regA('valorTotal')} error={errA.valorTotal?.message as string} />
-          <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 flex justify-center gap-2 shadow-md" disabled={mutationAbast.isPending}>
+          <Input label="Valor Total (R$)" required type="number" step="0.01" {...regA('valorTotal')} error={errA.valorTotal?.message as string} />
+          <Button type="submit" className="w-full bg-gradient-to-r from-fire to-ember hover:opacity-90 flex justify-center gap-2 shadow-md" disabled={mutationAbast.isPending}>
             {mutationAbast.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Registrar Abastecimento
           </Button>
         </form>
@@ -246,14 +247,14 @@ export function Frota() {
       <Modal isOpen={isManuModalOpen} onClose={() => setIsManuModalOpen(false)} title={`Manutenção: ${selectedVeiculo?.modelo}`}>
         <form onSubmit={handleM((data) => mutationManu.mutate(data))} className="space-y-4">
           <div className="space-y-1">
-            <label className="text-sm font-medium text-slate-700">Tipo de Manutenção</label>
+            <label className="text-sm font-medium text-slate-700">Tipo de Manutenção <span className="text-red-500">*</span></label>
             <select {...regM('tipo')} className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:ring-2 focus:ring-amber-500 outline-none">
               <option value="0">Preventiva</option>
               <option value="1">Corretiva</option>
             </select>
             <div className="flex gap-3 mt-2 p-2 bg-slate-50 rounded border border-slate-100 text-[10px] leading-relaxed">
               <div className="flex-1">
-                <span className="font-bold text-blue-600 block mb-0.5">PREVENTIVA:</span>
+                <span className="font-bold text-fire block mb-0.5">PREVENTIVA:</span>
                 <p className="text-slate-500 italic">Planejada para evitar falhas (ex: óleo, filtros, revisões).</p>
               </div>
               <div className="w-px bg-slate-200"></div>
@@ -263,10 +264,10 @@ export function Frota() {
               </div>
             </div>
           </div>
-          <Textarea label="Descrição Detalhada" placeholder="Descreva os serviços realizados, peças trocadas, etc." {...regM('descricao')} error={errM.descricao?.message as string} />
+          <Textarea label="Descrição Detalhada" required placeholder="Descreva os serviços realizados, peças trocadas, etc." {...regM('descricao')} error={errM.descricao?.message as string} />
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Km na Manutenção" type="number" {...regM('quilometragemRegistrada')} error={errM.quilometragemRegistrada?.message as string} />
-            <Input label="Custo (R$)" type="number" step="0.01" {...regM('custoTotal')} error={errM.custoTotal?.message as string} />
+            <Input label="Km na Manutenção" required type="number" {...regM('quilometragemRegistrada')} error={errM.quilometragemRegistrada?.message as string} />
+            <Input label="Custo (R$)" required type="number" step="0.01" {...regM('custoTotal')} error={errM.custoTotal?.message as string} />
           </div>
           <Button type="submit" className="w-full bg-amber-600 hover:bg-amber-700 flex justify-center gap-2" disabled={mutationManu.isPending}>
             {mutationManu.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Registrar Manutenção
@@ -278,7 +279,7 @@ export function Frota() {
       <div className="mt-12 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-            <ArrowRightLeft size={20} className="text-indigo-600" /> Histórico de Atividades da Frota
+            <ArrowRightLeft size={20} className="text-ember" /> Histórico de Atividades da Frota
           </h3>
           
           {/* Barra de Filtros */}
@@ -319,7 +320,7 @@ export function Frota() {
 
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
+            <table className="w-full text-left text-sm min-w-[800px]">
               <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
                 <tr>
                   <th className="px-6 py-4 font-medium">Data</th>
@@ -353,7 +354,7 @@ export function Frota() {
                         </td>
                         <td className="px-6 py-4">
                           <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                            isAbast ? 'bg-blue-50 text-blue-600' : 'bg-amber-50 text-amber-600'
+                            isAbast ? 'bg-amber-50 text-amber-700' : 'bg-slate-50 text-slate-600'
                           }`}>
                             {isAbast ? 'Abastecimento' : 'Manutenção'}
                           </span>
@@ -393,6 +394,7 @@ export function Trocas() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'troca' | 'avaria'>('troca');
   const queryClient = useQueryClient();
+  const userRole = localStorage.getItem('sgpf_role');
   
   const { register, handleSubmit, reset, setValue, control, formState: { errors } } = useForm({
     resolver: zodResolver(trocaSchema)
@@ -417,6 +419,7 @@ export function Trocas() {
 
   const { data: clientes } = useQuery<any[]>({ queryKey: ['clientes'], queryFn: async () => (await api.get('/Clientes')).data });
   const { data: produtos } = useQuery<any[]>({ queryKey: ['produtos'], queryFn: async () => (await api.get('/Produtos')).data });
+  const { data: funcionarios } = useQuery<any[]>({ queryKey: ['funcionarios'], queryFn: async () => (await api.get('/Funcionarios')).data });
 
   const mutation = useMutation({
     mutationFn: (newTroca: any) => api.post('/Logistica/trocas', newTroca),
@@ -439,7 +442,7 @@ export function Trocas() {
     setPaginaAtual(1);
   }, [filterCliente, filterProduto, filterData, filterAno]);
 
-  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-ember" size={32} /></div>;
 
   const trocasFiltradas = (trocas || [])
     .filter(t => {
@@ -462,7 +465,7 @@ export function Trocas() {
           <p className="text-sm md:text-base text-slate-500 mt-1">Registre trocas por erro de pedido ou avarias para reposição imediata.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-          <Button onClick={() => openModal('troca')} className="w-full sm:w-auto flex justify-center items-center gap-2 bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-100">
+          <Button onClick={() => openModal('troca')} className="w-full sm:w-auto flex justify-center items-center gap-2 bg-gradient-to-r from-fire to-ember shadow-lg">
             <ArrowRightLeft size={18} /> Registrar Troca
           </Button>
           <Button onClick={() => openModal('avaria')} variant="outline" className="w-full sm:w-auto flex justify-center items-center gap-2 border-slate-200 text-slate-700 hover:bg-slate-50">
@@ -537,6 +540,7 @@ export function Trocas() {
                 <th className="px-6 py-4 font-medium">Cliente</th>
                 <th className="px-6 py-4 font-medium">Produto</th>
                 <th className="px-6 py-4 font-medium text-center">Quantidade</th>
+                <th className="px-6 py-4 font-medium">Motorista</th>
                 <th className="px-6 py-4 font-medium">Motivo</th>
               </tr>
             </thead>
@@ -548,6 +552,9 @@ export function Trocas() {
                   <td className="px-6 py-4 font-medium text-slate-900">{clientes?.find(c => c.id === t.clienteId)?.nomeFantasia || 'Cliente'}</td>
                   <td className="px-6 py-4 text-slate-600">{produtos?.find(p => p.id === t.produtoId)?.nome || 'Produto'}</td>
                   <td className="px-6 py-4 text-center font-bold text-slate-700">{t.quantidade}</td>
+                  <td className="px-6 py-4 text-slate-600 italic">
+                    {funcionarios?.find(f => f.id === t.motoristaId)?.nome || '-'}
+                  </td>
                   <td className="px-6 py-4 text-slate-600">
                     <span className={`px-2.5 py-1 rounded-md text-[10px] uppercase font-bold tracking-wider ${t.motivo === 'Avaria' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-600'}`}>
                       {t.motivo}
@@ -578,7 +585,7 @@ export function Trocas() {
                 </div>
                 <div className="bg-slate-50 rounded-lg p-3 border border-slate-100 flex justify-between items-center gap-3">
                   <span className="text-sm font-medium text-slate-700 line-clamp-2">{produto?.nome || 'Produto'}</span>
-                  <span className="text-sm font-black text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100 shrink-0">{t.quantidade} un</span>
+                  <span className="text-sm font-bold text-fire bg-amber-50 px-2 py-1 rounded border border-amber-100 shrink-0">{t.quantidade} un</span>
                 </div>
               </div>
             );
@@ -611,6 +618,7 @@ export function Trocas() {
             render={({ field }) => (
               <SearchableSelect
                 label="Cliente"
+                required
                 placeholder="Pesquise o cliente..."
                 options={clientes?.map(c => ({ value: c.id, label: c.nomeFantasia })) || []}
                 value={field.value}
@@ -626,6 +634,7 @@ export function Trocas() {
             render={({ field }) => (
               <SearchableSelect
                 label="Produto"
+                required
                 placeholder="Pesquise o produto..."
                 options={produtos?.filter(p => p.tipo !== 0).map(p => ({ value: p.id, label: p.nome })) || []}
                 value={field.value}
@@ -635,9 +644,25 @@ export function Trocas() {
             )}
           />
           
-          <Input label="Quantidade" type="number" {...register('quantidade')} error={errors.quantidade?.message as string} />
-          <Input label="Motivo" placeholder={modalType === 'troca' ? "Ex: Erro no pedido, Vencimento" : "Ex: Embalagem violada, Produto quebrado"} {...register('motivo')} error={errors.motivo?.message as string} />
-          <Button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 flex justify-center gap-2 shadow-md mt-4" disabled={mutation.isPending}>
+          {(userRole === 'Admin' || userRole === 'Gestor') && (
+            <Controller
+              control={control}
+              name="motoristaId"
+              render={({ field }) => (
+                <SearchableSelect
+                  label="Motorista (Opcional)"
+                  placeholder="Selecione quem realizou a troca..."
+                  options={funcionarios?.map(f => ({ value: f.id, label: f.nome })) || []}
+                  value={field.value || ''}
+                  onChange={field.onChange}
+                />
+              )}
+            />
+          )}
+          
+          <Input label="Quantidade" required type="number" {...register('quantidade')} error={errors.quantidade?.message as string} />
+          <Input label="Motivo" required placeholder={modalType === 'troca' ? "Ex: Erro no pedido, Vencimento" : "Ex: Embalagem violada, Produto quebrado"} {...register('motivo')} error={errors.motivo?.message as string} />
+          <Button type="submit" className="w-full bg-gradient-to-r from-fire to-ember hover:opacity-90 flex justify-center gap-2 shadow-md mt-4" disabled={mutation.isPending}>
             {mutation.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} 
             {modalType === 'troca' ? 'Confirmar Registro de Troca' : 'Registrar Avaria'}
           </Button>

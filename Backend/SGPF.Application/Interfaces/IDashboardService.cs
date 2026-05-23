@@ -4,7 +4,7 @@ namespace SGPF.Application.Interfaces;
 
 public interface IDashboardService
 {
-    Task<DashboardData> GetDashboardDataAsync(int year, int month, int? day = null, Guid? clienteId = null);
+    Task<DashboardData> GetDashboardDataAsync(int year, int month, int? day = null, Guid? clienteId = null, Guid? motoristaId = null);
 }
 
 public class DashboardData

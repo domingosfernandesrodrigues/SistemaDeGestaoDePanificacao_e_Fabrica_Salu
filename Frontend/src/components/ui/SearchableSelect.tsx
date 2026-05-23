@@ -13,6 +13,7 @@ interface SearchableSelectProps {
   placeholder?: string;
   label?: string;
   error?: string;
+  required?: boolean;
 }
 
 export function SearchableSelect({ 
@@ -21,7 +22,8 @@ export function SearchableSelect({
   onChange, 
   placeholder = "Selecione...", 
   label, 
-  error 
+  error,
+  required
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -45,31 +47,36 @@ export function SearchableSelect({
 
   return (
     <div className="space-y-1 relative" ref={containerRef}>
-      {label && <label className="text-sm font-medium text-slate-700">{label}</label>}
+      {label && (
+        <label className="text-sm font-medium text-text-main">
+          {label}
+          {required && <span className="text-red-500 ml-1">*</span>}
+        </label>
+      )}
       
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`w-full h-10 px-3 flex items-center justify-between rounded-lg border bg-white text-sm transition-all focus:ring-2 focus:ring-indigo-500 outline-none ${
-          error ? 'border-red-500' : 'border-slate-200'
-        } ${isOpen ? 'ring-2 ring-indigo-500 border-indigo-500' : ''}`}
+        className={`w-full h-10 px-3 flex items-center justify-between rounded-lg border bg-bg-card text-sm transition-all focus:ring-2 focus:ring-ember outline-none ${
+          error ? 'border-red-500' : 'border-border-subtle'
+        } ${isOpen ? 'ring-2 ring-ember border-ember' : ''}`}
       >
-        <span className={`${selectedOption ? 'text-slate-900 font-medium' : 'text-slate-400'} text-left flex-1 break-words line-clamp-2 leading-tight`}>
+        <span className={`${selectedOption ? 'text-text-main font-medium' : 'text-text-dim'} text-left flex-1 break-words line-clamp-2 leading-tight`}>
           {selectedOption ? selectedOption.label : placeholder}
         </span>
         <ChevronDown 
           size={18} 
-          className={`text-slate-400 transition-transform duration-300 ${isOpen ? 'rotate-180 text-indigo-500' : ''}`} 
+          className={`text-text-dim transition-transform duration-300 ${isOpen ? 'rotate-180 text-ember' : ''}`} 
         />
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
-          <div className="p-2 border-b border-slate-100 flex items-center gap-2 bg-slate-50">
-            <Search size={14} className="text-slate-400" />
+        <div className="absolute z-50 w-full mt-1 bg-bg-card border border-border-subtle rounded-lg shadow-xl overflow-hidden animate-in fade-in zoom-in duration-200">
+          <div className="p-2 border-b border-border-subtle flex items-center gap-2 bg-bg-page/50">
+            <Search size={14} className="text-text-dim" />
             <input
               autoFocus
-              className="w-full text-sm outline-none bg-transparent"
+              className="w-full text-sm outline-none bg-transparent text-text-main placeholder:text-text-dim"
               placeholder="Pesquisar..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -88,8 +95,8 @@ export function SearchableSelect({
                   }}
                    className={`w-full text-left px-3 py-2.5 rounded-md text-sm flex items-start justify-between transition-all ${
                     value === opt.value 
-                      ? 'bg-indigo-600 text-white shadow-md' 
-                      : 'text-slate-700 hover:bg-indigo-50 hover:text-indigo-700'
+                      ? 'bg-ember text-white shadow-md shadow-fire/10' 
+                      : 'text-text-main hover:bg-ember/5 dark:hover:bg-dark/20 hover:text-ember'
                   }`}
                 >
                    <span className="flex-1 break-words leading-relaxed">{opt.label}</span>

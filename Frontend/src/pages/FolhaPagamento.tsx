@@ -51,7 +51,14 @@ export function FolhaPagamento() {
     },
   });
 
+  // Rastreia quais IDs estão sendo baixados para impedir cliques duplos
+  const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
+
   const downloadContracheque = async (id: string) => {
+    // Guard: ignora se já está baixando este ID
+    if (downloadingIds.has(id)) return;
+
+    setDownloadingIds(prev => new Set(prev).add(id));
     try {
       const response = await api.get(`/folha-pagamento/${id}/contracheque`, { responseType: 'blob' });
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -60,6 +67,8 @@ export function FolhaPagamento() {
       link.setAttribute('download', `contracheque_${id}.pdf`);
       document.body.appendChild(link);
       link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
     } catch (err: any) {
       if (err.response?.data instanceof Blob) {
         const text = await err.response.data.text();
@@ -72,8 +81,15 @@ export function FolhaPagamento() {
       } else {
         alert('Erro de conexão ao gerar contracheque');
       }
+    } finally {
+      setDownloadingIds(prev => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
+
 
   // Reset da página ao filtrar
   useEffect(() => {
@@ -100,7 +116,7 @@ export function FolhaPagamento() {
   const totalPaginas = Math.ceil(folhasFiltradas.length / itensPorPagina) || 1;
   const folhasPaginadas = folhasFiltradas.slice((paginaAtual - 1) * itensPorPagina, paginaAtual * itensPorPagina);
 
-  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-ember" size={32} /></div>;
 
   return (
     <div className="space-y-6">
@@ -111,7 +127,7 @@ export function FolhaPagamento() {
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button 
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 h-11 px-6 shadow-md shadow-indigo-100"
+            className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember h-11 px-6 shadow-md"
             onClick={() => mutationProcess.mutate()}
             disabled={mutationProcess.isPending}
           >
@@ -127,7 +143,7 @@ export function FolhaPagamento() {
           onClick={() => setAbaAtiva('abertas')}
           className={`px-2 sm:px-6 py-3 text-xs sm:text-sm font-bold transition-all border-b-2 ${
             abaAtiva === 'abertas' 
-            ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50' 
+            ? 'border-ember text-ember bg-ember/5' 
             : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
           }`}
         >
@@ -138,7 +154,7 @@ export function FolhaPagamento() {
           onClick={() => setAbaAtiva('fechadas')}
           className={`px-2 sm:px-6 py-3 text-xs sm:text-sm font-bold transition-all border-b-2 ${
             abaAtiva === 'fechadas' 
-            ? 'border-indigo-600 text-indigo-600 bg-indigo-50/50' 
+            ? 'border-ember text-ember bg-ember/5' 
             : 'border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50'
           }`}
         >
@@ -154,7 +170,7 @@ export function FolhaPagamento() {
           <select 
             value={filtroFuncionario} 
             onChange={e => setFiltroFuncionario(e.target.value)}
-            className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+            className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-ember/20 focus:border-ember outline-none transition-all"
           >
             <option value="">Todos os funcionários</option>
             {funcionários?.map(f => (
@@ -168,7 +184,7 @@ export function FolhaPagamento() {
             <select 
               value={filtroMes} 
               onChange={e => setFiltroMes(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+              className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-ember/20 focus:border-ember outline-none transition-all"
             >
               <option value="">Todos</option>
               {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
@@ -181,7 +197,7 @@ export function FolhaPagamento() {
             <select 
               value={filtroAno} 
               onChange={e => setFiltroAno(e.target.value)}
-              className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition-all"
+              className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-ember/20 focus:border-ember outline-none transition-all"
             >
               <option value="">Todos</option>
               {[currentYear, currentYear - 1, currentYear - 2].map(y => (
@@ -223,7 +239,7 @@ export function FolhaPagamento() {
                       <span className="text-amber-600 font-bold text-[10px]">100%: {folha.totalHorasExtras100}h</span>
                     </div>
                   </td>
-                  <td className="px-3 py-3 text-center text-indigo-600 font-bold">
+                  <td className="px-3 py-3 text-center text-fire font-bold">
                     {folha.valorAdicionalNoturno > 0 ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorAdicionalNoturno) : '-'}
                   </td>
                   <td className="px-3 py-3 text-center text-red-500 font-bold">
@@ -242,15 +258,16 @@ export function FolhaPagamento() {
                   <td className="px-4 py-3 whitespace-nowrap">
                     <div className="flex items-center justify-end gap-2">
                       <button 
-                        className="h-9 w-9 flex items-center justify-center bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 rounded-lg shadow-sm transition-all" 
-                        title="Baixar Contracheque"
+                        className="h-9 w-9 flex items-center justify-center bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200 rounded-lg shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed" 
+                        title={downloadingIds.has(folha.id) ? 'Gerando PDF...' : 'Baixar Contracheque'}
                         onClick={() => downloadContracheque(folha.id)}
+                        disabled={downloadingIds.has(folha.id)}
                       >
-                        <Download size={20} />
+                        {downloadingIds.has(folha.id) ? <Loader2 size={18} className="animate-spin" /> : <Download size={18} />}
                       </button>
                       {folha.status === 0 && (
                         <button 
-                          className="h-9 w-9 flex items-center justify-center bg-blue-600 text-white hover:bg-blue-700 rounded-lg shadow-sm transition-all disabled:opacity-50" 
+                          className="h-9 w-9 flex items-center justify-center bg-ember text-white hover:bg-fire rounded-lg shadow-sm transition-all disabled:opacity-50" 
                           title="Fechar Folha (Gera Contas a Pagar)"
                           onClick={() => mutationClose.mutate(folha.id)}
                           disabled={mutationClose.isPending}
@@ -301,9 +318,9 @@ export function FolhaPagamento() {
                       <p className="text-[10px] text-amber-600 font-bold">HE 100%</p>
                       <p className="text-sm font-black text-amber-700">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorHorasExtras100)}</p>
                     </div>
-                    <div className="bg-indigo-50 p-2.5 rounded-xl border border-indigo-100">
-                      <p className="text-[10px] text-indigo-600 font-bold">Noturno</p>
-                      <p className="text-sm font-black text-indigo-700">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorAdicionalNoturno)}</p>
+                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
+                      <p className="text-[10px] text-slate-500 font-bold">Noturno</p>
+                      <p className="text-sm font-black text-slate-800">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorAdicionalNoturno)}</p>
                     </div>
                   </div>
                 </div>
@@ -316,14 +333,17 @@ export function FolhaPagamento() {
               <div className="flex flex-col sm:flex-row gap-2">
                 <Button 
                   variant="secondary" 
-                  className="flex-1 h-10 border border-slate-200 flex items-center justify-center gap-2 text-xs font-bold shadow-sm"
+                  className="flex-1 h-10 border border-slate-200 flex items-center justify-center gap-2 text-xs font-bold shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                   onClick={() => downloadContracheque(folha.id)}
+                  disabled={downloadingIds.has(folha.id)}
                 >
-                  <Download size={18} className="text-slate-700" /> Contracheque
+                  {downloadingIds.has(folha.id) 
+                    ? <><Loader2 size={16} className="animate-spin" /> Gerando...</>
+                    : <><Download size={18} className="text-slate-700" /> Contracheque</>}
                 </Button>
                 {folha.status === 0 && (
                   <Button 
-                    className="flex-1 h-10 bg-blue-600 text-white flex items-center justify-center gap-2 text-xs"
+                    className="flex-1 h-10 bg-gradient-to-r from-fire to-ember text-white flex items-center justify-center gap-2 text-xs"
                     onClick={() => mutationClose.mutate(folha.id)}
                     disabled={mutationClose.isPending}
                   >
@@ -370,7 +390,7 @@ export function FolhaPagamento() {
       {/* Legenda de Cálculos (Metodologia CLT) */}
       <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
         <h3 className="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
-          <Calculator size={16} className="text-indigo-600" /> Metodologia de Cálculo (CLT + SGP-F)
+          <Calculator size={16} className="text-ember" /> Metodologia de Cálculo (CLT + SGP-F)
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="space-y-1">
@@ -382,7 +402,7 @@ export function FolhaPagamento() {
             <p className="text-xs text-slate-600 leading-relaxed">Aplicadas integralmente em Domingos e **Feriados** (conforme cadastrado na Agenda CRM).</p>
           </div>
           <div className="space-y-1">
-            <p className="text-[11px] font-bold text-indigo-600 uppercase">Adicional Noturno</p>
+            <p className="text-[11px] font-bold text-slate-600 uppercase">Adicional Noturno</p>
             <p className="text-xs text-slate-600 leading-relaxed">Acréscimo de 20% sobre o valor da hora para trabalhos realizados entre **22:00 e 05:00**.</p>
           </div>
           <div className="space-y-1">
@@ -393,7 +413,7 @@ export function FolhaPagamento() {
       </div>
 
       {abaAtiva === 'abertas' && (
-        <div className="p-4 bg-indigo-50 text-indigo-800 rounded-lg border border-indigo-100 text-xs flex items-start gap-3">
+        <div className="p-4 bg-amber-50 text-amber-800 rounded-lg border border-amber-100 text-xs flex items-start gap-3">
           <Filter size={16} className="mt-0.5 shrink-0" />
           <p>
             As folhas listadas acima estão em processamento. Ao clicar em <strong>"Fechar"</strong>, o status mudará para fechada e você poderá consultá-la permanentemente na aba de <strong>Histórico</strong>.

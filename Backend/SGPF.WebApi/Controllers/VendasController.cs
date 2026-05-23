@@ -7,7 +7,7 @@ namespace SGPF.WebApi.Controllers;
 
 [ApiController]
 [Route("api/v1/[controller]")]
-[Authorize(Roles = "Admin,Gestor,Operador,Cliente")]
+[Authorize(Roles = "Admin,Gestor,Operador,Cliente,Motorista")]
 public class VendasController : ControllerBase
 {
     private readonly IVendaService _vendaService;
@@ -20,7 +20,22 @@ public class VendasController : ControllerBase
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
-        return Ok(await _vendaService.GetPedidosAsync());
+        Guid? motoristaId = null;
+        if (User.IsInRole("Motorista"))
+        {
+            var claim = User.FindFirst("FuncionarioId");
+            if (claim != null && Guid.TryParse(claim.Value, out var id))
+            {
+                motoristaId = id;
+            }
+            else
+            {
+                // Se for motorista mas não tiver FuncionarioId vinculado, retorna lista vazia ou erro
+                return Ok(new List<PedidoVenda>());
+            }
+        }
+
+        return Ok(await _vendaService.GetPedidosAsync(motoristaId));
     }
 
     [HttpGet("{id}")]

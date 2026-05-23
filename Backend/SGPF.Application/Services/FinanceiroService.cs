@@ -55,13 +55,16 @@ public class FinanceiroService : IFinanceiroService
         var ops = await _opRepo.FindAsync(o => o.Status == StatusOrdemProducao.Finalizada && o.DataFinalizacao.HasValue && o.DataFinalizacao.Value.Month == mes && o.DataFinalizacao.Value.Year == ano);
         dre.CustosProducao = ops.Sum(o => o.CustoTotalCalculado);
 
-        // 3. Custos com Avarias (Logística Reversa)
+        // 3. Custos com Avarias (Logística Reversa) - Apenas produtos fabricados influenciam o financeiro/DRE
         var avarias = await _trocaRepo.FindAsync(t => t.DataTroca.Month == mes && t.DataTroca.Year == ano);
         decimal custoAvarias = 0;
         foreach (var avaria in avarias)
         {
             var p = await _produtoRepo.GetByIdAsync(avaria.ProdutoId);
-            if (p != null) custoAvarias += (p.PrecoCusto * avaria.Quantidade);
+            if (p != null && p.Tipo == TipoProduto.ProdutoAcabado)
+            {
+                custoAvarias += (p.PrecoCusto * avaria.Quantidade);
+            }
         }
         dre.CustosTrocaAvaria = custoAvarias;
 

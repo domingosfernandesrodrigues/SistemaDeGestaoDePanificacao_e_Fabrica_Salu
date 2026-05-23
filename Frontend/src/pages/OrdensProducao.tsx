@@ -112,7 +112,7 @@ export function OrdensProducao() {
   if (loadingOps) {
     return (
       <div className="flex items-center justify-center h-64">
-        <Loader2 className="animate-spin text-indigo-600" size={32} />
+        <Loader2 className="animate-spin text-ember" size={32} />
       </div>
     );
   }
@@ -124,7 +124,7 @@ export function OrdensProducao() {
           <h2 className="text-2xl font-bold text-slate-800">Ordens de Produção (OP)</h2>
           <p className="text-slate-500 text-sm">Controle a abertura, reserva de insumos e finalização da linha de produção.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center justify-center gap-2 bg-indigo-600 w-full sm:w-auto">
+        <Button onClick={() => setIsModalOpen(true)} className="flex items-center justify-center gap-2 bg-gradient-to-r from-fire to-ember w-full sm:w-auto">
           <Factory size={18} />
           <span>Nova Ordem</span>
         </Button>
@@ -135,18 +135,18 @@ export function OrdensProducao() {
           <div key={op.id} className={`bg-white rounded-xl shadow-sm border p-6 flex flex-col relative overflow-hidden ${
             op.status === 1 ? 'border-blue-200' : 'border-slate-200'
           }`}>
-            {op.status === 1 && <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>}
+            {op.status === 1 && <div className="absolute top-0 left-0 w-1 h-full bg-amber-500"></div>}
             
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <span className={`text-xs font-bold uppercase tracking-wider ${op.status === 1 ? 'text-blue-500' : 'text-slate-400'}`}>
+                <span className={`text-xs font-bold uppercase tracking-wider ${op.status === 1 ? 'text-amber-600' : 'text-slate-400'}`}>
                   {op.numeroOP}
                 </span>
                 {op.status === 0 && (
                   <div className="flex items-center gap-1">
                     <button 
                       onClick={() => handleEdit(op)}
-                      className="p-1 text-slate-400 hover:text-indigo-600 transition-colors"
+                      className="p-1 text-slate-400 hover:text-ember transition-colors"
                       title="Editar Planejamento"
                     >
                       <Edit2 size={14} />
@@ -162,7 +162,7 @@ export function OrdensProducao() {
                 )}
               </div>
               <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                op.status === 0 ? 'bg-slate-100 text-slate-600' : 'bg-blue-50 text-blue-600 border border-blue-100 animate-pulse'
+                op.status === 0 ? 'bg-slate-100 text-slate-600' : 'bg-amber-50 text-amber-700 border border-amber-100 animate-pulse'
               }`}>
                 {op.status === 0 ? 'Planejada' : 'Em Execução'}
               </span>
@@ -178,7 +178,7 @@ export function OrdensProducao() {
                   📝 {op.usuarioPlanejou?.nome || 'Sistema'}
                 </span>
                 {op.usuarioIniciou && (
-                  <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-1 rounded border border-blue-100" title="Quem iniciou">
+                  <span className="text-[10px] bg-amber-50 text-amber-700 px-2 py-1 rounded border border-amber-100" title="Quem iniciou">
                     🚀 {op.usuarioIniciou.nome}
                   </span>
                 )}
@@ -198,7 +198,7 @@ export function OrdensProducao() {
               ) : (
                 <Button 
                   variant="secondary" 
-                  className="w-full flex items-center justify-center gap-2 !bg-blue-50 !text-blue-700 hover:!bg-blue-100 border border-blue-200"
+                  className="w-full flex items-center justify-center gap-2 !bg-amber-50 !text-amber-700 hover:!bg-amber-100 border border-amber-200"
                   onClick={() => mutationStatus.mutate({ id: op.id, action: 'finish' })}
                   disabled={mutationStatus.isPending}
                 >
@@ -284,7 +284,7 @@ export function OrdensProducao() {
                     <div className="font-mono text-xs font-bold text-slate-500 mb-1">{op.numeroOP}</div>
                     <div className="flex flex-wrap gap-1">
                       <span className="text-[9px] text-slate-400 bg-slate-50 border border-slate-100 px-1 rounded" title="Planejado por">P: {op.usuarioPlanejou?.nome || '...'}</span>
-                      <span className="text-[9px] text-blue-400 bg-blue-50 border border-blue-100 px-1 rounded" title="Iniciado por">I: {op.usuarioIniciou?.nome || '...'}</span>
+                      <span className="text-[9px] text-amber-700 bg-amber-50 border border-amber-100 px-1 rounded" title="Iniciado por">I: {op.usuarioIniciou?.nome || '...'}</span>
                       <span className="text-[9px] text-emerald-400 bg-emerald-50 border border-emerald-100 px-1 rounded" title="Finalizado por">F: {op.usuarioFinalizou?.nome || '...'}</span>
                     </div>
                   </td>
@@ -344,7 +344,7 @@ export function OrdensProducao() {
             </Button>
             <Button 
               type="submit" 
-              className="flex-1 flex items-center justify-center gap-2 bg-indigo-600"
+              className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-fire to-ember"
               disabled={mutationSave.isPending}
             >
               {mutationSave.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />}

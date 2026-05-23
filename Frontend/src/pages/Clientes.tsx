@@ -192,7 +192,7 @@ export function Clientes() {
     reset();
   };
 
-  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-ember" size={32} /></div>;
 
   if (isError) {
     return (
@@ -213,7 +213,7 @@ export function Clientes() {
           <h2 className="text-2xl font-bold text-slate-800">Gestão de Clientes</h2>
           <p className="text-slate-500">Cadastre e gerencie seus clientes B2B.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center bg-indigo-600 shadow-sm active:scale-95 transition-transform">
+        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 w-full sm:w-auto justify-center bg-gradient-to-r from-fire to-ember shadow-sm active:scale-95 transition-transform">
           <UserPlus size={18} /> Novo Cliente
         </Button>
       </div>
@@ -267,7 +267,7 @@ export function Clientes() {
                     <td className="px-6 py-4 text-slate-600">{formatDocument(doc)}</td>
                     <td className="px-6 py-4 text-slate-600">{formatPhone(cliente.telefone)}</td>
                     <td className="px-6 py-4 text-right space-x-2">
-                      <button onClick={() => handleEdit(cliente)} className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Editar"><Edit2 size={16} /></button>
+                      <button onClick={() => handleEdit(cliente)} className="p-2 text-slate-500 hover:text-ember hover:bg-ember/5 rounded-lg transition-colors" title="Editar"><Edit2 size={16} /></button>
                       <button onClick={() => mutationToggle.mutate(cliente.id)} className={`p-2 rounded-lg transition-colors ${isAtivo ? 'text-amber-600 hover:bg-amber-50' : 'text-green-600 hover:bg-green-50'}`} title={isAtivo ? 'Desativar' : 'Ativar'}>
                         {isAtivo ? <PowerOff size={16} /> : <Power size={16} />}
                       </button>
@@ -297,7 +297,7 @@ export function Clientes() {
                     </span>
                   </div>
                   <div className="flex gap-1">
-                    <button onClick={() => handleEdit(cliente)} className="p-2 text-blue-600 bg-blue-50 rounded-lg"><Edit2 size={16} /></button>
+                    <button onClick={() => handleEdit(cliente)} className="p-2 text-slate-500 hover:text-ember bg-slate-50 hover:bg-ember/5 rounded-lg"><Edit2 size={16} /></button>
                     <button onClick={() => mutationToggle.mutate(cliente.id)} className={`p-2 rounded-lg ${isAtivo ? 'text-amber-600 bg-amber-50' : 'text-green-600 bg-green-50'}`}>
                       {isAtivo ? <PowerOff size={16} /> : <Power size={16} />}
                     </button>
@@ -355,7 +355,7 @@ export function Clientes() {
                     onClick={() => setCurrentPage(page)}
                     className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${
                       currentPage === page 
-                      ? 'bg-indigo-600 text-white' 
+                      ? 'bg-ember text-white' 
                       : 'text-slate-600 hover:bg-slate-100'
                     }`}
                   >
@@ -378,24 +378,24 @@ export function Clientes() {
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editId ? 'Editar Cliente' : 'Novo Cliente'}>
         <form onSubmit={handleSubmit((data) => mutationSave.mutate(data))} className="space-y-4">
-          <Input label="Nome Fantasia" {...register('nomeFantasia')} error={errors.nomeFantasia?.message} />
+          <Input label="Nome Fantasia" required {...register('nomeFantasia')} error={errors.nomeFantasia?.message} />
           <Input label="Razão Social" placeholder="Opcional" {...register('razaoSocial')} error={errors.razaoSocial?.message} />
           <div className="grid grid-cols-2 gap-4">
             <Controller name="cnp_j_CPF" control={control} render={({ field }) => (
-              <Input label="CNPJ ou CPF" placeholder="00.000.000/0000-00" {...field} onChange={(e) => field.onChange(formatDocument(e.target.value))} error={errors.cnp_j_CPF?.message} />
+              <Input label="CNPJ ou CPF" required placeholder="00.000.000/0000-00" {...field} onChange={(e) => field.onChange(formatDocument(e.target.value))} error={errors.cnp_j_CPF?.message} />
             )} />
             <Controller name="inscricaoEstadual" control={control} render={({ field }) => (
               <Input label="Inscrição Estadual" placeholder="Opcional" {...field} onChange={(e) => field.onChange(formatIE(e.target.value))} error={errors.inscricaoEstadual?.message} />
             )} />
           </div>
           <Controller name="telefone" control={control} render={({ field }) => (
-            <Input label="Telefone" placeholder="(00) 00000-0000" {...field} onChange={(e) => field.onChange(formatPhone(e.target.value))} error={errors.telefone?.message} />
+            <Input label="Telefone" required placeholder="(00) 00000-0000" {...field} onChange={(e) => field.onChange(formatPhone(e.target.value))} error={errors.telefone?.message} />
           )} />
-          <Input label="Endereço Completo" {...register('endereco')} error={errors.endereco?.message} />
+          <Input label="Endereço Completo" required {...register('endereco')} error={errors.endereco?.message} />
           
           <div className="pt-4 flex flex-col sm:flex-row gap-3">
             <Button type="button" variant="secondary" className="w-full sm:flex-1 h-11" onClick={handleCloseModal}>Cancelar</Button>
-            <Button type="submit" className="w-full sm:flex-1 h-11 bg-indigo-600" disabled={mutationSave.isPending}>
+            <Button type="submit" className="w-full sm:flex-1 h-11 bg-gradient-to-r from-fire to-ember" disabled={mutationSave.isPending}>
               {mutationSave.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} className="mr-2" />}
               {editId ? 'Atualizar Dados' : 'Salvar Cliente'}
             </Button>

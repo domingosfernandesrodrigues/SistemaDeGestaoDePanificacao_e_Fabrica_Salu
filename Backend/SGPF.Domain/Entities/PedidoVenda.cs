@@ -29,6 +29,9 @@ public class PedidoVenda
     public Guid? VeiculoId { get; set; }
     public Veiculo? Veiculo { get; set; }
     
+    public Guid? MotoristaId { get; set; }
+    public Funcionario? Motorista { get; set; }
+    
     public DateTime DataPedido { get; set; } = DateTime.UtcNow;
     public DateTime? DataEntregaPrevista { get; set; }
     public DateTime? DataEntregaRealizada { get; set; }

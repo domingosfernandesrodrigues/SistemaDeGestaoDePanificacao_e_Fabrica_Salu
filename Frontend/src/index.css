@@ -4,11 +4,53 @@
   --color-primary: var(--color-blue-600);
   --color-success: var(--color-green-500);
   --color-error: var(--color-red-500);
-  --color-foreground: var(--color-slate-900);
+  
+  /* Semantic tokens */
+  --color-bg-page: var(--bg-page);
+  --color-bg-card: var(--bg-card);
+  --color-border-subtle: var(--border-subtle);
+  --color-text-main: var(--text-main);
+  --color-text-dim: var(--text-dim);
+
+  /* Salu Theme Colors */
+  --color-fire: #C0390A;
+  --color-fire-deep: #8B2200;
+  --color-ember: #E8621A;
+  --color-ember-light: #F49255;
+  --color-gold: #D4860B;
+  --color-gold-light: #F5C842;
+  --color-cream: #FFF8EE;
+  --color-warm: #FEF0D6;
+  --color-surface: #FDE8C0;
+  --color-charcoal: #1C1008;
+  --color-dark: #2E1500;
+  --color-mid: #7A3B10;
+  --color-muted: #B8703A;
+  --color-salu-text: #3A1A05;
+
+  /* Typography */
+  --font-serif: 'Cormorant Garamond', serif;
+  --font-sans: 'DM Sans', sans-serif;
+}
+
+:root {
+  --bg-page: #f8fafc;
+  --bg-card: #ffffff;
+  --border-subtle: #e2e8f0;
+  --text-main: #0f172a;
+  --text-dim: #64748b;
+}
+
+.dark {
+  --bg-page: #020617; /* slate-950 */
+  --bg-card: #0f172a; /* slate-900 */
+  --border-subtle: #1e293b; /* slate-800 */
+  --text-main: #f8fafc; /* slate-50 */
+  --text-dim: #94a3b8; /* slate-400 */
 }
 
 body {
-  @apply bg-slate-50 text-foreground antialiased;
+  @apply bg-bg-page text-text-main antialiased transition-colors duration-300;
 }
 
 /* Safe Area Utilities */

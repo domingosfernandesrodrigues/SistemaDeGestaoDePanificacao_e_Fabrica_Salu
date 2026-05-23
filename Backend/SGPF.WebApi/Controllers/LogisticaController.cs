@@ -92,6 +92,14 @@ public class LogisticaController : ControllerBase
     {
         try
         {
+            if (User.IsInRole("Motorista") && !troca.MotoristaId.HasValue)
+            {
+                var claim = User.FindFirst("FuncionarioId");
+                if (claim != null && Guid.TryParse(claim.Value, out var id))
+                {
+                    troca.MotoristaId = id;
+                }
+            }
             return Ok(await _trocaService.RegistrarTrocaAsync(troca));
         }
         catch (Exception ex)

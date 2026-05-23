@@ -11,6 +11,7 @@ namespace SGPF.WebApi.Controllers;
 [ApiController]
 [Route("api/v1/[controller]")]
 [Authorize]
+// v2 - forced rebuild for recalculate route
 public class PontoController : ControllerBase
 {
     private readonly IRepository<RegistroPonto> _repository;
@@ -22,10 +23,63 @@ public class PontoController : ControllerBase
         _context = context;
     }
 
+    [HttpPost("recalcular")]
+    [Authorize] // Removido Roles temporariamente para teste
+    public async Task<IActionResult> Recalcular([FromQuery] Guid funcionarioId, [FromQuery] int mes, [FromQuery] int ano)
+    {
+        Console.WriteLine($"[DEBUG] Recalcular atingido: Func={funcionarioId}, Mes={mes}, Ano={ano}");
+        try
+        {
+            var registros = await _context.RegistrosPonto
+                .Where(p => p.FuncionarioId == funcionarioId && 
+                            p.DataHoraEntrada.Month == mes && 
+                            p.DataHoraEntrada.Year == ano &&
+                            p.DataHoraSaida != null)
+                .ToListAsync();
+
+            if (!registros.Any())
+                return Ok(new { message = "Nenhum registro encontrado para este período." });
+
+            foreach (var g in registros.GroupBy(r => r.DataHoraEntrada.Date))
+            {
+                var registrosDia = g.OrderBy(r => r.DataHoraEntrada).ToList();
+                decimal totalAcumuladoDia = 0;
+
+                foreach (var reg in registrosDia)
+                {
+                    var duracao = (decimal)(reg.DataHoraSaida!.Value - reg.DataHoraEntrada).TotalHours;
+                    reg.TotalHorasTrabalhadas = duracao;
+                    
+                    var novoTotalDia = totalAcumuladoDia + duracao;
+                    
+                    if (novoTotalDia > 8)
+                    {
+                        if (totalAcumuladoDia >= 8)
+                            reg.TotalHorasExtras = duracao;
+                        else
+                            reg.TotalHorasExtras = novoTotalDia - 8;
+                    }
+                    else
+                    {
+                        reg.TotalHorasExtras = 0;
+                    }
+
+                    totalAcumuladoDia = novoTotalDia;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = $"Sucesso! {registros.Count} registros recalculados." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = "Erro ao recalcular: " + ex.Message });
+        }
+    }
+
     private async Task<Funcionario?> GetFuncionarioDoUsuario()
     {
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
-        // Primeiro tenta o ID direto (usuário é o próprio funcionário)
         var func = await _context.Funcionarios.FirstOrDefaultAsync(f => f.Id == userId);
         return func;
     }
@@ -58,20 +112,24 @@ public class PontoController : ControllerBase
         var result = registros
             .GroupBy(r => r.DataHoraEntrada.Date)
             .SelectMany(g => {
-                var totalDia = g.Sum(r => r.TotalHorasTrabalhadas);
+                var listaComHoras = g.Select(r => new {
+                    Registro = r,
+                    HorasTrabalhadas = r.TotalHorasTrabalhadas > 0 ? r.TotalHorasTrabalhadas : 
+                                      (r.DataHoraSaida.HasValue ? (decimal)(r.DataHoraSaida.Value - r.DataHoraEntrada).TotalHours : 0)
+                }).ToList();
+
+                var totalDia = listaComHoras.Sum(x => x.HorasTrabalhadas);
                 var extrasDia = totalDia > 8 ? totalDia - 8 : 0;
                 
-                // Distribuir as extras do dia proporcionalmente ou apenas na última entrada
-                // Para simplificar e bater com a soma, vamos atribuir as extras à última entrada do dia
-                var listaOrdenada = g.OrderByDescending(r => r.DataHoraEntrada).ToList();
-                return listaOrdenada.Select((r, index) => new {
-                    r.Id,
-                    r.DataHoraEntrada,
-                    r.DataHoraSaida,
-                    r.TotalHorasTrabalhadas,
-                    TotalHorasExtras = index == 0 ? extrasDia : 0, // Atribui extras apenas à última entrada
-                    r.Observacao,
-                    Status = r.DataHoraSaida == null ? "Aberto" : "Concluído"
+                var listaOrdenada = listaComHoras.OrderByDescending(x => x.Registro.DataHoraEntrada).ToList();
+                return listaOrdenada.Select((x, index) => new {
+                    x.Registro.Id,
+                    x.Registro.DataHoraEntrada,
+                    x.Registro.DataHoraSaida,
+                    TotalHorasTrabalhadas = x.HorasTrabalhadas,
+                    TotalHorasExtras = index == 0 ? extrasDia : 0,
+                    x.Registro.Observacao,
+                    Status = x.Registro.DataHoraSaida == null ? "Aberto" : "Concluído"
                 });
             })
             .OrderByDescending(r => r.DataHoraEntrada);
@@ -94,7 +152,6 @@ public class PontoController : ControllerBase
 
         if (aberto == null)
         {
-            // Limitar a 2 entradas e 2 saídas por dia
             var registrosHoje = await _repository.FindAsync(p => 
                 p.FuncionarioId == funcionario.Id && 
                 p.DataHoraEntrada.Date == DateTime.Today.Date);
@@ -118,7 +175,6 @@ public class PontoController : ControllerBase
             var horasEstaEntrada = (decimal)(aberto.DataHoraSaida.Value - aberto.DataHoraEntrada).TotalHours;
             aberto.TotalHorasTrabalhadas = horasEstaEntrada;
 
-            // Calcular horas extras baseadas no total do DIA
             var dataHoje = aberto.DataHoraEntrada.Date;
             var outrosRegistrosHoje = await _repository.FindAsync(p => 
                 p.FuncionarioId == funcionario.Id && 
@@ -131,14 +187,12 @@ public class PontoController : ControllerBase
 
             if (totalFinalDia > 8)
             {
-                // Se o que já trabalhou já passou de 8h, toda essa entrada é extra
                 if (totalHorasJaTrabalhadasHoje >= 8)
                 {
                     aberto.TotalHorasExtras = horasEstaEntrada;
                 }
                 else
                 {
-                    // Se passou de 8h agora, apenas a diferença é extra
                     aberto.TotalHorasExtras = totalFinalDia - 8;
                 }
             }
@@ -151,6 +205,7 @@ public class PontoController : ControllerBase
             return Ok(new { message = "Saída registrada com sucesso", tipo = "saída" });
         }
     }
+
     [HttpGet("historico-funcionario/{funcionarioId}")]
     [Authorize(Roles = "Admin,Gestor")]
     public async Task<IActionResult> GetHistoricoFuncionario(Guid funcionarioId, [FromQuery] int? mes, [FromQuery] int? ano)
@@ -166,18 +221,24 @@ public class PontoController : ControllerBase
         var result = registros
             .GroupBy(r => r.DataHoraEntrada.Date)
             .SelectMany(g => {
-                var totalDia = g.Sum(r => r.TotalHorasTrabalhadas);
+                var listaComHoras = g.Select(r => new {
+                    Registro = r,
+                    HorasTrabalhadas = r.TotalHorasTrabalhadas > 0 ? r.TotalHorasTrabalhadas : 
+                                      (r.DataHoraSaida.HasValue ? (decimal)(r.DataHoraSaida.Value - r.DataHoraEntrada).TotalHours : 0)
+                }).ToList();
+
+                var totalDia = listaComHoras.Sum(x => x.HorasTrabalhadas);
                 var extrasDia = totalDia > 8 ? totalDia - 8 : 0;
                 
-                var listaOrdenada = g.OrderByDescending(r => r.DataHoraEntrada).ToList();
-                return listaOrdenada.Select((r, index) => new {
-                    r.Id,
-                    r.DataHoraEntrada,
-                    r.DataHoraSaida,
-                    r.TotalHorasTrabalhadas,
+                var listaOrdenada = listaComHoras.OrderByDescending(x => x.Registro.DataHoraEntrada).ToList();
+                return listaOrdenada.Select((x, index) => new {
+                    x.Registro.Id,
+                    x.Registro.DataHoraEntrada,
+                    x.Registro.DataHoraSaida,
+                    TotalHorasTrabalhadas = x.HorasTrabalhadas,
                     TotalHorasExtras = index == 0 ? extrasDia : 0,
-                    r.Observacao,
-                    Status = r.DataHoraSaida == null ? "Aberto" : "Concluído"
+                    x.Registro.Observacao,
+                    Status = x.Registro.DataHoraSaida == null ? "Aberto" : "Concluído"
                 });
             })
             .OrderByDescending(r => r.DataHoraEntrada);

@@ -98,7 +98,7 @@ export function FichaTecnica() {
     });
   };
 
-  if (loadingFichas) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+  if (loadingFichas) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-ember" size={32} /></div>;
 
   return (
     <div className="space-y-6">
@@ -107,7 +107,7 @@ export function FichaTecnica() {
           <h2 className="text-2xl font-bold text-slate-800">Fichas Técnicas (BOM)</h2>
           <p className="text-slate-500">Gerencie as receitas e composições de seus produtos fabricados.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-indigo-600">
+        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember">
           <ChefHat size={18} /> Nova Receita
         </Button>
       </div>
@@ -132,7 +132,7 @@ export function FichaTecnica() {
               <div className="p-5 border-b border-slate-100 bg-slate-50/50">
                 <div className="flex justify-between items-start">
                   <h3 className="font-bold text-slate-800 text-lg">{produto?.nome || produto?.Nome || 'Sem Nome'}</h3>
-                  <button onClick={() => handleEdit(ficha)} className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                  <button onClick={() => handleEdit(ficha)} className="p-1.5 text-slate-500 hover:text-ember hover:bg-ember/5 rounded-lg transition-colors">
                     <TrendingUp size={16} />
                   </button>
                 </div>
@@ -164,7 +164,7 @@ export function FichaTecnica() {
                 <div className="pt-4 border-t border-slate-100 flex justify-between items-end mt-4">
                   <div>
                     <p className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Custo de Produção</p>
-                    <p className="text-xl font-black text-indigo-600">
+                    <p className="text-xl font-bold text-fire">
                       {custoTotal.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                     </p>
                   </div>
@@ -185,6 +185,7 @@ export function FichaTecnica() {
             <div className="space-y-1">
               <SearchableSelect
                 label="Produto Final"
+                required
                 placeholder="Pesquise o produto..."
                 options={produtosFabricados.map(p => ({ 
                   value: p.id || p.Id, 
@@ -196,7 +197,7 @@ export function FichaTecnica() {
             </div>
             <div className="space-y-1">
               <label className="text-sm font-medium text-slate-700 flex items-center gap-1">
-                <Scale size={14} className="text-slate-400" /> Rendimento da Receita
+                <Scale size={14} className="text-slate-400" /> Rendimento da Receita <span className="text-red-500">*</span>
               </label>
               <Input 
                 type="number" 
@@ -204,6 +205,7 @@ export function FichaTecnica() {
                 value={rendimentoPadrao === 0 ? '' : rendimentoPadrao} 
                 onChange={(e) => setRendimentoPadrao(e.target.value === '' ? 0 : Number(e.target.value))}
                 placeholder="Ex: 50.00"
+                required
               />
               <p className="text-[10px] text-slate-400">Quantidade total que esta receita produz.</p>
             </div>
@@ -212,19 +214,20 @@ export function FichaTecnica() {
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2 uppercase tracking-wide">
-                <Scale size={16} className="text-indigo-600" /> Ingredientes
+                <Scale size={16} className="text-ember" /> Ingredientes
               </h4>
-              <button onClick={addItem} className="text-xs font-bold text-indigo-600 hover:text-indigo-700 flex items-center gap-1 bg-indigo-50 px-2 py-1 rounded">
+              <button onClick={addItem} className="text-xs font-bold text-ember hover:text-fire flex items-center gap-1 bg-ember/5 px-2 py-1 rounded">
                 <Plus size={14} /> Adicionar
               </button>
             </div>
 
-            <div className="space-y-2 max-h-[40vh] overflow-y-auto pr-1">
+            <div className="space-y-2">
               {items.map((item, index) => (
                 <div key={index} className="grid grid-cols-12 gap-2 p-3 bg-slate-50 rounded-lg border border-slate-100 items-end">
                   <div className="col-span-12 sm:col-span-5 space-y-1">
                     <SearchableSelect
                       label="Insumo"
+                      required
                       placeholder="Pesquise o insumo..."
                       options={insumosDisponiveis.map(i => ({ 
                         value: i.id || i.Id, 
@@ -235,7 +238,7 @@ export function FichaTecnica() {
                     />
                   </div>
                   <div className="col-span-5 sm:col-span-3 space-y-1">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase">Qtd</label>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase">Qtd <span className="text-red-500">*</span></label>
                     <input 
                       type="number" 
                       step="any"
@@ -267,7 +270,7 @@ export function FichaTecnica() {
             </div>
           </div>
 
-          <Button onClick={handleSave} className="w-full bg-indigo-600" disabled={mutationSave.isPending}>
+          <Button onClick={handleSave} className="w-full bg-gradient-to-r from-fire to-ember" disabled={mutationSave.isPending}>
             {mutationSave.isPending ? <Loader2 className="animate-spin mr-2" size={18} /> : <Save size={18} className="mr-2" />}
             {editMode ? 'Salvar Alterações' : 'Gravar Receita'}
           </Button>

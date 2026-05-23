@@ -21,8 +21,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      localStorage.clear();
-      window.location.href = '/';
+      // Se não for a rota de login, limpa o token e redireciona
+      if (!error.config.url?.includes('/Auth/login')) {
+        localStorage.clear();
+        window.location.href = '/';
+      }
     }
     return Promise.reject(error);
   }
