@@ -112,13 +112,17 @@ export default function Funcionarios() {
     reset();
   };
 
-  const filtered = funcionarios?.filter(f =>
-    f.nome.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.cpf.includes(searchTerm.replace(/\D/g, '')) ||
-    f.cargo.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const termLower = searchTerm.toLowerCase();
+  const termDigits = searchTerm.replace(/\D/g, '');
+  const filtered = funcionarios?.filter(f => {
+    if (!searchTerm.trim()) return true;
+    const matchesNome  = (f.nome  ?? '').toLowerCase().includes(termLower);
+    const matchesCargo = (f.cargo ?? '').toLowerCase().includes(termLower);
+    const matchesCPF   = termDigits.length > 0 && (f.cpf ?? '').includes(termDigits);
+    return matchesNome || matchesCargo || matchesCPF;
+  });
 
-  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-indigo-600" size={32} /></div>;
+  if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-ember" size={32} /></div>;
 
   return (
     <div className="space-y-6">
@@ -127,7 +131,7 @@ export default function Funcionarios() {
           <h2 className="text-2xl font-bold text-slate-800">Recursos Humanos (Funcionários)</h2>
           <p className="text-slate-500">Cadastre colaboradores para controle de ponto e folha de pagamento.</p>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-indigo-600">
+        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember">
           <Plus size={18} /> Novo Funcionário
         </Button>
       </div>
@@ -158,7 +162,7 @@ export default function Funcionarios() {
                 }`}>
                   {f.ativo ? 'Ativo' : 'Inativo'}
                 </span>
-                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => mutationToggle.mutate(f.id)}
                     className={`p-1.5 rounded-md hover:bg-slate-50 ${f.ativo ? 'text-slate-400 hover:text-amber-600' : 'text-green-600 hover:text-green-700'}`}
@@ -173,7 +177,7 @@ export default function Funcionarios() {
                   >
                     <Trash2 size={16} />
                   </button>
-                  <button onClick={() => handleEdit(f)} className="p-1.5 text-slate-400 hover:text-indigo-600 rounded-md hover:bg-slate-50">
+                  <button onClick={() => handleEdit(f)} className="p-1.5 text-slate-400 hover:text-ember rounded-md hover:bg-slate-50">
                     <Edit2 size={16} />
                   </button>
                 </div>
@@ -187,7 +191,7 @@ export default function Funcionarios() {
 
             <div className="space-y-2 pt-2 border-t border-slate-100">
               <div className="flex items-center gap-2 text-sm text-slate-600">
-                <Briefcase size={14} className="text-indigo-500" />
+                <Briefcase size={14} className="text-ember" />
                 <span className="font-medium">{f.cargo}</span>
               </div>
               <div className="flex items-center gap-2 text-sm text-slate-600">
@@ -211,10 +215,10 @@ export default function Funcionarios() {
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editId ? 'Editar Funcionário' : 'Novo Funcionário'}>
         <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
-          <Input label="Nome Completo" {...register('nome')} error={errors.nome?.message} />
+          <Input label="Nome Completo" required {...register('nome')} error={errors.nome?.message} />
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium text-slate-700">CPF</label>
+              <label className="text-sm font-medium text-slate-700">CPF <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 placeholder="000.000.000-00"
@@ -226,11 +230,11 @@ export default function Funcionarios() {
               />
               {errors.cpf && <p className="text-xs text-red-500">{errors.cpf.message}</p>}
             </div>
-            <Input label="Cargo" {...register('cargo')} error={errors.cargo?.message} />
+            <Input label="Cargo" required {...register('cargo')} error={errors.cargo?.message} />
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Input label="Salário Base" type="number" step="0.01" {...register('salarioBase')} error={errors.salarioBase?.message} />
-            <Input label="Data de Admissão" type="date" {...register('dataAdmissao')} error={errors.dataAdmissao?.message} />
+            <Input label="Salário Base" required type="number" step="0.01" {...register('salarioBase')} error={errors.salarioBase?.message} />
+            <Input label="Data de Admissão" required type="date" {...register('dataAdmissao')} error={errors.dataAdmissao?.message} />
           </div>
           <Input label="Data de Demissão (opcional)" type="date" {...register('dataDemissao')} />
 
@@ -250,7 +254,7 @@ export default function Funcionarios() {
 
           <div className="pt-4 flex gap-3">
             <Button type="button" variant="secondary" className="flex-1" onClick={handleCloseModal}>Cancelar</Button>
-            <Button type="submit" className="flex-1 bg-indigo-600 flex justify-center gap-2" disabled={mutation.isPending}>
+            <Button type="submit" className="flex-1 bg-gradient-to-r from-fire to-ember flex justify-center gap-2" disabled={mutation.isPending}>
               {mutation.isPending ? <Loader2 className="animate-spin" size={18} /> : <Save size={18} />} Salvar
             </Button>
           </div>
