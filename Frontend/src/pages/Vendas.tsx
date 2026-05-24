@@ -185,6 +185,7 @@ export function Vendas() {
     mutationFn: (newPedido: PedidoForm) => api.post('/Vendas', newPedido),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendas'] });
+      queryClient.invalidateQueries({ queryKey: ['produtos'] });
       handleCloseModal();
     },
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao criar pedido')
@@ -194,6 +195,7 @@ export function Vendas() {
     mutationFn: ({ id, data }: { id: string, data: PedidoForm }) => api.put(`/Vendas/${id}`, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['vendas'] });
+      queryClient.invalidateQueries({ queryKey: ['produtos'] });
       handleCloseModal();
     },
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao atualizar pedido')
@@ -244,7 +246,10 @@ export function Vendas() {
 
   const mutationUpdateStatus = useMutation({
     mutationFn: ({ id, status }: { id: string, status: number }) => api.patch(`/Vendas/${id}/status`, status, { headers: { 'Content-Type': 'application/json' } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vendas'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendas'] });
+      queryClient.invalidateQueries({ queryKey: ['produtos'] });
+    },
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao mover pedido')
   });
 
@@ -270,13 +275,19 @@ export function Vendas() {
 
   const mutationCancel = useMutation({
     mutationFn: (id: string) => api.post(`/Vendas/${id}/cancelar`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vendas'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendas'] });
+      queryClient.invalidateQueries({ queryKey: ['produtos'] });
+    },
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao cancelar pedido')
   });
 
   const mutationDeleteOrder = useMutation({
     mutationFn: (id: string) => api.delete(`/Vendas/${id}`),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['vendas'] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['vendas'] });
+      queryClient.invalidateQueries({ queryKey: ['produtos'] });
+    },
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao excluir pedido')
   });
 
@@ -844,32 +855,69 @@ export function Vendas() {
                   );
 
                   return (
-                    <>
-                      <div className="bg-white p-4 rounded-xl shadow-inner border border-slate-100">
-                        <img 
-                          src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixQrCodeDinamico)}`} 
-                          alt="QR Code Pix"
-                          className="w-48 h-48 mx-auto"
-                        />
-                      </div>
-                      <div className="text-center space-y-2">
-                        <p className="text-sm text-slate-500">Escaneie o código abaixo para pagar via Pix</p>
-                        <div className="bg-slate-100 p-3 rounded-lg text-[10px] font-mono break-all max-w-xs border border-slate-200">
-                          {pixQrCodeDinamico}
+                    <div className="w-full space-y-4">
+                      {/* Dados estruturados do Pix semelhantes aos do boleto */}
+                      <div className="w-full bg-white border border-slate-200 rounded-lg p-6 shadow-sm space-y-4 text-left">
+                        <div className="flex justify-between items-start border-b border-slate-100 pb-4">
+                          <div className="font-bold text-lg text-[#32BCAD] uppercase flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-[#32BCAD] animate-pulse"></span>
+                            Pix
+                          </div>
+                          <div className="text-right">
+                            <p className="text-[10px] text-slate-400 font-bold uppercase">Banco de Destino</p>
+                            <p className="font-bold text-slate-700 text-sm">{contaSelecionada?.bancoNome || empresa?.bancoNome || 'BANCO NÃO CONFIGURADO'}</p>
+                          </div>
                         </div>
-                        <Button 
-                          size="sm" 
-                          variant="secondary" 
-                          className="mt-2"
-                          onClick={() => {
-                            navigator.clipboard.writeText(pixQrCodeDinamico);
-                            alert('Código Pix copiado!');
-                          }}
-                        >
-                          Copiar Código Pix
-                        </Button>
+                        
+                        <div className="space-y-3">
+                          <div>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase">Beneficiário</p>
+                            <p className="text-sm font-medium text-slate-700 uppercase">{empresa?.razaoSocial || empresa?.nomeFantasia || 'EMPRESA NÃO CONFIGURADA'}</p>
+                          </div>
+                          <div className="grid grid-cols-2 gap-4 border-t border-slate-100 pt-3">
+                            <div>
+                              <p className="text-[10px] text-slate-400 font-bold uppercase">Chave Pix</p>
+                              <p className="text-xs font-semibold text-slate-600 break-all">{pixChave}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-[10px] text-slate-400 font-bold uppercase">Valor a Pagar</p>
+                              <p className="text-lg font-black text-[#32BCAD]">
+                                {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(selectedVendaDocs?.valorTotal || 0)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </>
+
+                      {/* QR Code e Código de Cópia */}
+                      <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center space-y-4">
+                        <div className="bg-white p-4 rounded-xl shadow-inner border border-slate-100">
+                          <img 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixQrCodeDinamico)}`} 
+                            alt="QR Code Pix"
+                            className="w-48 h-48 mx-auto"
+                          />
+                        </div>
+                        
+                        <div className="text-center space-y-2 w-full max-w-xs">
+                          <p className="text-xs text-slate-500 font-medium">Escaneie o código acima ou use a chave copia e cola abaixo:</p>
+                          <div className="bg-slate-100 p-3 rounded-lg text-[9px] font-mono break-all border border-slate-200 select-all text-center">
+                            {pixQrCodeDinamico}
+                          </div>
+                          
+                          <Button 
+                            size="sm" 
+                            className="w-full bg-[#32BCAD] hover:bg-[#2aa89b] text-white flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-bold shadow-sm mt-2 transition-colors border-0"
+                            onClick={() => {
+                              navigator.clipboard.writeText(pixQrCodeDinamico);
+                              alert('Código Pix copiado!');
+                            }}
+                          >
+                            Copiar Código Pix
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
                   );
                 })()}
               </>
