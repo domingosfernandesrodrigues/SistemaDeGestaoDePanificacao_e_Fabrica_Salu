@@ -42,15 +42,22 @@ Este documento é o mapa mestre do Sistema de Gestão de Panificação e Fábric
 - [Valor de Venda (Valuation)](7-gestao/valor-venda-sistema.md) - Precificação e Mercado.
 - [Manual do Administrador](7-gestao/manual-administrador.md) - Guia de implantação e operação.
 
-## 📌 Status Atual do Sistema (23/05/2026)
-O sistema SGP-F encontra-se em estado de **Produção — Estabilidade, Segurança Comercial e Geração Dinâmica de Faturamento**.
+## 📌 Status Atual do Sistema (24/05/2026)
+O sistema SGP-F encontra-se em estado de **Produção — Estabilidade Geral, Automação Comercial, Segurança de Código e Auditoria de Ponto**.
 
-- **Faturamento Pix 100% Dinâmico (EMV):** Implementado gerador dinâmico de Pix BR Code no frontend com cálculo real de `CRC16-CCITT`, garantindo compatibilidade e leitura instantânea com qualquer banco. A geração é feita na hora usando a chave Pix ativa cadastrada em "Contas Bancárias e Saldos", mesmo para pedidos antigos.
-- **Prevenção Automatizada de Inadimplência:** O Painel de Vendas B2B agora bloqueia automaticamente a criação ou gravação de novos pedidos para clientes que possuam 3 ou mais comandas/pedidos com status pendente de pagamento (não pagos e não cancelados), blindando o fluxo de caixa.
+- **Segurança de Código & Expurgo de Arquivos Obsoletos:** Realizada varredura de sistema com a desativação e remoção lógica definitiva de endpoints inseguros ou de desenvolvimento, como o `DbCompareController.cs` (que expunha schemas e connection strings), `DebugController.cs`, `check_db.cs` (script com chaves hardcoded) e `compare_result.txt` (log temporário). Todos os outros controllers do backend agora contam com proteção robusta baseada em Roles JWT via `[Authorize]`.
+- **Faturamento Pix 100% Estruturado no B2B:** O modal de Documentos de Pagamento de Pix foi aprimorado para apresentar de forma estruturada e em alto contraste os dados do pagamento (Beneficiário, Banco de Destino, Chave Pix cadastrada, Valor do Pedido e QR Code), harmonizando perfeitamente com o layout do boleto bancário.
+- **Automação Financeira (Baixa Automática):** O webhook de faturamento de venda (`ConfirmarPagamentoAsync`) agora realiza o crédito automático imediato do valor faturado no saldo real da conta padrão cadastrada no módulo de Contas Bancárias.
+- **Dedução e Devolução Automatizada de Estoque B2B:** Implementada baixa automática do estoque ao criar/aprovar pedidos de venda B2B e devolução integral ao estoque em caso de cancelamento ou exclusão do pedido no painel, garantindo rastreabilidade do estoque físico com exclusão em cascata financeira e de itens associados.
+- **Prevenção de Conflito de EF Core (Tracking Conflict):** Saneado o bug de tracking circular (`another instance is already being tracked`) no `VendaService.cs` através do desligamento da navegação circular dos produtos.
+- **Invalidação de Cache deDropdowns:** Invalidação imediata do cache do react-query para `['produtos']` e `['vendas']` nas mutações de criação/exclusão/atualização de pedidos B2B, garantindo a sincronia instantânea de quantidades de estoque no frontend sem refresh de tela.
+- **Cerca Virtual do Ponto (Geolocalização):** Cerca virtual expandida de 50 metros para **100 metros** no backend (`PontoController.cs`) e frontend (`ConfiguracoesEmpresa.tsx`).
+- **Otimização de Bateria e Ponto Dinâmico:** A geolocalização por GPS do dispositivo agora é solicitada e validada **apenas na primeira batida do dia (entrada)**. Para as demais 3 marcações (intervalo e saída), a geolocalização é ignorada, agilizando o fluxo operacional e prevenindo erros de GPS no decorrer da jornada.
+- **Dashboards Executivos de BI (Estoque Crítico):** Inclusão do monitor de estoque crítico (quantidade <= 10) na aba "Estoque" do Painel Executivo do Dashboard.
+- **Correção de Geolocalização (Configurações da Empresa):** Correção na geração de endereços e na lógica do interpretador `parseEndereco` nas Configurações da Empresa. Agora usa o delimitador consistente ` - `, tratando de forma 100% retrocompatível endereços legados com vírgula para que a Cidade e o Estado não fiquem desatualizados ou invertidos.
+- **Acessibilidade e Ajuste na Folha de Pagamento:** Ajuste nas fontes do `LandingPage.tsx` para garantir máximo contraste visual e atualização do subcabeçalho da Folha de Pagamento para "Gestão de salários e contracheques.".
 - **Logomarca nas Comandas:** A comanda em PDF emitida a partir do Painel de Vendas B2B agora exibe dinamicamente a logomarca da empresa configurada em "Configurações da Empresa".
 - **Filtro de Motoristas no B2B:** Adicionado select dinâmico e responsivo na barra de filtros do Painel B2B para filtragem instantânea de pedidos por motorista encarregado da rota.
-- **Edição Completa de Pedidos:** Corrigido o processo de sincronização e persistência no backend (`AtualizarPedidoAsync`), mapeando corretamente a Forma de Pagamento e o Motorista selecionados durante a edição do pedido e regenerando as informações de cobrança.
-- **Filtro Seguro de Recursos Humanos:** Refatorado defensivamente o filtro de busca de Funcionários para prevenir crashes por campos nulos (`nome`, `cpf`, `cargo`) e buscas vazias em JavaScript.
 
 ---
 ## 🚀 Execução do Projeto

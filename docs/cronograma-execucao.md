@@ -56,7 +56,20 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 ## 📊 Status de Progresso Geral
 - **Fase Atual:** Estabilidade e Performance ✅
 - **Progresso Total:** 100% (Todos os módulos, BI, Perfil Motorista e Otimizações de Performance concluídos)
-- **Última Atualização:** 14/05/2026
+- **Última Atualização:** 24/05/2026
+
+### 🛠️ Estabilização Geral, Automação Comercial, Segurança de Código e Ponto Digital (24/Mai/2026):
+- **Expurgo e Segurança de Backend:** Varredura completa do sistema e desativação lógica definitiva de rotas e scripts obsoletos e inseguros (`DbCompareController.cs`, `DebugController.cs`, `check_db.cs` e `compare_result.txt`). Todos os outros controladores contam com a proteção JWT ativa (`[Authorize]`), prevenindo vazamento de esquemas e credenciais de banco.
+- **Faturamento Pix Estruturado no B2B:** Redesenho completo do modal de Documentos de Pagamento para Pix no Painel B2B, exibindo informações estruturadas de alto contraste (Beneficiário, Banco de Destino, Chave Pix, Valor do Pedido e QR Code), padronizado visualmente com o layout de boleto bancário.
+- **Conciliação Bancária Automática:** Integração nativa entre o webhook de faturamento de venda (`ConfirmarPagamentoAsync`) e o módulo de Contas Bancárias, realizando o crédito automático direto do valor no saldo real da conta bancária padrão ativa.
+- **Automação Trabalhista (GPS do Ponto Otimizado):** Lógica inteligente que solicita e valida a geolocalização por GPS do dispositivo **apenas na primeira batida de ponto do dia (entrada)**. Para as demais 3 batidas (intervalos e saída), a checagem é ignorada, melhorando a fluidez operacional dos funcionários.
+- **Cerca Virtual Estendida:** A Cerca Virtual do Ponto foi expandida de 50 metros para **100 metros** de perímetro físico tolerável para marcações no backend e frontend.
+- **Dedução e Devolução Automatizada de Estoque B2B:** Implementada baixa automática do estoque ao criar/aprovar pedidos de venda B2B e devolução integral ao estoque em caso de cancelamento ou exclusão do pedido no painel, garantindo rastreabilidade do estoque físico com exclusão em cascata financeira e de itens associados.
+- **Prevenção de Conflito de EF Core (Tracking Conflict):** Saneado o bug de tracking circular (`another instance is already being tracked`) no `VendaService.cs` através do desligamento da navegação circular dos produtos.
+- **Invalidação de Cache deDropdowns:** Invalidação imediata do cache do react-query para `['produtos']` e `['vendas']` nas mutações de criação/exclusão/atualização de pedidos B2B, garantindo a sincronia instantânea de quantidades de estoque no frontend sem refresh de tela.
+- **Dashboards Executivos de BI (Estoque Crítico):** Inclusão do monitor de estoque crítico (quantidade <= 10) na aba "Estoque" do Painel Executivo do Dashboard.
+- **Correção de Geolocalização (Configurações da Empresa):** Correção na geração de endereços e na lógica do interpretador `parseEndereco` nas Configurações da Empresa. Agora usa o delimitador consistente ` - `, tratando de forma 100% retrocompatível endereços legados com vírgula para que a Cidade e o Estado não fiquem desatualizados ou invertidos.
+- **Acessibilidade e Ajuste na Folha de Pagamento:** Ajuste nas fontes do `LandingPage.tsx` para garantir máximo contraste visual e atualização do subcabeçalho da Folha de Pagamento para "Gestão de salários e contracheques.".
 
 ### 🛠️ Refinamentos de Performance & Identidade (14/Mai/2026):
 - **Otimização de Downloads (Cache de Logo):** Implementado cache de `byte[]` no backend (`FolhaPagamentoService`) e cache de memória no frontend (`empresaService`) para evitar requisições redundantes de imagens pesadas.
