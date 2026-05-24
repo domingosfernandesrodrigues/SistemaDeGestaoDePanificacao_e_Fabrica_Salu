@@ -123,7 +123,7 @@ export function FolhaPagamento() {
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Folha de Pagamento</h2>
-          <p className="text-slate-500">Gestão de salários, horas extras e contracheques.</p>
+          <p className="text-slate-500">Gestão de salários e contracheques.</p>
         </div>
         <div className="flex flex-col sm:flex-row gap-3">
           <Button 
@@ -219,7 +219,6 @@ export function FolhaPagamento() {
               <tr>
                 <th className="px-4 py-4">Funcionário</th>
                 <th className="px-3 py-4">Ref.</th>
-                <th className="px-3 py-4 text-center">H. Extras (50/100%)</th>
                 <th className="px-3 py-4 text-center">Adic. Noturno</th>
                 <th className="px-3 py-4 text-center">Descontos</th>
                 <th className="px-4 py-4 text-right">Salário Líquido</th>
@@ -228,17 +227,11 @@ export function FolhaPagamento() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {folhasPaginadas.length === 0 && <tr><td colSpan={8} className="px-6 py-8 text-center text-slate-400 font-medium">Nenhuma folha encontrada.</td></tr>}
+              {folhasPaginadas.length === 0 && <tr><td colSpan={7} className="px-6 py-8 text-center text-slate-400 font-medium">Nenhuma folha encontrada.</td></tr>}
               {folhasPaginadas.map((folha) => (
                 <tr key={folha.id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="px-4 py-3 font-bold text-slate-800">{folha.funcionarioNome}</td>
                   <td className="px-3 py-3 text-slate-500 font-black">{folha.mesReferencia.toString().padStart(2, '0')}/{folha.anoReferencia}</td>
-                  <td className="px-3 py-3">
-                    <div className="flex flex-col items-center leading-tight">
-                      <span className="text-slate-500 text-[10px]">50%: {folha.totalHorasExtras50}h</span>
-                      <span className="text-amber-600 font-bold text-[10px]">100%: {folha.totalHorasExtras100}h</span>
-                    </div>
-                  </td>
                   <td className="px-3 py-3 text-center text-fire font-bold">
                     {folha.valorAdicionalNoturno > 0 ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorAdicionalNoturno) : '-'}
                   </td>
@@ -309,17 +302,9 @@ export function FolhaPagamento() {
               <div className="grid grid-cols-2 gap-4 py-3 border-y border-slate-50">
                 <div className="col-span-2 space-y-2">
                   <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Detalhamento CLT</p>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                      <p className="text-[10px] text-slate-500 font-bold">HE 50%</p>
-                      <p className="text-sm font-black text-slate-700">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorHorasExtras50)}</p>
-                    </div>
-                    <div className="bg-amber-50 p-2.5 rounded-xl border border-amber-100">
-                      <p className="text-[10px] text-amber-600 font-bold">HE 100%</p>
-                      <p className="text-sm font-black text-amber-700">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorHorasExtras100)}</p>
-                    </div>
+                  <div className="grid grid-cols-1 gap-2">
                     <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                      <p className="text-[10px] text-slate-500 font-bold">Noturno</p>
+                      <p className="text-[10px] text-slate-500 font-bold">Adicional Noturno</p>
                       <p className="text-sm font-black text-slate-800">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorAdicionalNoturno)}</p>
                     </div>
                   </div>
@@ -387,30 +372,7 @@ export function FolhaPagamento() {
         )}
       </div>
       
-      {/* Legenda de Cálculos (Metodologia CLT) */}
-      <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 space-y-4">
-        <h3 className="text-sm font-black text-slate-700 uppercase tracking-wider flex items-center gap-2">
-          <Calculator size={16} className="text-ember" /> Metodologia de Cálculo (CLT + SGP-F)
-        </h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="space-y-1">
-            <p className="text-[11px] font-bold text-slate-500 uppercase">Horas Extras 50%</p>
-            <p className="text-xs text-slate-600 leading-relaxed">Aplicadas sobre horas que excedem a jornada de 8h em dias úteis e sábados.</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[11px] font-bold text-amber-600 uppercase">Horas Extras 100%</p>
-            <p className="text-xs text-slate-600 leading-relaxed">Aplicadas integralmente em Domingos e **Feriados** (conforme cadastrado na Agenda CRM).</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[11px] font-bold text-slate-600 uppercase">Adicional Noturno</p>
-            <p className="text-xs text-slate-600 leading-relaxed">Acréscimo de 20% sobre o valor da hora para trabalhos realizados entre **22:00 e 05:00**.</p>
-          </div>
-          <div className="space-y-1">
-            <p className="text-[11px] font-bold text-slate-500 uppercase">Base e Descontos</p>
-            <p className="text-xs text-slate-600 leading-relaxed">Base de 220h mensais. Descontos incluem INSS (8%) e afastamentos não remunerados.</p>
-          </div>
-        </div>
-      </div>
+
 
       {abaAtiva === 'abertas' && (
         <div className="p-4 bg-amber-50 text-amber-800 rounded-lg border border-amber-100 text-xs flex items-start gap-3">
