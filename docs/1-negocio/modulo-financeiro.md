@@ -59,6 +59,16 @@ Para reconstruir o saldo histórico com exatidão no final de qualquer período 
 - A conta marcada como `IsPadrao` é utilizada automaticamente nos Documentos de Pagamento do módulo de Vendas.
 - Os campos de pagamento foram **removidos** da entidade `Empresa` para evitar duplicidade.
 
+### Integração Asaas e Conciliação por Webhook
+- **Geração Dinâmica Real:** Ao registrar ou atualizar um Pedido de Venda com forma de pagamento `Boleto` ou `Pix`, se a conta padrão contiver um `GatewayToken` válido, o sistema se comunica diretamente com a API do Asaas para:
+  - **Pesquisa/Cadastro de Cliente:** Pesquisa se o cliente já existe por CPF/CNPJ no Asaas para evitar duplicidade; caso não exista, cadastra automaticamente.
+  - **Criação de Cobrança:** Envia o valor e os dados do pedido, recebendo do Asaas a Linha Digitável real (para Boletos) ou a string de payload EMV copia e cola real (para Pix).
+- **Suporte a Ambientes (Sandbox vs Produção):**
+  - **Sandbox:** Se o token começar com `sandbox:`, `test:` ou `$$`, a API aponta para o ambiente de testes do Asaas (`https://sandbox.asaas.com/api/v3`). O prefixo correspondente é tratado e removido na autenticação.
+  - **Produção:** Se o token for cadastrado normalmente, o sistema utiliza o ambiente real de produção (`https://api.asaas.com/api/v3`).
+- **Resiliência (Fallback):** Se o token estiver em branco, contiver credenciais de exemplo ou ocorrer qualquer falha técnica na API externa, o sistema ativa automaticamente o **simulador offline dinâmico**, garantindo que as vendas nunca parem.
+- **Webhook de Baixa Automática:** O endpoint público `POST api/v1/pagamentos/webhook/asaas` escuta notificações em tempo real. Quando um pagamento é recebido (`PAYMENT_RECEIVED` ou `PAYMENT_CONFIRMED`), o sistema identifica o número do pedido no campo `externalReference` e realiza a confirmação de recebimento automática, alterando o status do pedido para "Pago" e atualizando o saldo bancário correspondente de forma instantânea.
+
 ## 4. Fluxo de Caixa
 - `SaldoEmCaixa` no Dashboard/Financeiro é calculado como a soma de `SaldoAtual` de todas as `ContasBancarias` ativas.
 - Visão diária e mensal de entradas (ContasReceber) e saídas (ContasPagar).

@@ -43,8 +43,17 @@ Este documento é o mapa mestre do Sistema de Gestão de Panificação e Fábric
 - [Manual do Administrador](7-gestao/manual-administrador.md) - Guia de implantação e operação.
 
 ## 📌 Status Atual do Sistema (26/05/2026)
-O sistema SGP-F encontra-se em estado de **Produção — Estabilidade Geral, Automação Financeira Retroativa, Filtros Avançados e Otimização de Banco de Dados**.
+O sistema SGP-F encontra-se em estado de **Produção — Estabilidade Geral, Automação Financeira, Integração com Gateway de Pagamento Asaas, e Otimização de Banco de Dados**.
 
+- **Integração Completa com Gateway Asaas (Outbound & Webhooks):**
+  - **Envio Dinâmico Real:** Criação automática de faturamento real de Boleto e Pix diretamente no Asaas ao gerar/editar pedidos de vendas. O sistema faz um cruzamento inteligente por CPF/CNPJ de cliente para reutilizar cadastros existentes no painel do gateway, evitando duplicidades.
+  - **Mapeamento de Ambientes (Sandbox vs Produção):** Roteamento nativo baseado no token de API configurado em *Contas Bancárias e Saldos*: se o token for prefixado com `sandbox:`, `test:` ou `$$`, a transação é direcionada ao ambiente de homologação do Asaas; caso contrário, é executada diretamente em Produção.
+  - **Resiliência (Simulação Offline Fallback):** Caso o token de API não esteja configurado, seja fictício ou ocorra uma instabilidade de rede, o SGPF aciona automaticamente o simulador offline determinístico de Pix e Boleto, garantindo zero interrupções.
+  - **Webhook de Baixa Automática e Conciliação:** Implementado controlador assíncrono público `POST api/v1/pagamentos/webhook/asaas` que escuta e valida eventos de compensação real em tempo real (`PAYMENT_RECEIVED`/`PAYMENT_CONFIRMED`). Identifica o número do pedido no campo `externalReference` e realiza a confirmação de recebimento automática, alterando o status para "Pago" e atualizando o saldo bancário correspondente sem necessidade de digitação ou conferência.
+- **Resolução de Escaneabilidade de Pix e Boleto (B2B):**
+  - **Boleto Febraban Válido:** Correção na Linha Digitável do boleto para gerar sempre a Linha Digitável válida de 47 dígitos, conversão em tempo real no frontend para o código de barras de 44 dígitos no padrão Febraban Modulo 11 geral (DV) e renderização na simbologia `interleaved2of5` via API do `bwip-js`.
+  - **Pix Estático Scaneável:** Correção do Pix de dinâmico para estático (`010211`) e sanitização de chaves Pix (mantendo o sinal `+` nos celulares), eliminando erros de decodificação bancária.
+  - **Banner Amber de Alerta:** Inclusão de banner com aviso visual amber no painel de vendas no frontend caso a chave Pix não esteja configurada ou seja uma chave fictícia de teste, prevenindo que o operador exiba um QR Code inválido.
 - **Histórico Real e Saldos Retroativos das Contas**: Implementada a tabela física `MovimentacoesBancarias` vinculada às contas, integrando com receitas (ContasReceber), despesas (ContasPagar), faturamentos de vendas (VendaService), custos de frota (FrotaService), e lançamentos manuais.
 - **Lógica de Cálculo Reverso Avançado de Saldos**: Algoritmo histórico exato para cálculo de saldo retroativo ao final de qualquer mês anterior selecionado (`SaldoPeriodo = SaldoAtualReal - EntradasFuturas + SaidasFuturas`), garantindo integridade matemática perfeita mesmo antes de implantações antigas.
 - **Painel de Extrato, Filtros e Paginação**: Adicionada a seção de Extrato na listagem de contas, com painel completo de filtros de Data (datepicker), select de Origens de transações (Manual, Despesa, Receita, Venda, Combustível, Manutenção e Abertura), botão de limpeza rápida de filtros, feedback para buscas vazias e paginação responsiva de 10 itens por página.
