@@ -36,6 +36,7 @@
 - `ContasPagar`: Id, FornecedorId, Descricao, Valor, DataEmissao, DataVencimento, DataPagamento, Status (Pendente/Paga/Cancelada).
 - `ContasBancarias`: Id, Nome, Tipo (0=Outros/1=Corrente/2=Poupança/3=Investimento), SaldoInicial (decimal), SaldoAtual (decimal), Ativa (BIT), IsPadrao (BIT), PixChave, BancoNome, Agencia, NumeroConta, GatewayToken.
   > Regra: apenas uma conta pode ter `IsPadrao = true` por vez. Saldo conciliado automaticamente nas baixas.
+- `MovimentacoesBancarias`: Id (Guid, PK), ContaBancariaId (Guid, FK ContasBancarias), Tipo (VARCHAR(10) - "entrada" / "saida"), Valor (DECIMAL(18,2)), Descricao (VARCHAR(MAX)), DataMovimentacao (DATETIME2), Origem (INT - 0=Manual, 1=BaixaPagar, 2=BaixaReceber, 3=Venda, 4=FrotaAbastecimento, 5=FrotaManutencao, 6=AberturaConta), ReferenciaId (Guid, Nullable FK).
 
 ## Módulo: Landing Page e Autenticação
 - `Usuarios` (ASP.NET Identity): Id, Email, NomCompleto, Role (Admin/Gestor/Operador/Motorista/Cliente), PrecisaTrocarSenha (BIT), Ativo (BIT).

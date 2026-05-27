@@ -55,8 +55,17 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 
 ## 📊 Status de Progresso Geral
 - **Fase Atual:** Estabilidade e Performance ✅
-- **Progresso Total:** 100% (Todos os módulos, BI, Perfil Motorista e Otimizações de Performance concluídos)
-- **Última Atualização:** 24/05/2026
+- **Progresso Total:** 100% (Todos os módulos, BI, Perfil Motorista, Contas Bancárias Retroativas com Filtros e Paginação, e Otimização Extrema de Performance de Dados concluídos)
+- **Última Atualização:** 26/05/2026
+
+### 🛠️ Contas Bancárias Retroativas, Painel de Extrato, Filtros e Alta Performance (26/Mai/2026):
+- **Tabela Histórica de Movimentações Bancárias:** Criação da tabela SQL `MovimentacoesBancarias` vinculada a `ContasBancarias` para persistência real de todo o fluxo financeiro de caixa (Manual, Despesa, Receita, Venda, Frota e Abertura).
+- **Lógica de Cálculo Reverso de Saldos:** Algoritmo retroativo avançado (`SaldoPeriodo = SaldoAtualReal - EntradasFuturas + SaidasFuturas`) com suporte a validação de data de abertura de conta, exibindo o saldo histórico preciso ao final de qualquer período.
+- **Filtros e Paginação Reativos (Extrato):** Barra de filtros moderna no frontend (`ContasBancarias.tsx`) permitindo isolar lançamentos no extrato por Data específica e por Origem do lançamento, com reset rápido, feedbacks para buscas sem resultados e paginação responsiva de 10 registros por página.
+- **Otimização Extrema de Performance (Carga em Banco):**
+  - **Somas Diretas via SQL (`SumAsync`)**: Evita instanciação de milhares de objetos futuros na memória do servidor Web API, transferindo o cálculo agregador diretamente ao SQL Server.
+  - **Agrupamentos em Banco (`GroupBy`)**: Redução de milhares de registros futuros de movimentações a poucas linhas agregadas enviadas à aplicação.
+  - **HashSet lookup em Extrato**: Redução da complexidade algorítmica de conciliação do extrato de $O(N \times M)$ para $O(N)$ linear.
 
 ### 🛠️ Estabilização Geral, Automação Comercial, Segurança de Código e Ponto Digital (24/Mai/2026):
 - **Expurgo e Segurança de Backend:** Varredura completa do sistema e desativação lógica definitiva de rotas e scripts obsoletos e inseguros (`DbCompareController.cs`, `DebugController.cs`, `check_db.cs` e `compare_result.txt`). Todos os outros controladores contam com a proteção JWT ativa (`[Authorize]`), prevenindo vazamento de esquemas e credenciais de banco.

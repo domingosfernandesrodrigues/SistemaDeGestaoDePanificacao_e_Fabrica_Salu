@@ -34,6 +34,26 @@ Entidade central para gestão de saldos e configurações de recebimento.
   - **Toggle de Pagamento de Venda** → crédita/reverte na conta padrão
   - **Movimentação Manual** → entrada ou saída avulsa via endpoint `/movimentar`
 
+### Histórico de Movimentações Bancárias (`MovimentacaoBancaria`)
+Entidade que registra todo o fluxo histórico de entrada e saída financeira vinculada às contas, servindo de extrato cronológico e base para fluxos de caixa e DRE.
+
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `Id` | Guid | Identificador único da transação |
+| `ContaBancariaId` | Guid | Chave estrangeira ligada à conta bancária de origem/destino |
+| `Tipo` | string | Tipo do lançamento: "entrada" ou "saida" |
+| `Valor` | decimal | Valor financeiro com precisão decimal configurada (18,2) |
+| `Descricao` | string | Detalhes do lançamento (ex: "Baixa de Conta a Receber", "Sangria manual") |
+| `DataMovimentacao` | DateTime | Data e hora em UTC em que a transação ocorreu |
+| `Origem` | int (Enum) | Mapeamento técnico da origem da transação: 0=Manual, 1=BaixaPagar, 2=BaixaReceber, 3=Venda, 4=FrotaAbastecimento, 5=FrotaManutencao, 6=AberturaConta |
+| `ReferenciaId` | Guid? | ID opcional para referência cruzada com tabelas de vendas, frotas ou despesas gerais |
+
+### Lógica de Cálculo de Saldos Retroativos
+Para reconstruir o saldo histórico com exatidão no final de qualquer período passado selecionado, o sistema executa um **algoritmo de cálculo reverso**:
+- Partindo do `SaldoAtual` real consolidado hoje, o sistema subtrai/soma as receitas, despesas e lançamentos futuros posteriores à data limite selecionada:
+  $$\text{SaldoPeriodo} = \text{SaldoAtual} - \text{EntradasFuturas} + \text{SaidasFuturas}$$
+- Se a conta bancária foi aberta (`DataAbertura`) após a data limite do período selecionado, seu saldo é automaticamente retornado como zero, indicando que a conta ainda não existia naquela data.
+
 ## 3. Configurações de Pagamento (Pix / Boleto)
 - Os dados de Pix e Boleto (chave, banco, agência) são gerenciados exclusivamente pela entidade `ContaBancaria`.
 - A conta marcada como `IsPadrao` é utilizada automaticamente nos Documentos de Pagamento do módulo de Vendas.
@@ -60,5 +80,7 @@ Entidade central para gestão de saldos e configurações de recebimento.
 | PUT | `/{id}` | Atualiza conta |
 | DELETE | `/{id}` | Exclui conta (sem soft-delete, usar `Ativa=false`) |
 | POST | `/{id}/movimentar` | Lança entrada ou saída manual no saldo |
+| GET | `/extrato` | Obtém extrato consolidado do período filtrado por data e origem com paginação (O(1) HashSet lookup) |
+| GET | `/saldos-periodo` | Calcula os saldos históricos retroativos por agrupamento SQL nativo via `SumAsync` e `GroupBy` |
 
 **Autorizações:** `Admin`, `Gestor`
