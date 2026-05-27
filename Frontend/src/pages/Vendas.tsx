@@ -39,8 +39,39 @@ function crc16Ccitt(str: string): string {
   return crc.toString(16).toUpperCase().padStart(4, '0');
 }
 
+function sanitizarChavePix(chave: string): string {
+  const clean = chave.trim();
+  if (clean.includes('@')) {
+    return clean;
+  }
+  const isRandomKey = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(clean);
+  if (isRandomKey) {
+    return clean.toLowerCase();
+  }
+  
+  // Se for celular, remove não-dígitos mas assegura o sinal '+' inicial
+  const apenasDigitos = clean.replace(/\D/g, '');
+  if (clean.startsWith('+') || (apenasDigitos.length >= 12 && apenasDigitos.startsWith('55'))) {
+    return `+${apenasDigitos}`;
+  }
+  
+  return apenasDigitos;
+}
+
+function validarChavePix(chave: string): boolean {
+  const clean = chave.trim();
+  if (clean === 'CHAVE-PIX-NAO-CONFIGURADA' || clean === 'sgpf-fabrica-pix-key-12345' || !clean) {
+    return false;
+  }
+  const sanitizada = sanitizarChavePix(clean);
+  if (sanitizada.includes('@')) {
+    return sanitizada.length >= 5;
+  }
+  return sanitizada.replace('+', '').length >= 8;
+}
+
 function gerarBrCodePix(chave: string, valor: number, nomeRecebedor: string): string {
-  const cleanChave = chave.trim();
+  const cleanChave = sanitizarChavePix(chave);
   let cleanNome = nomeRecebedor.toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
   cleanNome = cleanNome.substring(0, 25);
 
@@ -52,7 +83,7 @@ function gerarBrCodePix(chave: string, valor: number, nomeRecebedor: string): st
 
   const payload = 
     "000201" +
-    "010212" +
+    "010211" +
     mai +
     "52040000" +
     "5303986" +
@@ -81,6 +112,51 @@ interface Venda {
   motorista?: { nome: string };
   pixQrCode?: string;
   boletoCodigoBarras?: string;
+}
+
+function obterDadosBoleto(linhaDigitavel: string) {
+  let clean = linhaDigitavel.replace(/\D/g, '');
+  if (!clean) return { barcode: '', linha: linhaDigitavel };
+  
+  // Se tiver 46 dígitos (caso de boletos antigos gerados com bug de arredondamento no final)
+  if (clean.length === 46) {
+    clean = clean.substring(0, 37) + '0' + clean.substring(37);
+  }
+  
+  if (clean.length !== 47) return { barcode: clean, linha: linhaDigitavel };
+  
+  const banco = clean.substring(0, 3);
+  const moeda = clean.substring(3, 4);
+  const vencimentoEValor = clean.substring(33, 47);
+  const campoLivre = clean.substring(4, 9) + clean.substring(10, 20) + clean.substring(21, 31);
+  
+  // Calcular DV do código de barras (módulo 11) de forma dinâmica para validação de apps
+  const digitosParaCalculo = `${banco}${moeda}${vencimentoEValor}${campoLivre}`;
+  let soma = 0;
+  let peso = 2;
+  for (let i = digitosParaCalculo.length - 1; i >= 0; i--) {
+    soma += parseInt(digitosParaCalculo.charAt(i), 10) * peso;
+    peso++;
+    if (peso > 9) peso = 2;
+  }
+  
+  const resto = soma % 11;
+  let dv = 11 - resto;
+  if (dv === 0 || dv === 10 || dv === 11) {
+    dv = 1;
+  }
+  
+  const barcode = `${banco}${moeda}${dv}${vencimentoEValor}${campoLivre}`;
+  
+  // Sincronizar a linha digitável impressa com o DV calculado para validação visual/manual
+  const partes = linhaDigitavel.split(' ');
+  if (partes.length === 5) {
+    partes[3] = dv.toString();
+    const linha = partes.join(' ');
+    return { barcode, linha };
+  }
+  
+  return { barcode, linha: linhaDigitavel };
 }
 
 export function Vendas() {
@@ -889,34 +965,47 @@ export function Vendas() {
                         </div>
                       </div>
 
-                      {/* QR Code e Código de Cópia */}
-                      <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center space-y-4">
-                        <div className="bg-white p-4 rounded-xl shadow-inner border border-slate-100">
-                          <img 
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixQrCodeDinamico)}`} 
-                            alt="QR Code Pix"
-                            className="w-48 h-48 mx-auto"
-                          />
-                        </div>
-                        
-                        <div className="text-center space-y-2 w-full max-w-xs">
-                          <p className="text-xs text-slate-500 font-medium">Escaneie o código acima ou use a chave copia e cola abaixo:</p>
-                          <div className="bg-slate-100 p-3 rounded-lg text-[9px] font-mono break-all border border-slate-200 select-all text-center">
-                            {pixQrCodeDinamico}
+                      {/* QR Code e Código de Cópia com validação visual */}
+                      {validarChavePix(pixChave) ? (
+                        <div className="bg-slate-50 p-6 rounded-xl border border-slate-200 flex flex-col items-center space-y-4 w-full">
+                          <div className="bg-white p-4 rounded-xl shadow-inner border border-slate-100">
+                            <img 
+                              src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(pixQrCodeDinamico)}`} 
+                              alt="QR Code Pix"
+                              className="w-48 h-48 mx-auto"
+                            />
                           </div>
                           
-                          <Button 
-                            size="sm" 
-                            className="w-full bg-[#32BCAD] hover:bg-[#2aa89b] text-white flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-bold shadow-sm mt-2 transition-colors border-0"
-                            onClick={() => {
-                              navigator.clipboard.writeText(pixQrCodeDinamico);
-                              alert('Código Pix copiado!');
-                            }}
-                          >
-                            Copiar Código Pix
-                          </Button>
+                          <div className="text-center space-y-2 w-full max-w-xs">
+                            <p className="text-xs text-slate-500 font-medium">Escaneie o código acima ou use a chave copia e cola abaixo:</p>
+                            <div className="bg-slate-100 p-3 rounded-lg text-[9px] font-mono break-all border border-slate-200 select-all text-center">
+                              {pixQrCodeDinamico}
+                            </div>
+                            
+                            <Button 
+                              size="sm" 
+                              className="w-full bg-[#32BCAD] hover:bg-[#2aa89b] text-white flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-bold shadow-sm mt-2 transition-colors border-0"
+                              onClick={() => {
+                                navigator.clipboard.writeText(pixQrCodeDinamico);
+                                alert('Código Pix copiado!');
+                              }}
+                            >
+                              Copiar Código Pix
+                            </Button>
+                          </div>
                         </div>
-                      </div>
+                      ) : (
+                        <div className="flex items-start gap-3 bg-amber-50 border border-amber-300 text-amber-800 rounded-xl p-5 w-full">
+                          <AlertTriangle size={20} className="shrink-0 text-amber-500 mt-0.5" />
+                          <div>
+                            <p className="font-bold text-sm text-amber-900">Chave Pix não Configurada ou Temporária</p>
+                            <p className="text-xs mt-1 text-amber-700 leading-relaxed font-sans">
+                              A chave Pix atual (<strong>{pixChave}</strong>) é inválida ou um preenchimento temporário. 
+                              Por favor, cadastre uma **chave Pix real** (CNPJ, CPF, Telefone ou E-mail) no cadastro da conta bancária ou nas configurações da empresa para habilitar a geração de cobranças Pix válidas para os aplicativos de banco.
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   );
                 })()}
@@ -955,14 +1044,21 @@ export function Vendas() {
                       </div>
                       <div className="pt-4 border-t-2 border-black border-dashed">
                         <div className="w-full flex flex-col items-center gap-2">
-                          <img 
-                            src={`https://bwipjs-api.metafloor.com/?bcid=code128&text=${selectedVendaDocs?.boletoCodigoBarras?.replace(/\D/g, '') || '341917900101043510047910201500085950200000'}&scale=2&height=15&includetext`} 
-                            alt="Código de Barras Boleto"
-                            className="w-full max-h-24 object-contain"
-                          />
-                          <p className="text-[10px] font-bold font-mono tracking-widest text-slate-800">
-                            {selectedVendaDocs?.boletoCodigoBarras || '34191.79001 01043.510047 91020.150008 5 950200000'}
-                          </p>
+                          {(() => {
+                            const dadosBoleto = obterDadosBoleto(selectedVendaDocs?.boletoCodigoBarras || '34191.79001 01043.510047 91020.150008 5 95020000000000');
+                            return (
+                              <>
+                                <img 
+                                  src={`https://bwipjs-api.metafloor.com/?bcid=interleaved2of5&text=${dadosBoleto.barcode}&scale=2&height=15`} 
+                                  alt="Código de Barras Boleto"
+                                  className="w-full max-h-24 object-contain"
+                                />
+                                <p className="text-[10px] font-bold font-mono tracking-widest text-slate-800">
+                                  {dadosBoleto.linha}
+                                </p>
+                              </>
+                            );
+                          })()}
                         </div>
                       </div>
                     </div>
