@@ -5,6 +5,9 @@ using QuestPDF.Fluent;
 using QuestPDF.Helpers;
 using QuestPDF.Infrastructure;
 using QuestPDF.Previewer;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 
 namespace SGPF.Application.Services;
 
@@ -18,6 +21,7 @@ public class VendaService : IVendaService
     private readonly IRepository<Cliente> _clienteRepo;
     private readonly IRepository<Empresa> _empresaRepo;
     private readonly IRepository<ContaBancaria> _contaBancariaRepo;
+    private readonly IRepository<MovimentacaoBancaria> _movimentacaoRepo;
 
     public VendaService(
         IRepository<PedidoVenda> pedidoRepo,
@@ -27,7 +31,8 @@ public class VendaService : IVendaService
         IRepository<PedidoVendaItem> itemRepo,
         IRepository<Cliente> clienteRepo,
         IRepository<Empresa> empresaRepo,
-        IRepository<ContaBancaria> contaBancariaRepo)
+        IRepository<ContaBancaria> contaBancariaRepo,
+        IRepository<MovimentacaoBancaria> movimentacaoRepo)
     {
         _pedidoRepo = pedidoRepo;
         _produtoRepo = produtoRepo;
@@ -37,6 +42,7 @@ public class VendaService : IVendaService
         _clienteRepo = clienteRepo;
         _empresaRepo = empresaRepo;
         _contaBancariaRepo = contaBancariaRepo;
+        _movimentacaoRepo = movimentacaoRepo;
     }
 
     public async Task<PedidoVenda?> GetByIdAsync(Guid id)
@@ -44,10 +50,20 @@ public class VendaService : IVendaService
         var pedido = await _pedidoRepo.GetByIdAsync(id);
         if (pedido != null)
         {
-            pedido.Itens = (await _itemRepo.FindAsync(i => i.PedidoVendaId == id)).ToList();
-            foreach (var item in pedido.Itens)
+            pedido.Itens = (await _itemRepo.FindAsync(i => i.PedidoVendaId == id, asNoTracking: true)).ToList();
+            if (pedido.Itens.Any())
             {
-                item.Produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
+                var produtoIds = pedido.Itens.Select(i => i.ProdutoId).Distinct().ToList();
+                var produtos = (await _produtoRepo.FindAsync(p => produtoIds.Contains(p.Id), asNoTracking: true))
+                    .ToDictionary(p => p.Id);
+
+                foreach (var item in pedido.Itens)
+                {
+                    if (produtos.TryGetValue(item.ProdutoId, out var produto))
+                    {
+                        item.Produto = produto;
+                    }
+                }
             }
             pedido.Cliente = await _clienteRepo.GetByIdAsync(pedido.ClienteId);
         }
@@ -105,21 +121,8 @@ public class VendaService : IVendaService
         if (produtosAtualizados.Any()) await _produtoRepo.UpdateRangeAsync(produtosAtualizados);
 
 
-        // Buscar conta bancária padrão para gerar dados de pagamento
-        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
-        var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
-        
-        if (pedido.FormaPagamento == FormaPagamento.Boleto)
-        {
-            var banco = contaPadrao?.BancoNome ?? empresa?.BancoNome ?? "BANCO ITAU";
-            pedido.BoletoCodigoBarras = $"34191.79001 01043.510047 91020.150008 5 950200000{pedido.ValorTotal:0000}";
-        }
-        else if (pedido.FormaPagamento == FormaPagamento.Pix)
-        {
-            var chave = contaPadrao?.PixChave ?? empresa?.PixChave ?? "sgpf-fabrica-pix-key-12345";
-            var nomeRecebedor = (empresa?.NomeFantasia ?? "SGPF FABRICA").ToUpper();
-            pedido.PixQrCode = GerarBrCodePix(chave, pedido.ValorTotal, nomeRecebedor);
-        }
+        // Processar faturamento via Gateway de Pagamento Real (Asaas) ou Fallback local
+        await ProcessarFaturamentoAsaasOuFallbackAsync(pedido);
 
         await _pedidoRepo.AddAsync(pedido);
 
@@ -131,6 +134,7 @@ public class VendaService : IVendaService
         var pedido = (await _pedidoRepo.GetAllAsync()).FirstOrDefault(p => p.NumeroPedido == numeroPedido);
         if (pedido == null) return false;
 
+        var eraPago = pedido.Pago;
         pedido.Pago = true;
         await _pedidoRepo.UpdateAsync(pedido);
 
@@ -141,6 +145,29 @@ public class VendaService : IVendaService
             conta.Status = StatusContaReceber.Recebido;
             conta.DataRecebimento = DateTime.UtcNow;
             await _contaReceberRepo.UpdateAsync(conta);
+        }
+
+        // Conciliação automática: credita o valor na conta bancária padrão caso ainda não estivesse pago
+        if (!eraPago)
+        {
+            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+            if (contaPadrao != null)
+            {
+                contaPadrao.SaldoAtual += pedido.ValorTotal;
+                await _contaBancariaRepo.UpdateAsync(contaPadrao);
+
+                // Gravar movimentação
+                await _movimentacaoRepo.AddAsync(new MovimentacaoBancaria
+                {
+                    ContaBancariaId = contaPadrao.Id,
+                    Tipo = "entrada",
+                    Valor = pedido.ValorTotal,
+                    Descricao = $"Recebimento Pedido {pedido.NumeroPedido} (Faturamento)",
+                    DataMovimentacao = DateTime.UtcNow,
+                    Origem = OrigemMovimentacao.Venda,
+                    ReferenciaId = pedido.Id
+                });
+            }
         }
 
         return true;
@@ -172,6 +199,12 @@ public class VendaService : IVendaService
         var pedido = await GetByIdAsync(pedidoId);
         if (pedido == null || pedido.Status != StatusPedidoVenda.Novo)
             throw new Exception("Pedido não pode ser aprovado.");
+
+        // Evita colisão de rastreamento do EF Core limpando referências circulares
+        foreach (var item in pedido.Itens)
+        {
+            item.Produto = null!;
+        }
 
         var movimentacoes = new List<MovimentacaoEstoque>();
         var produtosAtualizados = new List<Produto>();
@@ -225,6 +258,18 @@ public class VendaService : IVendaService
             {
                 contaPadrao.SaldoAtual += pedido.ValorTotal;
                 await _contaBancariaRepo.UpdateAsync(contaPadrao);
+
+                // Gravar movimentação
+                await _movimentacaoRepo.AddAsync(new MovimentacaoBancaria
+                {
+                    ContaBancariaId = contaPadrao.Id,
+                    Tipo = "entrada",
+                    Valor = pedido.ValorTotal,
+                    Descricao = $"Recebimento Pedido {pedido.NumeroPedido} (Criar Faturado)",
+                    DataMovimentacao = DateTime.UtcNow,
+                    Origem = OrigemMovimentacao.Venda,
+                    ReferenciaId = pedido.Id
+                });
             }
         }
 
@@ -236,6 +281,12 @@ public class VendaService : IVendaService
         var pedido = await GetByIdAsync(pedidoId);
         if (pedido == null || pedido.Status == StatusPedidoVenda.Entregue)
             throw new Exception("Pedido inválido ou já entregue.");
+
+        // Evita colisão de rastreamento do EF Core limpando referências circulares
+        foreach (var item in pedido.Itens)
+        {
+            item.Produto = null!;
+        }
 
         var movimentacoes = new List<MovimentacaoEstoque>();
 
@@ -279,6 +330,12 @@ public class VendaService : IVendaService
         var pedido = await GetByIdAsync(id);
         if (pedido == null) throw new Exception("Pedido não encontrado.");
         if (pedido.Status == StatusPedidoVenda.Cancelado) return pedido;
+
+        // Evita colisão de rastreamento do EF Core limpando referências circulares
+        foreach (var item in pedido.Itens)
+        {
+            item.Produto = null!;
+        }
 
         // Reverter Logística
         if (pedido.Status != StatusPedidoVenda.Novo && pedido.Status != StatusPedidoVenda.Cancelado)
@@ -329,6 +386,18 @@ public class VendaService : IVendaService
             {
                 contaPadrao.SaldoAtual -= valorEstorno;
                 await _contaBancariaRepo.UpdateAsync(contaPadrao);
+
+                // Gravar movimentação
+                await _movimentacaoRepo.AddAsync(new MovimentacaoBancaria
+                {
+                    ContaBancariaId = contaPadrao.Id,
+                    Tipo = "saida",
+                    Valor = valorEstorno,
+                    Descricao = $"Estorno / Cancelamento Pedido {pedido.NumeroPedido}",
+                    DataMovimentacao = DateTime.UtcNow,
+                    Origem = OrigemMovimentacao.Venda,
+                    ReferenciaId = pedido.Id
+                });
             }
         }
 
@@ -344,6 +413,12 @@ public class VendaService : IVendaService
         
         if (pedidoExistente.Status > StatusPedidoVenda.Separacao)
             throw new Exception("Somente pedidos em Aprovação ou Separação podem ser editados.");
+
+        // Evita colisão de rastreamento do EF Core limpando referências circulares
+        foreach (var item in pedidoExistente.Itens)
+        {
+            item.Produto = null!;
+        }
 
         // 1. Reverter estoque atual (Reservas)
         if (pedidoExistente.Status == StatusPedidoVenda.Separacao)
@@ -403,23 +478,10 @@ public class VendaService : IVendaService
         pedidoExistente.FormaPagamento = pedidoAtualizado.FormaPagamento;
         pedidoExistente.MotoristaId = pedidoAtualizado.MotoristaId;
 
-        // Limpar e regenerar dados de faturamento (Pix/Boleto)
+        // Limpar e regenerar dados de faturamento via Gateway Real (Asaas) ou Fallback local
         pedidoExistente.BoletoCodigoBarras = null;
         pedidoExistente.PixQrCode = null;
-
-        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
-        var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
-
-        if (pedidoExistente.FormaPagamento == FormaPagamento.Boleto)
-        {
-            pedidoExistente.BoletoCodigoBarras = $"34191.79001 01043.510047 91020.150008 5 950200000{pedidoExistente.ValorTotal:0000}";
-        }
-        else if (pedidoExistente.FormaPagamento == FormaPagamento.Pix)
-        {
-            var chave = contaPadrao?.PixChave ?? empresa?.PixChave ?? "sgpf-fabrica-pix-key-12345";
-            var nomeRecebedor = (empresa?.NomeFantasia ?? "SGPF FABRICA").ToUpper();
-            pedidoExistente.PixQrCode = GerarBrCodePix(chave, pedidoExistente.ValorTotal, nomeRecebedor);
-        }
+        await ProcessarFaturamentoAsaasOuFallbackAsync(pedidoExistente);
 
         await _pedidoRepo.UpdateAsync(pedidoExistente);
 
@@ -436,29 +498,85 @@ public class VendaService : IVendaService
 
     public async Task ExcluirPedidoAsync(Guid id)
     {
-        var pedido = await _pedidoRepo.GetByIdAsync(id);
+        var pedido = await GetByIdAsync(id);
         if (pedido == null) return;
 
+        // Evita colisão de rastreamento do EF Core limpando referências circulares
+        foreach (var item in pedido.Itens)
+        {
+            item.Produto = null!;
+        }
+
+        // Se o pedido não estiver em status Novo ou Cancelado (onde o estoque já foi estornado/não baixado),
+        // precisamos reverter os itens para o estoque antes de apagar.
         if (pedido.Status != StatusPedidoVenda.Novo && pedido.Status != StatusPedidoVenda.Cancelado)
-            throw new Exception("Somente pedidos Novos ou Cancelados podem ser excluídos permanentemente.");
+        {
+            var movimentacoes = new List<MovimentacaoEstoque>();
+            var produtosAtualizados = new List<Produto>();
+
+            foreach (var item in pedido.Itens)
+            {
+                var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
+                if (produto != null)
+                {
+                    produto.QuantidadeEstoque += item.Quantidade;
+                    produtosAtualizados.Add(produto);
+
+                    movimentacoes.Add(new MovimentacaoEstoque
+                    {
+                        ProdutoId = item.ProdutoId,
+                        Tipo = TipoMovimentacao.Entrada,
+                        Quantidade = item.Quantidade,
+                        Origem = pedido.NumeroPedido,
+                        Observacao = $"Estorno de Exclusão Direta do Pedido ({pedido.Status})"
+                    });
+                }
+            }
+
+            if (movimentacoes.Any()) await _estoqueRepo.AddRangeAsync(movimentacoes);
+            if (produtosAtualizados.Any()) await _produtoRepo.UpdateRangeAsync(produtosAtualizados);
+        }
+
+        // Remover Contas a Receber associadas para evitar quebra de chave estrangeira/integridade
+        var contas = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedido.Id);
+        foreach (var conta in contas)
+        {
+            await _contaReceberRepo.DeleteAsync(conta.Id);
+        }
+
+        // Limpar itens do pedido
+        var itens = await _itemRepo.FindAsync(i => i.PedidoVendaId == pedido.Id);
+        foreach (var item in itens)
+        {
+            await _itemRepo.DeleteAsync(item.Id);
+        }
 
         await _pedidoRepo.DeleteAsync(id);
     }
 
     public async Task<IEnumerable<PedidoVenda>> GetPedidosAsync(Guid? motoristaId = null)
     {
-        var pedidos = await _pedidoRepo.GetAllAsync();
-        
-        if (motoristaId.HasValue)
-        {
-            pedidos = pedidos.Where(p => p.MotoristaId == motoristaId.Value);
-        }
+        var pedidos = motoristaId.HasValue
+            ? await _pedidoRepo.FindAsync(p => p.MotoristaId == motoristaId.Value, asNoTracking: true)
+            : await _pedidoRepo.GetAllAsync(asNoTracking: true);
 
-        foreach (var p in pedidos)
+        var pedidosList = pedidos.ToList();
+
+        if (pedidosList.Any())
         {
-            p.Cliente = await _clienteRepo.GetByIdAsync(p.ClienteId);
+            var clienteIds = pedidosList.Select(p => p.ClienteId).Distinct().ToList();
+            var clientes = (await _clienteRepo.FindAsync(c => clienteIds.Contains(c.Id), asNoTracking: true))
+                .ToDictionary(c => c.Id);
+
+            foreach (var p in pedidosList)
+            {
+                if (clientes.TryGetValue(p.ClienteId, out var cliente))
+                {
+                    p.Cliente = cliente;
+                }
+            }
         }
-        return pedidos.OrderByDescending(p => p.DataPedido);
+        return pedidosList.OrderByDescending(p => p.DataPedido);
     }
 
     public async Task<PedidoVenda> TogglePagamentoAsync(Guid id)
@@ -485,11 +603,39 @@ public class VendaService : IVendaService
         {
             var valorTotal = contas.Sum(c => c.Valor);
             if (pedido.Pago && !eraPago)
+            {
                 contaPadrao.SaldoAtual += valorTotal; // marcou como pago: credita
-            else if (!pedido.Pago && eraPago)
-                contaPadrao.SaldoAtual -= valorTotal; // reverteu: debita de volta
+                await _contaBancariaRepo.UpdateAsync(contaPadrao);
 
-            await _contaBancariaRepo.UpdateAsync(contaPadrao);
+                // Gravar movimentação
+                await _movimentacaoRepo.AddAsync(new MovimentacaoBancaria
+                {
+                    ContaBancariaId = contaPadrao.Id,
+                    Tipo = "entrada",
+                    Valor = valorTotal,
+                    Descricao = $"Recebimento Pedido {pedido.NumeroPedido} (Status Alterado)",
+                    DataMovimentacao = DateTime.UtcNow,
+                    Origem = OrigemMovimentacao.Venda,
+                    ReferenciaId = pedido.Id
+                });
+            }
+            else if (!pedido.Pago && eraPago)
+            {
+                contaPadrao.SaldoAtual -= valorTotal; // reverteu: debita de volta
+                await _contaBancariaRepo.UpdateAsync(contaPadrao);
+
+                // Gravar movimentação
+                await _movimentacaoRepo.AddAsync(new MovimentacaoBancaria
+                {
+                    ContaBancariaId = contaPadrao.Id,
+                    Tipo = "saida",
+                    Valor = valorTotal,
+                    Descricao = $"Estorno Pedido {pedido.NumeroPedido} (Status Alterado)",
+                    DataMovimentacao = DateTime.UtcNow,
+                    Origem = OrigemMovimentacao.Venda,
+                    ReferenciaId = pedido.Id
+                });
+            }
         }
 
         return pedido;
@@ -646,11 +792,23 @@ public class VendaService : IVendaService
                         col.Item().PaddingVertical(2);
                     }
                     col.Item().AlignCenter().Text(nomeEmpresa).FontSize(12).SemiBold();
+                    if (!string.IsNullOrEmpty(empresa?.Telefone))
+                    {
+                        col.Item().AlignCenter().Text($"TEL: {empresa.Telefone}");
+                    }
                     col.Item().AlignCenter().Text("--------------------------------");
                     col.Item().AlignCenter().Text("COMPROVANTE DE PEDIDO").SemiBold();
                     col.Item().Text($"DATA: {DateTime.Now:dd/MM/yyyy HH:mm}");
                     col.Item().Text($"PEDIDO: {pedido.NumeroPedido}");
                     col.Item().Text($"CLIENTE: {pedido.Cliente?.NomeFantasia}");
+                    if (!string.IsNullOrEmpty(pedido.Cliente?.Telefone))
+                    {
+                        col.Item().Text($"CONTATO: {pedido.Cliente.Telefone}");
+                    }
+                    if (!string.IsNullOrEmpty(pedido.Cliente?.Endereco))
+                    {
+                        col.Item().Text($"ENTREGA: {pedido.Cliente.Endereco}");
+                    }
                     col.Item().AlignCenter().Text("--------------------------------");
                 });
 
@@ -690,13 +848,29 @@ public class VendaService : IVendaService
         }).GeneratePdf();
     }
     // Gera um BR Code Pix válido conforme especificação do Banco Central (EMV QR Code)
+    private static string SanitizarChavePix(string chave)
+    {
+        var clean = chave.Trim();
+        if (clean.Contains("@"))
+        {
+            return clean;
+        }
+        if (System.Guid.TryParse(clean, out var parsedGuid))
+        {
+            return parsedGuid.ToString().ToLower();
+        }
+        return new string(clean.Where(char.IsDigit).ToArray());
+    }
+
     private static string GerarBrCodePix(string chavePixUrl, decimal valor, string nomeRecebedor)
     {
+        var chaveSanitizada = SanitizarChavePix(chavePixUrl);
+
         // Trunca nome para máx 25 chars (limite da spec)
         nomeRecebedor = nomeRecebedor.Length > 25 ? nomeRecebedor[..25].Trim() : nomeRecebedor;
 
         // Campo 26: Merchant Account Info (Pix)
-        var pixKey   = $"0014BR.GOV.BCB.PIX01{chavePixUrl.Length:00}{chavePixUrl}";
+        var pixKey   = $"0014BR.GOV.BCB.PIX01{chaveSanitizada.Length:00}{chaveSanitizada}";
         var mai      = $"26{pixKey.Length:00}{pixKey}";
 
         // Campo 54: Valor
@@ -706,7 +880,7 @@ public class VendaService : IVendaService
         // Monta payload sem CRC
         var payload =
             "000201"         +  // Payload Format Indicator
-            "010212"         +  // Point of Initiation Method (12 = QR rústico)
+            "010211"         +  // Point of Initiation Method (11 = QR estático)
             mai              +  // Merchant Account Info
             "52040000"       +  // MCC
             "5303986"        +  // Transaction Currency (BRL)
@@ -733,5 +907,202 @@ public class VendaService : IVendaService
                 crc = (ushort)((crc & 0x8000) != 0 ? (crc << 1) ^ poly : crc << 1);
         }
         return crc;
+    }
+
+    private async Task ProcessarFaturamentoAsaasOuFallbackAsync(PedidoVenda pedido)
+    {
+        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+        var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
+        var token = contaPadrao?.GatewayToken ?? empresa?.GatewayToken;
+
+        if (!string.IsNullOrWhiteSpace(token) && token != "SUA-CHAVE-ASAAS" && token != "TOKEN-API-GATEWAY-EXEMPLO")
+        {
+            try
+            {
+                var cliente = await _clienteRepo.GetByIdAsync(pedido.ClienteId);
+                if (cliente != null)
+                {
+                    bool sucesso = await CriarCobrancaAsaasAsync(token, pedido, cliente);
+                    if (sucesso) return;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[ASAAS INTEGRATION ERROR] Falha ao criar cobrança no Asaas. Detalhes: {ex.Message}. Utilizando simulador Offline.");
+            }
+        }
+
+        // Fallback offline (simulação) se o token não existir ou falhar
+        GerarDadosPagamentoFallback(pedido, contaPadrao, empresa);
+    }
+
+    private async Task<bool> CriarCobrancaAsaasAsync(string token, PedidoVenda pedido, Cliente cliente)
+    {
+        bool isSandbox = false;
+        string cleanToken = token;
+
+        if (token.StartsWith("sandbox:", StringComparison.OrdinalIgnoreCase))
+        {
+            isSandbox = true;
+            cleanToken = token.Substring("sandbox:".Length);
+        }
+        else if (token.StartsWith("test:", StringComparison.OrdinalIgnoreCase))
+        {
+            isSandbox = true;
+            cleanToken = token.Substring("test:".Length);
+        }
+        else if (token.StartsWith("$$"))
+        {
+            isSandbox = true;
+            cleanToken = token.Substring(1); // Remove o primeiro $, mantendo o segundo $ que faz parte da chave
+        }
+
+        string baseUrl = isSandbox ? "https://sandbox.asaas.com/api/v3" : "https://api.asaas.com/api/v3";
+
+        using var client = new HttpClient();
+        client.DefaultRequestHeaders.Add("access_token", cleanToken);
+        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+        var cpfCnpjLimpo = new string(cliente.CNPJ_CPF.Where(char.IsDigit).ToArray());
+        
+        // 1. Verificar se o cliente já existe no Asaas
+        string? customerId = null;
+        var searchUrl = $"{baseUrl}/customers?cpfCnpj={cpfCnpjLimpo}";
+        
+        try
+        {
+            var searchResponse = await client.GetAsync(searchUrl);
+            if (searchResponse.IsSuccessStatusCode)
+            {
+                var searchResponseStr = await searchResponse.Content.ReadAsStringAsync();
+                using var doc = JsonDocument.Parse(searchResponseStr);
+                var dataProp = doc.RootElement.GetProperty("data");
+                if (dataProp.ValueKind == JsonValueKind.Array && dataProp.GetArrayLength() > 0)
+                {
+                    customerId = dataProp[0].GetProperty("id").GetString();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ASAAS CUSTOMER SEARCH ERROR] {ex.Message}");
+        }
+
+        // 2. Se não existir, cadastrar o cliente
+        if (string.IsNullOrEmpty(customerId))
+        {
+            var customerPayload = new
+            {
+                name = string.IsNullOrWhiteSpace(cliente.RazaoSocial) ? cliente.NomeFantasia : cliente.RazaoSocial,
+                cpfCnpj = cpfCnpjLimpo,
+                phone = new string((cliente.Telefone ?? "").Where(char.IsDigit).ToArray()),
+                notificationDisabled = true
+            };
+
+            var customerContent = new StringContent(JsonSerializer.Serialize(customerPayload), Encoding.UTF8, "application/json");
+            var createResponse = await client.PostAsync($"{baseUrl}/customers", customerContent);
+            if (!createResponse.IsSuccessStatusCode)
+            {
+                var errorStr = await createResponse.Content.ReadAsStringAsync();
+                throw new Exception($"Falha ao cadastrar cliente no Asaas. HTTP Status: {createResponse.StatusCode}. Detalhes: {errorStr}");
+            }
+
+            var createResponseStr = await createResponse.Content.ReadAsStringAsync();
+            using var doc = JsonDocument.Parse(createResponseStr);
+            customerId = doc.RootElement.GetProperty("id").GetString();
+        }
+
+        if (string.IsNullOrEmpty(customerId))
+        {
+            throw new Exception("Não foi possível resolver o ID do cliente no Asaas.");
+        }
+
+        // 3. Criar a cobrança (BOLETO ou PIX)
+        var billingTypeStr = pedido.FormaPagamento == FormaPagamento.Boleto ? "BOLETO" : "PIX";
+        var paymentPayload = new
+        {
+            customer = customerId,
+            billingType = billingTypeStr,
+            value = pedido.ValorTotal,
+            dueDate = DateTime.UtcNow.AddDays(15).ToString("yyyy-MM-dd"),
+            externalReference = pedido.NumeroPedido,
+            description = $"Pedido {pedido.NumeroPedido} - {cliente.NomeFantasia}"
+        };
+
+        var paymentContent = new StringContent(JsonSerializer.Serialize(paymentPayload), Encoding.UTF8, "application/json");
+        var paymentResponse = await client.PostAsync($"{baseUrl}/payments", paymentContent);
+        if (!paymentResponse.IsSuccessStatusCode)
+        {
+            var errorStr = await paymentResponse.Content.ReadAsStringAsync();
+            throw new Exception($"Falha ao criar pagamento no Asaas. HTTP Status: {paymentResponse.StatusCode}. Detalhes: {errorStr}");
+        }
+
+        var paymentResponseStr = await paymentResponse.Content.ReadAsStringAsync();
+        using (var doc = JsonDocument.Parse(paymentResponseStr))
+        {
+            var root = doc.RootElement;
+            if (pedido.FormaPagamento == FormaPagamento.Boleto)
+            {
+                if (root.TryGetProperty("identificationField", out var idFieldProp) && idFieldProp.ValueKind == JsonValueKind.String)
+                {
+                    pedido.BoletoCodigoBarras = idFieldProp.GetString();
+                }
+                else if (root.TryGetProperty("barCode", out var barCodeProp) && barCodeProp.ValueKind == JsonValueKind.String)
+                {
+                    pedido.BoletoCodigoBarras = barCodeProp.GetString();
+                }
+
+                if (string.IsNullOrWhiteSpace(pedido.BoletoCodigoBarras))
+                {
+                    throw new Exception("Não foi retornado código de barras ou linha digitável do Asaas.");
+                }
+            }
+            else if (pedido.FormaPagamento == FormaPagamento.Pix)
+            {
+                var paymentId = root.GetProperty("id").GetString();
+                if (string.IsNullOrEmpty(paymentId))
+                {
+                    throw new Exception("Não foi retornado o ID da transação Pix do Asaas.");
+                }
+
+                var pixResponse = await client.GetAsync($"{baseUrl}/payments/{paymentId}/pixQrCode");
+                if (!pixResponse.IsSuccessStatusCode)
+                {
+                    throw new Exception($"Falha ao recuperar Pix QR Code do Asaas. HTTP Status: {pixResponse.StatusCode}");
+                }
+
+                var pixResponseStr = await pixResponse.Content.ReadAsStringAsync();
+                using var pixDoc = JsonDocument.Parse(pixResponseStr);
+                var pixRoot = pixDoc.RootElement;
+                if (pixRoot.TryGetProperty("payload", out var payloadProp) && payloadProp.ValueKind == JsonValueKind.String)
+                {
+                    pedido.PixQrCode = payloadProp.GetString();
+                }
+                else
+                {
+                    throw new Exception("Resposta do Pix QR Code não contém o payload (copia e cola).");
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private void GerarDadosPagamentoFallback(PedidoVenda pedido, ContaBancaria? contaPadrao, Empresa? empresa)
+    {
+        pedido.BoletoCodigoBarras = null;
+        pedido.PixQrCode = null;
+
+        if (pedido.FormaPagamento == FormaPagamento.Boleto)
+        {
+            var valorEmCentavos = (long)(pedido.ValorTotal * 100);
+            pedido.BoletoCodigoBarras = $"34191.79001 01043.510047 91020.150008 5 9502{valorEmCentavos:D10}";
+        }
+        else if (pedido.FormaPagamento == FormaPagamento.Pix)
+        {
+            var chave = contaPadrao?.PixChave ?? empresa?.PixChave ?? "sgpf-fabrica-pix-key-12345";
+            var nomeRecebedor = (empresa?.NomeFantasia ?? "SGPF FABRICA").ToUpper();
+            pedido.PixQrCode = GerarBrCodePix(chave, pedido.ValorTotal, nomeRecebedor);
+        }
     }
 }
