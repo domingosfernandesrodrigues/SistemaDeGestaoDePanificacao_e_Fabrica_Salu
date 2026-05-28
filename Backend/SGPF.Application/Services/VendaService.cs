@@ -129,7 +129,7 @@ public class VendaService : IVendaService
         return pedido;
     }
 
-    public async Task<bool> ConfirmarPagamentoAsync(string numeroPedido)
+    public async Task<bool> ConfirmarPagamentoAsync(string numeroPedido, decimal? valorLiquido = null, string? transacaoId = null, DateTime? dataPagamento = null)
     {
         var pedido = (await _pedidoRepo.GetAllAsync()).FirstOrDefault(p => p.NumeroPedido == numeroPedido);
         if (pedido == null) return false;
@@ -138,35 +138,47 @@ public class VendaService : IVendaService
         pedido.Pago = true;
         await _pedidoRepo.UpdateAsync(pedido);
 
+        var dataRecebimentoEfetivo = dataPagamento ?? DateTime.UtcNow;
+
         // Atualizar Financeiro (Conta a Receber)
         var contas = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedido.Id);
         foreach (var conta in contas)
         {
             conta.Status = StatusContaReceber.Recebido;
-            conta.DataRecebimento = DateTime.UtcNow;
+            conta.DataRecebimento = dataRecebimentoEfetivo;
             await _contaReceberRepo.UpdateAsync(conta);
         }
 
         // Conciliação automática: credita o valor na conta bancária padrão caso ainda não estivesse pago
         if (!eraPago)
         {
-            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+            // Fallback inteligente para Conta Bancária Ativa: Prioriza padrão, depois qualquer ativa
+            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
+                              ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
+
             if (contaPadrao != null)
             {
-                contaPadrao.SaldoAtual += pedido.ValorTotal;
+                var valorRecebidoReal = valorLiquido ?? pedido.ValorTotal;
+                contaPadrao.SaldoAtual += valorRecebidoReal;
                 await _contaBancariaRepo.UpdateAsync(contaPadrao);
+
+                var traceInfo = !string.IsNullOrEmpty(transacaoId) ? $" (ID: {transacaoId})" : "";
 
                 // Gravar movimentação
                 await _movimentacaoRepo.AddAsync(new MovimentacaoBancaria
                 {
                     ContaBancariaId = contaPadrao.Id,
                     Tipo = "entrada",
-                    Valor = pedido.ValorTotal,
-                    Descricao = $"Recebimento Pedido {pedido.NumeroPedido} (Faturamento)",
-                    DataMovimentacao = DateTime.UtcNow,
+                    Valor = valorRecebidoReal,
+                    Descricao = $"Recebimento Pedido {pedido.NumeroPedido}{traceInfo}",
+                    DataMovimentacao = dataRecebimentoEfetivo,
                     Origem = OrigemMovimentacao.Venda,
                     ReferenciaId = pedido.Id
                 });
+            }
+            else
+            {
+                Console.WriteLine($"[FINANCEIRO WARNING] Pagamento confirmado para o pedido {pedido.NumeroPedido}, mas nenhuma conta bancária ativa foi encontrada para conciliação automática!");
             }
         }
 

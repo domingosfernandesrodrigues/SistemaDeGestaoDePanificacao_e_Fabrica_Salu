@@ -1,1 +1,1 @@
-// Desativado por varredura de segurança e eliminação de código inútil
+// DELETED

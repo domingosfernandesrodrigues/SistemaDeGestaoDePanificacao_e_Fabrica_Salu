@@ -41,16 +41,8 @@ public class AuthService : IAuthService
             return null;
         }
         
-        // Backward compatibility: If the hash starts with $2a$, $2b$, $2x$, or $2y$, it's BCrypt. Otherwise, it might be plain text.
-        bool isPasswordValid = false;
-        if (usuario.SenhaHash.StartsWith("$2a$") || usuario.SenhaHash.StartsWith("$2b$") || usuario.SenhaHash.StartsWith("$2x$") || usuario.SenhaHash.StartsWith("$2y$")) 
-        {
-            isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Senha, usuario.SenhaHash);
-        } 
-        else 
-        {
-            isPasswordValid = (usuario.SenhaHash == request.Senha);
-        }
+        // Validação estrita por hashes criptográficos BCrypt robustos
+        bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Senha, usuario.SenhaHash);
 
         if (!isPasswordValid) 
         {

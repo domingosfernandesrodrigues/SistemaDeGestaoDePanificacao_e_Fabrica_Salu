@@ -15,7 +15,7 @@ public interface IVendaService
     Task<PedidoVenda?> GetByIdAsync(Guid id);
     Task<IEnumerable<PedidoVenda>> GetPedidosAsync(Guid? motoristaId = null);
     Task<PedidoVenda> TogglePagamentoAsync(Guid id);
-    Task<bool> ConfirmarPagamentoAsync(string numeroPedido);
+    Task<bool> ConfirmarPagamentoAsync(string numeroPedido, decimal? valorLiquido = null, string? transacaoId = null, System.DateTime? dataPagamento = null);
     Task<byte[]> GerarNotaFiscalAsync(Guid pedidoId);
     Task<byte[]> GerarComandaAsync(Guid pedidoId);
 }
