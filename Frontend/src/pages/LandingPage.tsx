@@ -11,6 +11,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { LogoSalu } from '../components/LogoSalu';
+import { PhysicsCanvas } from '../components/PhysicsCanvas';
 
 const loginSchema = z.object({
   email: z.string().email('E-mail inválido'),
@@ -165,8 +166,13 @@ export function LandingPage() {
       <section id="home" className="relative min-h-[560px] bg-dark flex items-center px-6 md:px-12 py-24 overflow-hidden">
         {/* Animated Hero Background */}
         <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute inset-0 opacity-20 bg-[radial-gradient(ellipse_60%_50%_at_80%_50%,rgba(224,98,26,0.22)_0%,transparent_70%),radial-gradient(ellipse_40%_60%_at_20%_80%,rgba(192,57,10,0.18)_0%,transparent_60%)]" />
-          <div className="absolute right-0 top-0 bottom-0 w-full md:w-[45%] bg-[repeating-linear-gradient(90deg,transparent,transparent_39px,rgba(212,134,11,0.07)_39px,rgba(212,134,11,0.07)_40px)]" />
+          <div className="absolute inset-0 opacity-15 bg-[radial-gradient(ellipse_60%_50%_at_80%_50%,rgba(224,98,26,0.20)_0%,transparent_70%),radial-gradient(ellipse_40%_60%_at_20%_80%,rgba(192,57,10,0.15)_0%,transparent_60%)]" />
+          <div className="absolute right-0 top-0 bottom-0 w-full md:w-[45%] bg-[repeating-linear-gradient(90deg,transparent,transparent_39px,rgba(212,134,11,0.05)_39px,rgba(212,134,11,0.05)_40px)]" />
+        </div>
+
+        {/* Physics-Based Kinetic Atmosphere Background (GPU Accelerated) */}
+        <div className="absolute inset-0 z-[1] select-none pointer-events-auto">
+          <PhysicsCanvas />
         </div>
 
         <div className="relative z-10 max-w-[620px]">
@@ -422,7 +428,7 @@ export function LandingPage() {
                       <LogoSalu size={80} />
                     </div>
                     <h3 className="font-serif text-3xl text-cream font-bold mb-1">Salú Representação</h3>
-                    <p className="text-[#7A4820] text-sm">Insira suas credenciais para continuar</p>
+                    <p className="text-[#D4B89A] text-sm">Insira suas credenciais para continuar</p>
                   </div>
 
                   <form onSubmit={handleSubmit(onLogin)} className="space-y-5">
@@ -431,35 +437,35 @@ export function LandingPage() {
                     )}
                     
                     <div className="space-y-1.5">
-                      <label htmlFor="login-email" className="block text-[0.72rem] font-bold text-[#9B7653] tracking-widest uppercase">E-mail</label>
+                      <label htmlFor="login-email" className="block text-[0.72rem] font-bold text-[#D4B89A] tracking-widest uppercase">E-mail</label>
                       <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A2410] pointer-events-none" />
+                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ember-light/60 pointer-events-none" />
                         <input
                           id="login-email"
                           type="email"
                           placeholder="seu@email.com.br"
                           {...register('email')}
-                          className="w-full bg-black/20 border-[1.5px] border-ember/40 rounded-lg py-3 pl-10 pr-4 text-cream text-[0.93rem] outline-none focus:border-ember transition-colors placeholder:text-[#9B7653]/60"
+                          className="w-full bg-black/20 border-[1.5px] border-ember/40 rounded-lg py-3 pl-10 pr-4 text-cream text-[0.93rem] outline-none focus:border-ember transition-colors placeholder:text-[#D4B89A]/45"
                         />
                       </div>
                       {errors.email && <p className="text-red-500 text-[10px] mt-1">{errors.email.message}</p>}
                     </div>
 
                     <div className="space-y-1.5">
-                      <label htmlFor="login-senha" className="block text-[0.72rem] font-bold text-[#9B7653] tracking-widest uppercase">Senha</label>
+                      <label htmlFor="login-senha" className="block text-[0.72rem] font-bold text-[#D4B89A] tracking-widest uppercase">Senha</label>
                       <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A2410] pointer-events-none" />
+                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ember-light/60 pointer-events-none" />
                         <input
                           id="login-senha"
                           type={showPass ? 'text' : 'password'}
                           placeholder="••••••••"
                           {...register('senha')}
-                          className="w-full bg-black/20 border-[1.5px] border-ember/40 rounded-lg py-3 pl-10 pr-12 text-cream text-[0.93rem] outline-none focus:border-ember transition-colors placeholder:text-[#9B7653]/60"
+                          className="w-full bg-black/20 border-[1.5px] border-ember/40 rounded-lg py-3 pl-10 pr-12 text-cream text-[0.93rem] outline-none focus:border-ember transition-colors placeholder:text-[#D4B89A]/45"
                         />
                         <button 
                           type="button" 
                           onClick={() => setShowPass(!showPass)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A2410] hover:text-ember-light transition-colors"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-ember-light/60 hover:text-ember-light transition-colors"
                         >
                           {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                         </button>
@@ -475,7 +481,7 @@ export function LandingPage() {
                       {isSubmitting ? 'Verificando...' : 'Entrar no Sistema'}
                     </button>
 
-                    <div className="text-center pt-4 text-[0.82rem] text-[#7A4820]">
+                    <div className="text-center pt-4 text-[0.82rem] text-[#D4B89A]">
                       <button 
                         type="button" 
                         onClick={() => alert('Por favor, entre em contato com a administração para recuperar sua senha.')}
@@ -490,13 +496,13 @@ export function LandingPage() {
                 <form onSubmit={hT(onTrocar)} className="space-y-5">
                   <div className="mb-8">
                     <h3 className="font-serif text-3xl text-cream font-bold mb-1">Primeiro Acesso</h3>
-                    <p className="text-[#7A4820] text-sm">Crie uma senha segura para sua conta</p>
+                    <p className="text-[#D4B89A] text-sm">Crie uma senha segura para sua conta</p>
                   </div>
 
                   <div className="space-y-1.5">
-                    <label htmlFor="nova-senha" className="block text-[0.72rem] font-bold text-[#9B7653] tracking-widest uppercase">Nova Senha</label>
+                    <label htmlFor="nova-senha" className="block text-[0.72rem] font-bold text-[#D4B89A] tracking-widest uppercase">Nova Senha</label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A2410] pointer-events-none" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ember-light/60 pointer-events-none" />
                       <input
                         id="nova-senha"
                         type={showPass ? 'text' : 'password'}
@@ -504,7 +510,11 @@ export function LandingPage() {
                         {...rT('novaSenha')}
                         className="w-full bg-white/5 border-[1.5px] border-ember/20 rounded-lg py-3 pl-10 pr-12 text-cream text-[0.93rem] outline-none focus:border-ember transition-colors"
                       />
-                      <button type="button" onClick={() => setShowPass(!showPass)} className="absolute right-3 top-1/2 -translate-y-1/2 text-[#4A2410]">
+                      <button 
+                        type="button" 
+                        onClick={() => setShowPass(!showPass)} 
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-ember-light/60 hover:text-ember-light transition-colors"
+                      >
                         {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                       </button>
                     </div>
@@ -516,8 +526,8 @@ export function LandingPage() {
                     {passwordRequirements.map((req, idx) => {
                       const isMet = req.test(novaSenha);
                       return (
-                        <div key={idx} className={`flex items-center gap-2 text-[10px] ${isMet ? 'text-ember-light font-bold' : 'text-[#4A2410]'}`}>
-                          <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border ${isMet ? 'bg-ember/20 border-ember-light' : 'border-[#4A2410]'}`}>
+                        <div key={idx} className={`flex items-center gap-2 text-[11px] ${isMet ? 'text-ember-light font-bold' : 'text-[#D4B89A]/50'}`}>
+                          <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center border ${isMet ? 'bg-ember/20 border-ember-light' : 'border-[#D4B89A]/20'}`}>
                             {isMet && <CheckCircle2 size={10} />}
                           </div>
                           {req.label}
@@ -527,9 +537,9 @@ export function LandingPage() {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label htmlFor="confirmar-senha" className="block text-[0.72rem] font-bold text-[#9B7653] tracking-widest uppercase">Confirmar Senha</label>
+                    <label htmlFor="confirmar-senha" className="block text-[0.72rem] font-bold text-[#D4B89A] tracking-widest uppercase">Confirmar Senha</label>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#4A2410] pointer-events-none" />
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ember-light/60 pointer-events-none" />
                       <input
                         id="confirmar-senha"
                         type={showPass ? 'text' : 'password'}
