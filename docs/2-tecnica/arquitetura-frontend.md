@@ -15,12 +15,13 @@
 
 ## Estratégias de Performance
 - **Cache em Memória:** Dados de configuração da empresa são cacheados em nível de serviço (`empresaService`) para evitar refetching em cada transição de página no Layout.
-- **Otimização de Imagens:** Implementada compressão via Canvas API no upload de logos. Imagens são redimensionadas para max 400px e comprimidas para 70% de qualidade (JPEG) antes de serem enviadas como base64 via API.
-- **Lazy Loading de PDFs:** Contracheques são gerados on-demand no backend, com estado de carregamento (`Loader2`) no frontend e bloqueio de cliques múltiplos.
+- **Otimização de Imagens:** Compressão via Canvas API no upload de logos. Imagens redimensionadas para max 400px e comprimidas para 70% de qualidade antes de serem transmitidas via base64.
+- **Lazy Loading de PDFs:** Contracheques são gerados no backend sob demanda com indicador visual de progresso e bloqueio anti-cliques múltiplos.
+- **Cinética de Alta Performance (Rede Digital):** O componente `<PhysicsCanvas />` realiza toda a simulação matemática vetorial diretamente sob aceleração de hardware (GPU) via Canvas HTML5 2D, com renderização HiDPI (`devicePixelRatio` nativo) e desligamento instantâneo via media query `prefers-reduced-motion` para preservação máxima de CPU e bateria.
 
 ## Padrões de Código
-- Componentes Funcionais com Interfaces TS claras.
-- **Mobile First:** Uso rigoroso de breakpoints Tailwind para suporte a iPhone 14 Pro Max.
-- **Validação:** Zod + React Hook Form para todos os inputs, com sinalização visual de campos obrigatórios (*).
-- **UX Consistente:** Modais com sticky headers e scroll interno para formulários densos.
-- Tratamento de erro global nos requests (Toast Notifications).
+- Componentes Funcionais estruturados com interfaces estritas e TypeScript limpo.
+- **Mobile First:** Grid flexível baseado em breakpoints Tailwind para responsividade contínua (Mobile até Desktop Ultrawide).
+- **Validação Robustecida:** Zod + React Hook Form para tratamento rigoroso de entradas e feedback visual imediato.
+- **UX Inovadora e Atmosférica:** Integração de elementos dinâmicos de dados em segundo plano (constelações e conexões de rede lineares) que reagem dinamicamente à movimentação do cursor sem criar concorrência visual ou fadiga de movimento.
+- **Isolamento de Camadas (z-index):** Separação rigorosa de camadas interativas (background cinético em `z-[1]`, interface de leitura e botões primários em `z-[10]` e modais/overlays em `z-[200]`).

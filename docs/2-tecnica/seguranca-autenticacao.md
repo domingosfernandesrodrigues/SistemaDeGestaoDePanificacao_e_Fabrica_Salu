@@ -13,8 +13,10 @@
 - **Cliente:** Acesso restrito apenas aos seus próprios dados e pedidos.
 
 ## Políticas
-- Refresh Token para manter sessões seguras.
-- Criptografia de senhas usando BCrypt ou Argon2.
+- **Refresh Token:** Para manter sessões seguras e mitigar interceptações de credenciais.
+- **Criptografia Estrita (BCrypt):** Uso obrigatório do algoritmo BCrypt (com custo de 12 salt rounds) no serviço `AuthService.cs` para todas as validações de login e redefinições de senha. Qualquer fallback inseguro de comparação em texto simples foi purgado do sistema.
+- **Auto-Migrador de Senhas em Segundo Plano:** No boot do backend (`DbPatchesInitializer.cs`), um processo de auditoria transparente analisa a tabela `Usuarios`. Caso existam senhas antigas armazenadas em texto simples, o sistema computa o hash seguro via BCrypt e atualiza o registro na base de dados de forma completamente invisível ao usuário final.
+- **Wipe Definitivo de Backdoors:** Remoção física de todos os endpoints inseguros e scripts de desenvolvimento (`DbCompareController`, `DebugController`, `check_db`). Acesso aos controllers restrito rigorosamente pelo atributo `[Authorize]` e respectivas roles.
 
 ## Políticas de Isolamento (Multi-tenancy Lite)
 - Todo endpoint de cliente deve validar se o `ClienteId` do recurso solicitado pertence ao `UsuarioId` autenticado no token JWT.
