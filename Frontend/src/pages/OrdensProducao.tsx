@@ -43,7 +43,7 @@ export function OrdensProducao() {
   const [editId, setEditId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
-  const { register, handleSubmit, reset, setValue, control, formState: { errors } } = useForm<OpForm>({
+  const { register, handleSubmit, reset, setValue, control, watch, formState: { errors } } = useForm<OpForm>({
     resolver: zodResolver(opSchema)
   });
 
@@ -62,6 +62,9 @@ export function OrdensProducao() {
       return response.data;
     },
   });
+
+  const watchProdutoId = watch('produtoId');
+  const selectedProdutoInfo = produtos?.find(p => p.id === watchProdutoId);
 
   const mutationSave = useMutation({
     mutationFn: (data: OpForm) => {
@@ -318,13 +321,53 @@ export function OrdensProducao() {
               <SearchableSelect
                 label="Produto a Fabricar"
                 placeholder="Pesquise o produto..."
-                options={produtos?.filter(p => p.tipo === 1).map(p => ({ value: p.id, label: p.nome })) || []}
+                options={produtos?.filter(p => p.tipo === 1).map(p => ({ 
+                  value: p.id, 
+                  label: `${p.nome} (Saldo: ${p.quantidadeEstoque} ${p.unidadeMedida || 'Un'})` 
+                })) || []}
                 value={field.value}
                 onChange={field.onChange}
                 error={errors.produtoId?.message}
               />
             )}
           />
+
+          {selectedProdutoInfo && (
+            <div className="bg-gradient-to-br from-slate-50 to-slate-100/50 border border-slate-200/80 rounded-2xl p-4 flex items-center justify-between transition-all duration-300 shadow-sm animate-fade-in">
+              <div className="flex items-center gap-3">
+                <div className={`p-3 rounded-xl ${
+                  selectedProdutoInfo.quantidadeEstoque <= 0 
+                    ? 'bg-red-50 text-red-500'
+                    : selectedProdutoInfo.quantidadeEstoque <= 10
+                    ? 'bg-amber-50 text-amber-500'
+                    : 'bg-emerald-50 text-emerald-500'
+                }`}>
+                  <Factory size={20} />
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Saldo Atual em Estoque</p>
+                  <h4 className="text-lg font-black text-slate-800 mt-0.5">
+                    {selectedProdutoInfo.quantidadeEstoque} <span className="text-xs font-semibold text-slate-500">{selectedProdutoInfo.unidadeMedida || 'Un'}</span>
+                  </h4>
+                </div>
+              </div>
+              <div className="text-right">
+                <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                  selectedProdutoInfo.quantidadeEstoque <= 0 
+                    ? 'bg-red-100/80 text-red-700'
+                    : selectedProdutoInfo.quantidadeEstoque <= 10
+                    ? 'bg-amber-100/80 text-amber-700'
+                    : 'bg-emerald-100/80 text-emerald-700'
+                }`}>
+                  {selectedProdutoInfo.quantidadeEstoque <= 0 
+                    ? 'Esgotado'
+                    : selectedProdutoInfo.quantidadeEstoque <= 10
+                    ? 'Estoque Baixo'
+                    : 'Disponível'}
+                </span>
+              </div>
+            </div>
+          )}
 
           <Input 
             label="Quantidade Planejada (Un)" 
