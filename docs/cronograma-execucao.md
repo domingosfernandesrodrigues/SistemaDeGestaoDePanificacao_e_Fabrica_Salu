@@ -56,7 +56,15 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 ## 📊 Status de Progresso Geral
 - **Fase Atual:** Estabilidade e Performance ✅
 - **Progresso Total:** 100% (Todos os módulos, BI, Perfil Motorista, Contas Bancárias Retroativas com Filtros e Paginação, e Otimização Extrema de Performance de Dados concluídos)
-- **Última Atualização:** 26/05/2026
+- **Última Atualização:** 28/05/2026
+
+### 🛠️ Usabilidade Mobile, BI Avançado e Impressão Térmica Estabilizada (28/Mai/2026):
+- **Touch Drag-and-Drop em Vendas B2B:** Criação de manipuladores de eventos de toque (`onTouchStart`, `onTouchMove`, `onTouchEnd`) no Kanban de Vendas (`Vendas.tsx`) para permitir arrastar os cards na simulação de smartphone e em telas touch físicas usando detecção dinâmica de colunas (`document.elementFromPoint`).
+- **Seletor de Status Mobile:** Inclusão de menu suspenso de alteração de status específico para dispositivos móveis (`md:hidden`) em cada card do Kanban, com estilização em cores sólidas contextuais (*Ember*, *Amber*, *Fire*, *Green*, *Red*) para rápido avanço operacional de pedidos.
+- **Grade de Filtros Totalmente Responsiva:** Reestruturação da barra de filtros do painel B2B para o padrão `grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4 items-end`, isolando o seletor de pagamento e o botão de limpeza em colunas exclusivas, sanando quebras de layout em viewports intermediários.
+- **Saldos Físicos em Tempo Real nas OPs:** Integração de controle de estoque em tempo real na criação de Ordens de Produção (`OrdensProducao.tsx`). A busca inline de produtos exibe o saldo de estoque restante, e a seleção ativa renderiza um cartão premium de status de estoque (🔴 *Esgotado*, 🟡 *Estoque Baixo*, 🟢 *Disponível*) com animação e cores dinâmicas.
+- **BI - Inventário Comercial & Legibilidade Máxima:** Implementação da listagem "Saldos dos Produtos para Venda" (aba Estoque no Dashboard), isolando itens comerciais (acabados e revenda) de insumos. Novo design simétrico de 2 colunas (`lg:grid-cols-2 gap-8`) com scrollbar suave e redesenho das etiquetas de status de ambos os cards para fundos sólidos vibrantes de alto contraste e texto branco em negrito (`text-white text-xs font-bold shadow-sm`), resolvendo a visibilidade de dados em qualquer tema.
+- **Impressão Térmica de Comandas (80mm) sem Cortes:** Otimização da geração de PDF de comanda (`VendaService.cs`), deslocando todo o conteúdo 35 pontos para baixo contra o limite da guilhotina física da impressora de balcão, redimensionando a logo de 50px para 80px e ativando formatação global em negrito (`.Bold()`) e fontes aumentadas para máxima definição e queima do papel térmico.
 
 ### 🛠️ Contas Bancárias Retroativas, Painel de Extrato, Filtros e Alta Performance (26/Mai/2026):
 - **Tabela Histórica de Movimentações Bancárias:** Criação da tabela SQL `MovimentacoesBancarias` vinculada a `ContasBancarias` para persistência real de todo o fluxo financeiro de caixa (Manual, Despesa, Receita, Venda, Frota e Abertura).
