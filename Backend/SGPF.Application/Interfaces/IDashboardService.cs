@@ -52,6 +52,8 @@ public class InventoryMetrics
     public decimal InventoryValue { get; set; }
     public decimal TotalPurchases { get; set; } // Compras do período
     public decimal InputCost { get; set; } // Custo de insumos recebidos
+    public List<MetricItem> LowStockProducts { get; set; } = new();
+    public List<MetricItem> ProductsForSaleStock { get; set; } = new();
 }
 
 public class FleetMetrics
