@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, TouchEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -380,6 +380,45 @@ export function Vendas() {
     }
   };
 
+  const handleTouchStart = (e: TouchEvent, id: string) => {
+    if (isCliente) return;
+    setDraggedId(id);
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (isCliente || !draggedId) return;
+    
+    const touch = e.touches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    const dropZone = element?.closest('.drop-zone');
+    
+    document.querySelectorAll('.drop-zone').forEach(el => {
+      el.classList.remove('bg-indigo-50/50', 'border-indigo-300', 'ring-2', 'ring-ember/30');
+    });
+    if (dropZone) {
+      dropZone.classList.add('bg-indigo-50/50', 'border-indigo-300', 'ring-2', 'ring-ember/30');
+    }
+  };
+
+  const handleTouchEnd = (e: TouchEvent) => {
+    if (isCliente || !draggedId) return;
+    
+    const touch = e.changedTouches[0];
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    const dropZone = element?.closest('.drop-zone');
+    
+    document.querySelectorAll('.drop-zone').forEach(el => {
+      el.classList.remove('bg-indigo-50/50', 'border-indigo-300', 'ring-2', 'ring-ember/30');
+    });
+    
+    if (dropZone) {
+      const newStatus = Number(dropZone.getAttribute('data-status'));
+      mutationUpdateStatus.mutate({ id: draggedId, status: newStatus });
+    }
+    
+    setDraggedId(null);
+  };
+
   const onSubmit = (data: PedidoForm) => {
     // Converter desconto de % para valor fixo para o Backend
     const dataFormatted = {
@@ -436,7 +475,8 @@ export function Vendas() {
     
     return (
       <div 
-        className="bg-slate-50/80 rounded-xl p-3 border border-slate-200 min-h-[500px] transition-colors"
+        data-status={statusValue}
+        className="bg-slate-50/80 rounded-xl p-3 border border-slate-200 min-h-[500px] transition-colors drop-zone"
         onDragOver={(e) => e.preventDefault()}
         onDrop={() => handleDrop(statusValue)}
       >
@@ -455,6 +495,9 @@ export function Vendas() {
               key={venda.id}
               draggable={!isCliente}
               onDragStart={() => handleDragStart(venda.id)}
+              onTouchStart={(e) => handleTouchStart(e, venda.id)}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
               className={`bg-white rounded-xl border overflow-hidden transition-all group ${
                 !isCliente ? 'cursor-grab active:cursor-grabbing' : ''
               } ${
@@ -525,6 +568,33 @@ export function Vendas() {
                     <span className="text-[11px] font-semibold text-ember">{venda.motorista.nome.split(' ')[0]}</span>
                   </div>
                 )}
+
+                {/* Seletor de status para mobile/touch */}
+                {!isCliente && (
+                  <div className="md:hidden mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Status:</span>
+                    <select
+                      value={venda.status}
+                      onChange={(e) => {
+                        const newStatus = Number(e.target.value);
+                        mutationUpdateStatus.mutate({ id: venda.id, status: newStatus });
+                      }}
+                      className={`text-[11px] font-bold px-2 py-1 rounded-lg border outline-none cursor-pointer transition-all ${
+                        venda.status === 0 ? 'bg-ember/10 text-ember border-ember/20' :
+                        venda.status === 1 ? 'bg-amber-100 text-amber-700 border-amber-200' :
+                        venda.status === 2 ? 'bg-fire/10 text-fire border-fire/20' :
+                        venda.status === 3 ? 'bg-green-100 text-green-700 border-green-200' :
+                        'bg-red-50 text-red-500 border-red-100'
+                      }`}
+                    >
+                      <option value={0}>Aprovação</option>
+                      <option value={1}>Em Separação</option>
+                      <option value={2}>Em Rota</option>
+                      <option value={3}>Entregue</option>
+                      <option value={4}>Cancelado</option>
+                    </select>
+                  </div>
+                )}
               </div>
 
               {/* Footer: valor + pagamento + hora */}
@@ -577,9 +647,9 @@ export function Vendas() {
       </div>
 
       {/* Barra de Filtros */}
-      <div className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 gap-4 items-end ${isCliente ? 'md:grid-cols-3' : 'md:grid-cols-6'}`}>
+      <div className={`bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 ${isCliente ? 'lg:grid-cols-4' : 'lg:grid-cols-7'} gap-4 items-end`}>
         {!isCliente && (
-          <div className="md:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-2">
             <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Buscar Cliente</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
@@ -650,31 +720,35 @@ export function Vendas() {
           />
         </div>
 
-          <div className="flex gap-2">
-            <select 
-              value={filtroPago}
-              onChange={(e) => setFiltroPago(e.target.value)}
-              className="flex-1 h-10 px-2 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
-            >
-              <option value="">Todos (Pagto)</option>
-              <option value="true">Pago</option>
-              <option value="false">Pendente</option>
-            </select>
-            <Button 
-              variant="secondary" 
-              className="flex-1 h-10 text-xs"
-              onClick={() => {
-                setFiltroCliente('');
-                setFiltroMotorista('');
-                setFiltroAno(new Date().getFullYear().toString());
-                setFiltroMes((new Date().getMonth() + 1).toString());
-                setFiltroData('');
-                setFiltroPago('');
-              }}
-            >
-              Limpar
-            </Button>
-          </div>
+        <div>
+          <label className="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Pagamento</label>
+          <select 
+            value={filtroPago}
+            onChange={(e) => setFiltroPago(e.target.value)}
+            className="w-full h-10 px-2 rounded-lg border border-slate-200 bg-slate-50 text-xs focus:ring-2 focus:ring-indigo-500 outline-none"
+          >
+            <option value="">Todos (Pagto)</option>
+            <option value="true">Pago</option>
+            <option value="false">Pendente</option>
+          </select>
+        </div>
+
+        <div>
+          <Button 
+            variant="secondary" 
+            className="w-full h-10 text-xs"
+            onClick={() => {
+              setFiltroCliente('');
+              setFiltroMotorista('');
+              setFiltroAno(new Date().getFullYear().toString());
+              setFiltroMes((new Date().getMonth() + 1).toString());
+              setFiltroData('');
+              setFiltroPago('');
+            }}
+          >
+            Limpar Filtros
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
