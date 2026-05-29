@@ -794,22 +794,23 @@ public class VendaService : IVendaService
                 page.Size(226, PageSizes.A4.Height); // ~80mm width
                 page.Margin(0.5f, Unit.Centimetre);
                 page.PageColor(Colors.White);
-                page.DefaultTextStyle(x => x.FontSize(9).FontFamily(Fonts.CourierNew));
+                page.DefaultTextStyle(x => x.FontSize(10.5f).FontFamily(Fonts.CourierNew).Bold());
 
                 page.Header().Column(col =>
                 {
+                    col.Item().PaddingTop(35); // Espaçador aumentado para 35 no topo para evitar corte físico/guilhotina da impressora
                     if (logoBytes != null)
                     {
-                        col.Item().AlignCenter().Width(50).Image(logoBytes);
-                        col.Item().PaddingVertical(2);
+                        col.Item().AlignCenter().Width(80).Image(logoBytes);
+                        col.Item().PaddingVertical(5);
                     }
-                    col.Item().AlignCenter().Text(nomeEmpresa).FontSize(12).SemiBold();
+                    col.Item().AlignCenter().Text(nomeEmpresa).FontSize(13).Bold();
                     if (!string.IsNullOrEmpty(empresa?.Telefone))
                     {
                         col.Item().AlignCenter().Text($"TEL: {empresa.Telefone}");
                     }
                     col.Item().AlignCenter().Text("--------------------------------");
-                    col.Item().AlignCenter().Text("COMPROVANTE DE PEDIDO").SemiBold();
+                    col.Item().AlignCenter().Text("COMPROVANTE DE PEDIDO").Bold();
                     col.Item().Text($"DATA: {DateTime.Now:dd/MM/yyyy HH:mm}");
                     col.Item().Text($"PEDIDO: {pedido.NumeroPedido}");
                     col.Item().Text($"CLIENTE: {pedido.Cliente?.NomeFantasia}");
@@ -851,10 +852,10 @@ public class VendaService : IVendaService
                     });
 
                     col.Item().AlignCenter().PaddingVertical(5).Text("--------------------------------");
-                    col.Item().AlignRight().Text($"TOTAL: {pedido.ValorTotal:C}").SemiBold().FontSize(11);
+                    col.Item().AlignRight().Text($"TOTAL: {pedido.ValorTotal:C}").Bold().FontSize(12);
                     col.Item().Text($"PAGTO: {pedido.FormaPagamento}");
                     col.Item().Text($"STATUS: {(pedido.Pago ? "PAGO" : "PENDENTE")}");
-                    col.Item().AlignCenter().PaddingVertical(10).Text("OBRIGADO PELA PREFERÊNCIA!").FontSize(8).Italic();
+                    col.Item().AlignCenter().PaddingVertical(10).Text("OBRIGADO PELA PREFERÊNCIA!").FontSize(9).Italic();
                 });
             });
         }).GeneratePdf();
