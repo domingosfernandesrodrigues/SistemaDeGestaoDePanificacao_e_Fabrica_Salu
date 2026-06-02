@@ -22,6 +22,7 @@ public class FinanceiroService : IFinanceiroService
     private readonly IRepository<TrocaAvaria> _trocaRepo;
     private readonly IRepository<Produto> _produtoRepo;
     private readonly IRepository<ContaBancaria> _contaBancariaRepo;
+    private readonly IRepository<MovimentacaoBancaria> _movimentacaoRepo;
 
     public FinanceiroService(
         IRepository<ContaReceber> receberRepo,
@@ -31,7 +32,8 @@ public class FinanceiroService : IFinanceiroService
         IRepository<ManutencaoVeiculo> manutencaoRepo,
         IRepository<TrocaAvaria> trocaRepo,
         IRepository<Produto> produtoRepo,
-        IRepository<ContaBancaria> contaBancariaRepo)
+        IRepository<ContaBancaria> contaBancariaRepo,
+        IRepository<MovimentacaoBancaria> movimentacaoRepo)
     {
         _receberRepo = receberRepo;
         _pagarRepo = pagarRepo;
@@ -41,6 +43,7 @@ public class FinanceiroService : IFinanceiroService
         _trocaRepo = trocaRepo;
         _produtoRepo = produtoRepo;
         _contaBancariaRepo = contaBancariaRepo;
+        _movimentacaoRepo = movimentacaoRepo;
     }
 
     public async Task<RelatorioDreDto> GerarDreAsync(int mes, int ano)
@@ -48,32 +51,40 @@ public class FinanceiroService : IFinanceiroService
         var dre = new RelatorioDreDto { Mes = mes, Ano = ano };
 
         // 1. Receita Bruta (Vendas Concluídas/Entregues e faturadas via Contas a Receber)
-        var receitas = await _receberRepo.FindAsync(r => r.DataEmissao.Month == mes && r.DataEmissao.Year == ano);
+        var receitas = await _receberRepo.FindAsync(r => r.DataEmissao.Month == mes && r.DataEmissao.Year == ano, asNoTracking: true);
         dre.ReceitaBrutaVendas = receitas.Sum(r => r.Valor);
 
         // 2. Custos de Produção (Soma de CustoTotalCalculado das OPs finalizadas no mês)
-        var ops = await _opRepo.FindAsync(o => o.Status == StatusOrdemProducao.Finalizada && o.DataFinalizacao.HasValue && o.DataFinalizacao.Value.Month == mes && o.DataFinalizacao.Value.Year == ano);
+        var ops = await _opRepo.FindAsync(o => o.Status == StatusOrdemProducao.Finalizada && o.DataFinalizacao.HasValue && o.DataFinalizacao.Value.Month == mes && o.DataFinalizacao.Value.Year == ano, asNoTracking: true);
         dre.CustosProducao = ops.Sum(o => o.CustoTotalCalculado);
 
         // 3. Custos com Avarias (Logística Reversa) - Apenas produtos fabricados influenciam o financeiro/DRE
-        var avarias = await _trocaRepo.FindAsync(t => t.DataTroca.Month == mes && t.DataTroca.Year == ano);
+        var avarias = await _trocaRepo.FindAsync(t => t.DataTroca.Month == mes && t.DataTroca.Year == ano, asNoTracking: true);
         decimal custoAvarias = 0;
-        foreach (var avaria in avarias)
+        
+        var avariasList = avarias.ToList();
+        if (avariasList.Any())
         {
-            var p = await _produtoRepo.GetByIdAsync(avaria.ProdutoId);
-            if (p != null && p.Tipo == TipoProduto.ProdutoAcabado)
+            var produtoIds = avariasList.Select(a => a.ProdutoId).Distinct().ToList();
+            var produtos = (await _produtoRepo.FindAsync(p => produtoIds.Contains(p.Id), asNoTracking: true))
+                .ToDictionary(p => p.Id);
+
+            foreach (var avaria in avariasList)
             {
-                custoAvarias += (p.PrecoCusto * avaria.Quantidade);
+                if (produtos.TryGetValue(avaria.ProdutoId, out var p) && p.Tipo == TipoProduto.ProdutoAcabado)
+                {
+                    custoAvarias += (p.PrecoCusto * avaria.Quantidade);
+                }
             }
         }
         dre.CustosTrocaAvaria = custoAvarias;
 
         // 4. Despesas RH (Folhas Pagamento)
-        var folhas = await _folhaRepo.FindAsync(f => f.MesReferencia == mes && f.AnoReferencia == ano);
+        var folhas = await _folhaRepo.FindAsync(f => f.MesReferencia == mes && f.AnoReferencia == ano, asNoTracking: true);
         dre.DespesasFolhaPagamento = folhas.Sum(f => f.SalarioLiquido + f.TotalDescontos); // Custo total da empresa (líquido + impostos retidos)
 
         // 5. Despesas Manutenção Frota
-        var manutencoes = await _manutencaoRepo.FindAsync(m => m.Data.Month == mes && m.Data.Year == ano);
+        var manutencoes = await _manutencaoRepo.FindAsync(m => m.Data.Month == mes && m.Data.Year == ano, asNoTracking: true);
         dre.DespesasManutencaoFrota = manutencoes.Sum(m => m.CustoTotal);
 
         return dre;
@@ -81,11 +92,11 @@ public class FinanceiroService : IFinanceiroService
 
     public async Task<ResumoFinanceiroDto> ObterResumoAsync()
     {
-        var receber = await _receberRepo.FindAsync(r => r.Status == StatusContaReceber.Pendente);
-        var pagar = await _pagarRepo.FindAsync(p => p.Status == StatusContaPagar.Pendente);
+        var receber = await _receberRepo.FindAsync(r => r.Status == StatusContaReceber.Pendente, asNoTracking: true);
+        var pagar = await _pagarRepo.FindAsync(p => p.Status == StatusContaPagar.Pendente, asNoTracking: true);
 
         // Saldo real: soma dos SaldoAtual das contas bancárias ativas
-        var contas = await _contaBancariaRepo.FindAsync(c => c.Ativa);
+        var contas = await _contaBancariaRepo.FindAsync(c => c.Ativa, asNoTracking: true);
         var saldoReal = contas.Sum(c => c.SaldoAtual);
 
         return new ResumoFinanceiroDto
@@ -111,6 +122,18 @@ public class FinanceiroService : IFinanceiroService
             {
                 contaPadrao.SaldoAtual -= conta.Valor;
                 await _contaBancariaRepo.UpdateAsync(contaPadrao);
+
+                // Gravar movimentação histórica
+                await _movimentacaoRepo.AddAsync(new MovimentacaoBancaria
+                {
+                    ContaBancariaId = contaPadrao.Id,
+                    Tipo = "saida",
+                    Valor = conta.Valor,
+                    Descricao = $"Baixa de Conta a Pagar: {conta.Descricao}",
+                    DataMovimentacao = DateTime.UtcNow,
+                    Origem = OrigemMovimentacao.BaixaPagar,
+                    ReferenciaId = conta.Id
+                });
             }
         }
     }
@@ -130,6 +153,18 @@ public class FinanceiroService : IFinanceiroService
             {
                 contaPadrao.SaldoAtual += conta.Valor;
                 await _contaBancariaRepo.UpdateAsync(contaPadrao);
+
+                // Gravar movimentação histórica
+                await _movimentacaoRepo.AddAsync(new MovimentacaoBancaria
+                {
+                    ContaBancariaId = contaPadrao.Id,
+                    Tipo = "entrada",
+                    Valor = conta.Valor,
+                    Descricao = $"Baixa de Conta a Receber: {conta.Descricao}",
+                    DataMovimentacao = DateTime.UtcNow,
+                    Origem = OrigemMovimentacao.BaixaReceber,
+                    ReferenciaId = conta.Id
+                });
             }
         }
     }

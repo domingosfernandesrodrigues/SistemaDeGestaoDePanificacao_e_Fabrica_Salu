@@ -43,28 +43,12 @@ public class PontoController : ControllerBase
             foreach (var g in registros.GroupBy(r => r.DataHoraEntrada.Date))
             {
                 var registrosDia = g.OrderBy(r => r.DataHoraEntrada).ToList();
-                decimal totalAcumuladoDia = 0;
 
                 foreach (var reg in registrosDia)
                 {
                     var duracao = (decimal)(reg.DataHoraSaida!.Value - reg.DataHoraEntrada).TotalHours;
                     reg.TotalHorasTrabalhadas = duracao;
-                    
-                    var novoTotalDia = totalAcumuladoDia + duracao;
-                    
-                    if (novoTotalDia > 8)
-                    {
-                        if (totalAcumuladoDia >= 8)
-                            reg.TotalHorasExtras = duracao;
-                        else
-                            reg.TotalHorasExtras = novoTotalDia - 8;
-                    }
-                    else
-                    {
-                        reg.TotalHorasExtras = 0;
-                    }
-
-                    totalAcumuladoDia = novoTotalDia;
+                    reg.TotalHorasExtras = 0;
                 }
             }
 
@@ -118,16 +102,13 @@ public class PontoController : ControllerBase
                                       (r.DataHoraSaida.HasValue ? (decimal)(r.DataHoraSaida.Value - r.DataHoraEntrada).TotalHours : 0)
                 }).ToList();
 
-                var totalDia = listaComHoras.Sum(x => x.HorasTrabalhadas);
-                var extrasDia = totalDia > 8 ? totalDia - 8 : 0;
-                
                 var listaOrdenada = listaComHoras.OrderByDescending(x => x.Registro.DataHoraEntrada).ToList();
                 return listaOrdenada.Select((x, index) => new {
                     x.Registro.Id,
                     x.Registro.DataHoraEntrada,
                     x.Registro.DataHoraSaida,
                     TotalHorasTrabalhadas = x.HorasTrabalhadas,
-                    TotalHorasExtras = index == 0 ? extrasDia : 0,
+                    TotalHorasExtras = 0m,
                     x.Registro.Observacao,
                     Status = x.Registro.DataHoraSaida == null ? "Aberto" : "Concluído"
                 });
@@ -138,7 +119,7 @@ public class PontoController : ControllerBase
     }
 
     [HttpPost("registrar")]
-    public async Task<IActionResult> Registrar()
+    public async Task<IActionResult> Registrar([FromBody] PontoRegistroDto? dto)
     {
         var userId = Guid.Parse(User.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? Guid.Empty.ToString());
 
@@ -159,6 +140,34 @@ public class PontoController : ControllerBase
             if (registrosHoje.Count() >= 2)
             {
                 return BadRequest(new { message = "Limite diário atingido. Você já registrou 2 entradas e 2 saídas hoje." });
+            }
+
+            // Validação de Geofencing para o primeiro ponto do dia
+            if (!registrosHoje.Any())
+            {
+                var empresa = funcionario.EmpresaId.HasValue 
+                    ? await _context.Empresas.FirstOrDefaultAsync(e => e.Id == funcionario.EmpresaId.Value)
+                    : await _context.Empresas.FirstOrDefaultAsync();
+
+                if (empresa != null && empresa.Latitude.HasValue && empresa.Longitude.HasValue)
+                {
+                    if (dto == null || !dto.Latitude.HasValue || !dto.Longitude.HasValue)
+                    {
+                        return BadRequest(new { message = "Para registrar o primeiro ponto do dia, as coordenadas de localização (GPS) são obrigatórias. Por favor, ative a localização do seu dispositivo." });
+                    }
+
+                    // === DIAGNÓSTICO: log das coordenadas antes do cálculo ===
+                    Console.WriteLine($"[GEOFENCE] Empresa salva  → Lat={empresa.Latitude.Value:F8}, Lng={empresa.Longitude.Value:F8}");
+                    Console.WriteLine($"[GEOFENCE] Funcionário GPS → Lat={dto.Latitude.Value:F8}, Lng={dto.Longitude.Value:F8}");
+
+                    var distancia = CalcularDistancia(dto.Latitude.Value, dto.Longitude.Value, empresa.Latitude.Value, empresa.Longitude.Value);
+                    Console.WriteLine($"[GEOFENCE] Distância calculada: {distancia:F2} metros");
+
+                    if (distancia > 100) // Limite de 100 metros
+                    {
+                        return BadRequest(new { message = $"Você está fora do perímetro autorizado da empresa. Distância calculada: {distancia:F0} metros (máximo permitido: 100 metros)." });
+                    }
+                }
             }
 
             var novo = new RegistroPonto
@@ -182,24 +191,7 @@ public class PontoController : ControllerBase
                 p.Id != aberto.Id && 
                 p.DataHoraSaida != null);
 
-            var totalHorasJaTrabalhadasHoje = outrosRegistrosHoje.Sum(p => p.TotalHorasTrabalhadas);
-            var totalFinalDia = totalHorasJaTrabalhadasHoje + horasEstaEntrada;
-
-            if (totalFinalDia > 8)
-            {
-                if (totalHorasJaTrabalhadasHoje >= 8)
-                {
-                    aberto.TotalHorasExtras = horasEstaEntrada;
-                }
-                else
-                {
-                    aberto.TotalHorasExtras = totalFinalDia - 8;
-                }
-            }
-            else
-            {
-                aberto.TotalHorasExtras = 0;
-            }
+            aberto.TotalHorasExtras = 0;
 
             await _repository.UpdateAsync(aberto);
             return Ok(new { message = "Saída registrada com sucesso", tipo = "saída" });
@@ -227,16 +219,13 @@ public class PontoController : ControllerBase
                                       (r.DataHoraSaida.HasValue ? (decimal)(r.DataHoraSaida.Value - r.DataHoraEntrada).TotalHours : 0)
                 }).ToList();
 
-                var totalDia = listaComHoras.Sum(x => x.HorasTrabalhadas);
-                var extrasDia = totalDia > 8 ? totalDia - 8 : 0;
-                
                 var listaOrdenada = listaComHoras.OrderByDescending(x => x.Registro.DataHoraEntrada).ToList();
                 return listaOrdenada.Select((x, index) => new {
                     x.Registro.Id,
                     x.Registro.DataHoraEntrada,
                     x.Registro.DataHoraSaida,
                     TotalHorasTrabalhadas = x.HorasTrabalhadas,
-                    TotalHorasExtras = index == 0 ? extrasDia : 0,
+                    TotalHorasExtras = 0m,
                     x.Registro.Observacao,
                     Status = x.Registro.DataHoraSaida == null ? "Aberto" : "Concluído"
                 });
@@ -245,4 +234,26 @@ public class PontoController : ControllerBase
 
         return Ok(result);
     }
+
+    private double CalcularDistancia(double lat1, double lon1, double lat2, double lon2)
+    {
+        var R = 6371e3; // Metros
+        var phi1 = lat1 * Math.PI / 180;
+        var phi2 = lat2 * Math.PI / 180;
+        var deltaPhi = (lat2 - lat1) * Math.PI / 180;
+        var deltaLambda = (lon2 - lon1) * Math.PI / 180;
+
+        var a = Math.Sin(deltaPhi / 2) * Math.Sin(deltaPhi / 2) +
+                Math.Cos(phi1) * Math.Cos(phi2) *
+                Math.Sin(deltaLambda / 2) * Math.Sin(deltaLambda / 2);
+        var c = 2 * Math.Atan2(Math.Sqrt(a), Math.Sqrt(1 - a));
+
+        return R * c;
+    }
+}
+
+public class PontoRegistroDto
+{
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
 }

@@ -25,6 +25,7 @@ public class DespesasController : ControllerBase
             !d.Descricao.StartsWith("Compra #") && 
             d.Categoria != "Insumos" && 
             d.Categoria != "Mercadorias" && 
+            d.Categoria != "Alimentação" && 
             d.Categoria != "Folha de Pagamento").ToList();
         return Ok(filtradas);
     }

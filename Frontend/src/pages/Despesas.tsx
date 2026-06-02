@@ -94,8 +94,8 @@ export default function Despesas() {
 
   // Aplicação dos filtros
   const despesasFiltradas = despesas?.filter(d => {
-    // Ocultar registros de Folha de Pagamento nesta tela para centralizar no módulo de RH
-    if (d.categoria === 'Folha de Pagamento') return false;
+    // Ocultar registros de Folha de Pagamento e Alimentação nesta tela para centralização
+    if (d.categoria === 'Folha de Pagamento' || d.categoria === 'Alimentação') return false;
 
     const dataVenc = d.dataVencimento?.split('T')[0] || '';
     if (filtroCategoria && d.categoria !== filtroCategoria) return false;

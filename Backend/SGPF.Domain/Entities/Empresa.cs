@@ -11,6 +11,8 @@ public class Empresa
     public string Email { get; set; } = string.Empty;
     public string Endereco { get; set; } = string.Empty;
     public string? LogoUrl { get; set; }
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
     
     // Configurações de Pagamento
     public string? PixChave { get; set; }

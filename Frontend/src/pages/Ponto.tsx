@@ -39,6 +39,7 @@ export function Ponto() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [fileName, setFileName] = useState('');
   const [selectedFuncId, setSelectedFuncId] = useState<string>('');
+  const [isObtendoLocalizacao, setIsObtendoLocalizacao] = useState(false);
 
   const userRole = localStorage.getItem('sgpf_role') || 'Operador';
   const isAdminOrGestor = userRole === 'Admin' || userRole === 'Gestor';
@@ -88,10 +89,72 @@ export function Ponto() {
   });
 
   const mutationPonto = useMutation({
-    mutationFn: () => api.post('/Ponto/registrar'),
+    mutationFn: (coords: { latitude: number | null; longitude: number | null }) => 
+      api.post('/Ponto/registrar', coords),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['ponto-hoje'] }),
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao registrar ponto')
   });
+
+  const handleRegistrarPonto = async () => {
+    const isPrimeiraEntrada = registros?.length === 0;
+    let coords = { latitude: null, longitude: null };
+
+    if (isPrimeiraEntrada) {
+      setIsObtendoLocalizacao(true);
+      coords = await new Promise<{ latitude: number | null; longitude: number | null }>((resolve) => {
+        if (!navigator.geolocation) {
+          resolve({ latitude: null, longitude: null });
+          return;
+        }
+
+        let lastPosition: GeolocationPosition | null = null;
+        let watchId: number | null = null;
+
+        const timer = setTimeout(() => {
+          if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+          if (lastPosition) {
+            console.log(`[GPS] Timeout atingido no ponto. Usando última leitura com precisão de ${lastPosition.coords.accuracy}m`);
+            resolve({
+              latitude: lastPosition.coords.latitude,
+              longitude: lastPosition.coords.longitude
+            });
+          } else {
+            resolve({ latitude: null, longitude: null });
+          }
+        }, 5000); // 5 segundos máximo para calibração de precisão
+
+        watchId = navigator.geolocation.watchPosition(
+          (position) => {
+            lastPosition = position;
+            // Se a precisão atingir 20 metros ou menos, resolve imediatamente
+            if (position.coords.accuracy <= 20) {
+              clearTimeout(timer);
+              if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+              resolve({
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude
+              });
+            }
+          },
+          (error) => {
+            console.warn('Erro ao obter geolocalização precisa no ponto:', error);
+            clearTimeout(timer);
+            if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+            resolve({ latitude: null, longitude: null });
+          },
+          { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+        );
+      });
+      setIsObtendoLocalizacao(false);
+
+      if (coords.latitude === null || coords.longitude === null) {
+        alert("Para realizar o primeiro registro de ponto do dia, é obrigatório permitir o acesso à sua localização (GPS). Ative-a nas configurações de privacidade do seu navegador e tente novamente.");
+        return;
+      }
+    }
+
+    mutationPonto.mutate(coords);
+  };
 
   const mutationAfastamento = useMutation({
     mutationFn: (data: AfastamentoForm) => {
@@ -109,14 +172,7 @@ export function Ponto() {
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao registrar afastamento')
   });
 
-  const mutationRecalcular = useMutation({
-    mutationFn: () => api.post(`/Ponto/recalculo-manual?funcionarioId=${selectedFuncId}&mes=${mes}&ano=${ano}`),
-    onSuccess: (data: any) => {
-      queryClient.invalidateQueries({ queryKey: ['ponto-historico'] });
-      alert(data.data.message);
-    },
-    onError: (err: any) => alert(err.response?.data?.message || 'Erro ao recalcular histórico')
-  });
+
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -139,17 +195,6 @@ export function Ponto() {
   const registroAberto = registros?.find(r => !r.dataHoraSaida);
 
   const totalHoras = historico?.reduce((acc, r) => acc + Number(r.totalHorasTrabalhadas || 0), 0) || 0;
-
-  // Calcular horas extras agrupando por DIA para precisão total (mesma lógica da folha)
-  const extrasPorDia = historico?.reduce((acc: Record<string, number>, r) => {
-    const date = new Date(r.dataHoraEntrada).toDateString();
-    acc[date] = (acc[date] || 0) + Number(r.totalHorasTrabalhadas || 0);
-    return acc;
-  }, {});
-
-  const totalExtras = Object.values(extrasPorDia || {}).reduce((acc: number, totalDia: number) => {
-    return acc + (totalDia > 8 ? totalDia - 8 : 0);
-  }, 0);
 
   // Contar dias únicos trabalhados
   const diasTrabalhados = new Set(
@@ -208,20 +253,44 @@ export function Ponto() {
             <div className="grid grid-cols-2 gap-4 w-full">
               <Button
                 size="lg"
-                className="w-full text-lg py-6 bg-green-600 hover:bg-green-700"
-                disabled={mutationPonto.isPending || !!registroAberto}
-                onClick={() => mutationPonto.mutate()}
+                className="w-full text-lg py-6 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
+                disabled={mutationPonto.isPending || isObtendoLocalizacao || !!registroAberto}
+                onClick={handleRegistrarPonto}
               >
-                {mutationPonto.isPending && !registroAberto ? <Loader2 className="animate-spin mr-2" /> : 'Registrar Entrada'}
+                {isObtendoLocalizacao && !registroAberto ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2" />
+                    Calibrando GPS...
+                  </>
+                ) : mutationPonto.isPending && !registroAberto ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Registrar Entrada'
+                )}
               </Button>
               <Button
                 size="lg"
                 variant="secondary"
-                className="w-full text-lg py-6 bg-slate-800 text-white hover:bg-slate-700"
-                disabled={mutationPonto.isPending || !registroAberto}
-                onClick={() => mutationPonto.mutate()}
+                className="w-full text-lg py-6 bg-slate-800 text-white hover:bg-slate-700 flex items-center justify-center gap-2"
+                disabled={mutationPonto.isPending || isObtendoLocalizacao || !registroAberto}
+                onClick={handleRegistrarPonto}
               >
-                {mutationPonto.isPending && registroAberto ? <Loader2 className="animate-spin mr-2" /> : 'Registrar Saída'}
+                {isObtendoLocalizacao && registroAberto ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2" />
+                    Calibrando GPS...
+                  </>
+                ) : mutationPonto.isPending && registroAberto ? (
+                  <>
+                    <Loader2 className="animate-spin mr-2" />
+                    Salvando...
+                  </>
+                ) : (
+                  'Registrar Saída'
+                )}
               </Button>
             </div>
           </div>
@@ -308,24 +377,10 @@ export function Ponto() {
                 </select>
               </div>
             </div>
-            {isAdminOrGestor && selectedFuncId && (
-              <Button 
-                onClick={() => {
-                  if (confirm("Deseja recalcular todas as horas trabalhadas e extras deste funcionário no mês selecionado?")) {
-                    mutationRecalcular.mutate();
-                  }
-                }}
-                variant="secondary"
-                disabled={mutationRecalcular.isPending}
-                className="flex items-center gap-2 bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100 h-10 px-4"
-              >
-                {mutationRecalcular.isPending ? <Loader2 className="animate-spin" size={16} /> : <Timer size={16} />} 
-                Recalcular Valores
-              </Button>
-            )}
+
           </div>
 
-          <div className="grid grid-cols-3 gap-3 sm:gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 text-center">
               <CalendarDays className="text-ember mx-auto mb-1.5 sm:mb-2" size={20} />
               <p className="text-xl sm:text-2xl font-bold text-slate-800">{diasTrabalhados}</p>
@@ -335,11 +390,6 @@ export function Ponto() {
               <Timer className="text-green-500 mx-auto mb-1.5 sm:mb-2" size={20} />
               <p className="text-xl sm:text-2xl font-bold text-slate-800">{formatarHoras(totalHoras)}</p>
               <p className="text-[10px] sm:text-xs text-slate-500">Horas</p>
-            </div>
-            <div className="bg-white rounded-xl border border-slate-200 p-3 sm:p-4 text-center">
-              <TrendingUp className="text-amber-500 mx-auto mb-1.5 sm:mb-2" size={20} />
-              <p className="text-xl sm:text-2xl font-bold text-slate-800">{formatarHoras(totalExtras)}</p>
-              <p className="text-[10px] sm:text-xs text-slate-500">Extras</p>
             </div>
           </div>
 
@@ -353,7 +403,6 @@ export function Ponto() {
                     <th className="px-4 py-3 font-medium">Entrada</th>
                     <th className="px-4 py-3 font-medium">Saída</th>
                     <th className="px-4 py-3 font-medium text-right">Horas</th>
-                    <th className="px-4 py-3 font-medium text-right">Extras</th>
                     <th className="px-4 py-3 font-medium text-center">Status</th>
                   </tr>
                 </thead>
@@ -376,12 +425,6 @@ export function Ponto() {
                       </td>
                       <td className="px-4 py-3 text-right font-medium text-slate-800">
                         {reg.totalHorasTrabalhadas ? formatarHoras(Number(reg.totalHorasTrabalhadas)) : '-'}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        {reg.totalHorasExtras > 0
-                          ? <span className="text-amber-600 font-medium">+{formatarHoras(Number(reg.totalHorasExtras))}</span>
-                          : <span className="text-slate-400">-</span>
-                        }
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${reg.status === 'Aberto' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
@@ -440,14 +483,6 @@ export function Ponto() {
                           {reg.totalHorasTrabalhadas ? formatarHoras(Number(reg.totalHorasTrabalhadas)) : '-'}
                         </p>
                       </div>
-                      {reg.totalHorasExtras > 0 && (
-                        <div>
-                          <p className="text-[10px] text-amber-500 font-bold uppercase">Extras</p>
-                          <p className="text-sm font-bold text-amber-600">
-                            +{formatarHoras(Number(reg.totalHorasExtras))}
-                          </p>
-                        </div>
-                      )}
                     </div>
                   </div>
                 </div>
@@ -626,6 +661,7 @@ export function Ponto() {
                   <optgroup label="Afastamentos por convenção ou acordo">
                     <option value="Licença remunerada">Licença remunerada</option>
                     <option value="Licença não remunerada">Licença não remunerada</option>
+                    <option value="Falta Justificada">Falta Justificada</option>
                     <option value="Afastamento para capacitação">Afastamento para capacitação</option>
                   </optgroup>
 

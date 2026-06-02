@@ -41,7 +41,7 @@ public class EmpresasController : ControllerBase
     {
         if (id != empresa.Id) return BadRequest();
         await _repository.UpdateAsync(empresa);
-        return NoContent();
+        return Ok(empresa); // Retorna a empresa atualizada para o frontend atualizar o cache
     }
 
     [HttpDelete("{id}")]

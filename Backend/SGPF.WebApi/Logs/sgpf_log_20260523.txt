@@ -29498,3 +29498,2539 @@ FROM [Funcionarios] AS [f]
 2026-05-23 19:13:50.736 -04:00 [INF] Executed action SGPF.WebApi.Controllers.FolhaPagamentoController.GetComFuncionarios (SGPF.WebApi) in 18.731ms
 2026-05-23 19:13:50.736 -04:00 [INF] Executed endpoint 'SGPF.WebApi.Controllers.FolhaPagamentoController.GetComFuncionarios (SGPF.WebApi)'
 2026-05-23 19:13:50.736 -04:00 [INF] Request finished HTTP/1.1 GET http://localhost:5137/api/v1/folha-pagamento/funcionarios - 200 null application/json; charset=utf-8 19.6793ms
+2026-05-23 21:55:37.286 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 21:55:37.341 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 21:55:37.942 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 21:55:37.945 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 21:56:30.268 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 21:56:30.324 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 21:57:00.512 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 21:57:00.571 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 21:57:01.347 -04:00 [INF] Executed DbCommand (227ms) [Parameters=[], CommandType='"Text"', CommandTimeout='60']
+CREATE DATABASE [SGPF_Db_Salu];
+2026-05-23 21:57:01.427 -04:00 [INF] Executed DbCommand (73ms) [Parameters=[], CommandType='"Text"', CommandTimeout='60']
+IF SERVERPROPERTY('EngineEdition') <> 5
+BEGIN
+    ALTER DATABASE [SGPF_Db_Salu] SET READ_COMMITTED_SNAPSHOT ON;
+END;
+2026-05-23 21:57:01.488 -04:00 [INF] Executed DbCommand (10ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 21:57:01.500 -04:00 [INF] Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.
+2026-05-23 21:57:01.808 -04:00 [INF] Executed DbCommand (95ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DECLARE @result int;
+EXEC @result = sp_getapplock @Resource = '__EFMigrationsLock', @LockOwner = 'Session', @LockMode = 'Exclusive';
+SELECT @result
+2026-05-23 21:57:01.944 -04:00 [INF] Executed DbCommand (8ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+BEGIN
+    CREATE TABLE [__EFMigrationsHistory] (
+        [MigrationId] nvarchar(150) NOT NULL,
+        [ProductVersion] nvarchar(32) NOT NULL,
+        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+    );
+END;
+2026-05-23 21:57:01.959 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 21:57:01.963 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2026-05-23 21:57:01.971 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [MigrationId], [ProductVersion]
+FROM [__EFMigrationsHistory]
+ORDER BY [MigrationId];
+2026-05-23 21:57:01.988 -04:00 [INF] Applying migration '20260425033453_InitialCreate'.
+2026-05-23 21:57:02.030 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Clientes] (
+    [Id] uniqueidentifier NOT NULL,
+    [NomeFantasia] nvarchar(max) NOT NULL,
+    [CNPJ_CPF] nvarchar(max) NOT NULL,
+    [Endereco] nvarchar(max) NOT NULL,
+    [Telefone] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Clientes] PRIMARY KEY ([Id])
+);
+2026-05-23 21:57:02.035 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Empresas] (
+    [Id] uniqueidentifier NOT NULL,
+    [RazaoSocial] nvarchar(max) NOT NULL,
+    [CNPJ] nvarchar(max) NOT NULL,
+    [Endereco] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Empresas] PRIMARY KEY ([Id])
+);
+2026-05-23 21:57:02.039 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Fornecedores] (
+    [Id] uniqueidentifier NOT NULL,
+    [NomeFantasia] nvarchar(max) NOT NULL,
+    [CNPJ] nvarchar(max) NOT NULL,
+    [TipoFornecimento] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Fornecedores] PRIMARY KEY ([Id])
+);
+2026-05-23 21:57:02.047 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Usuarios] (
+    [Id] uniqueidentifier NOT NULL,
+    [Email] nvarchar(max) NOT NULL,
+    [SenhaHash] nvarchar(max) NOT NULL,
+    [Role] nvarchar(max) NOT NULL,
+    [ClienteId] uniqueidentifier NULL,
+    CONSTRAINT [PK_Usuarios] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Usuarios_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id])
+);
+2026-05-23 21:57:02.053 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Funcionarios] (
+    [Id] uniqueidentifier NOT NULL,
+    [Nome] nvarchar(max) NOT NULL,
+    [CPF] nvarchar(max) NOT NULL,
+    [Cargo] nvarchar(max) NOT NULL,
+    [SalarioBase] decimal(18,2) NOT NULL,
+    [DataAdmissao] datetime2 NOT NULL,
+    [EmpresaId] uniqueidentifier NOT NULL,
+    CONSTRAINT [PK_Funcionarios] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Funcionarios_Empresas_EmpresaId] FOREIGN KEY ([EmpresaId]) REFERENCES [Empresas] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 21:57:02.061 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Funcionarios_EmpresaId] ON [Funcionarios] ([EmpresaId]);
+2026-05-23 21:57:02.064 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Usuarios_ClienteId] ON [Usuarios] ([ClienteId]);
+2026-05-23 21:57:02.069 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425033453_InitialCreate', N'10.0.7');
+2026-05-23 21:57:02.074 -04:00 [INF] Applying migration '20260425041126_Phase2_FabricaEstoque'.
+2026-05-23 21:57:02.123 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Produtos] (
+    [Id] uniqueidentifier NOT NULL,
+    [Nome] nvarchar(max) NOT NULL,
+    [Tipo] int NOT NULL,
+    [UnidadeMedida] nvarchar(max) NOT NULL,
+    [PrecoCusto] decimal(18,4) NOT NULL,
+    [PrecoVenda] decimal(18,2) NOT NULL,
+    [QuantidadeEstoque] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_Produtos] PRIMARY KEY ([Id])
+);
+2026-05-23 21:57:02.128 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [FichasTecnicas] (
+    [Id] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [RendimentoPadrao] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_FichasTecnicas] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_FichasTecnicas_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 21:57:02.133 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [MovimentacoesEstoque] (
+    [Id] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [Tipo] int NOT NULL,
+    [Quantidade] decimal(18,4) NOT NULL,
+    [DataMovimentacao] datetime2 NOT NULL,
+    [Origem] nvarchar(max) NOT NULL,
+    [Observacao] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_MovimentacoesEstoque] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_MovimentacoesEstoque_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 21:57:02.138 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [OrdensProducao] (
+    [Id] uniqueidentifier NOT NULL,
+    [NumeroOP] nvarchar(max) NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [QuantidadePlanejada] decimal(18,4) NOT NULL,
+    [QuantidadeRealizada] decimal(18,4) NOT NULL,
+    [Status] int NOT NULL,
+    [DataAbertura] datetime2 NOT NULL,
+    [DataFinalizacao] datetime2 NULL,
+    [CustoTotalCalculado] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_OrdensProducao] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_OrdensProducao_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 21:57:02.148 -04:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [FichaTecnicaInsumos] (
+    [Id] uniqueidentifier NOT NULL,
+    [FichaTecnicaId] uniqueidentifier NOT NULL,
+    [InsumoId] uniqueidentifier NOT NULL,
+    [QuantidadeNecessaria] decimal(18,4) NOT NULL,
+    [PerdaPercentual] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_FichaTecnicaInsumos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_FichaTecnicaInsumos_FichasTecnicas_FichaTecnicaId] FOREIGN KEY ([FichaTecnicaId]) REFERENCES [FichasTecnicas] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_FichaTecnicaInsumos_Produtos_InsumoId] FOREIGN KEY ([InsumoId]) REFERENCES [Produtos] ([Id]) ON DELETE NO ACTION
+);
+2026-05-23 21:57:02.153 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [OrdemProducaoInsumos] (
+    [Id] uniqueidentifier NOT NULL,
+    [OrdemProducaoId] uniqueidentifier NOT NULL,
+    [InsumoId] uniqueidentifier NOT NULL,
+    [QuantidadePlanejada] decimal(18,4) NOT NULL,
+    [QuantidadeConsumida] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_OrdemProducaoInsumos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_OrdemProducaoInsumos_OrdensProducao_OrdemProducaoId] FOREIGN KEY ([OrdemProducaoId]) REFERENCES [OrdensProducao] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_OrdemProducaoInsumos_Produtos_InsumoId] FOREIGN KEY ([InsumoId]) REFERENCES [Produtos] ([Id]) ON DELETE NO ACTION
+);
+2026-05-23 21:57:02.157 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FichasTecnicas_ProdutoId] ON [FichasTecnicas] ([ProdutoId]);
+2026-05-23 21:57:02.161 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FichaTecnicaInsumos_FichaTecnicaId] ON [FichaTecnicaInsumos] ([FichaTecnicaId]);
+2026-05-23 21:57:02.165 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FichaTecnicaInsumos_InsumoId] ON [FichaTecnicaInsumos] ([InsumoId]);
+2026-05-23 21:57:02.168 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_MovimentacoesEstoque_ProdutoId] ON [MovimentacoesEstoque] ([ProdutoId]);
+2026-05-23 21:57:02.171 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_OrdemProducaoInsumos_InsumoId] ON [OrdemProducaoInsumos] ([InsumoId]);
+2026-05-23 21:57:02.175 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_OrdemProducaoInsumos_OrdemProducaoId] ON [OrdemProducaoInsumos] ([OrdemProducaoId]);
+2026-05-23 21:57:02.179 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_OrdensProducao_ProdutoId] ON [OrdensProducao] ([ProdutoId]);
+2026-05-23 21:57:02.181 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425041126_Phase2_FabricaEstoque', N'10.0.7');
+2026-05-23 21:57:02.184 -04:00 [INF] Applying migration '20260425043014_Phase3_RHFolha'.
+2026-05-23 21:57:02.236 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [ContasPagar] (
+    [Id] uniqueidentifier NOT NULL,
+    [Descricao] nvarchar(max) NOT NULL,
+    [Valor] decimal(18,2) NOT NULL,
+    [DataVencimento] datetime2 NOT NULL,
+    [DataPagamento] datetime2 NULL,
+    [Status] int NOT NULL,
+    [Categoria] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_ContasPagar] PRIMARY KEY ([Id])
+);
+2026-05-23 21:57:02.241 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [FolhasPagamento] (
+    [Id] uniqueidentifier NOT NULL,
+    [FuncionarioId] uniqueidentifier NOT NULL,
+    [MesReferencia] int NOT NULL,
+    [AnoReferencia] int NOT NULL,
+    [SalarioBaseCalculado] decimal(18,2) NOT NULL,
+    [TotalHorasExtras] decimal(18,2) NOT NULL,
+    [ValorHorasExtras] decimal(18,2) NOT NULL,
+    [TotalDescontos] decimal(18,2) NOT NULL,
+    [SalarioLiquido] decimal(18,2) NOT NULL,
+    [Status] int NOT NULL,
+    [DataGeracao] datetime2 NOT NULL,
+    CONSTRAINT [PK_FolhasPagamento] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_FolhasPagamento_Funcionarios_FuncionarioId] FOREIGN KEY ([FuncionarioId]) REFERENCES [Funcionarios] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 21:57:02.247 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [RegistrosPonto] (
+    [Id] uniqueidentifier NOT NULL,
+    [FuncionarioId] uniqueidentifier NOT NULL,
+    [DataHoraEntrada] datetime2 NOT NULL,
+    [DataHoraSaida] datetime2 NULL,
+    [TotalHorasTrabalhadas] decimal(18,2) NOT NULL,
+    [TotalHorasExtras] decimal(18,2) NOT NULL,
+    [Observacao] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_RegistrosPonto] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_RegistrosPonto_Funcionarios_FuncionarioId] FOREIGN KEY ([FuncionarioId]) REFERENCES [Funcionarios] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 21:57:02.251 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FolhasPagamento_FuncionarioId] ON [FolhasPagamento] ([FuncionarioId]);
+2026-05-23 21:57:02.254 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_RegistrosPonto_FuncionarioId] ON [RegistrosPonto] ([FuncionarioId]);
+2026-05-23 21:57:02.256 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425043014_Phase3_RHFolha', N'10.0.7');
+2026-05-23 21:57:02.260 -04:00 [INF] Applying migration '20260425044153_Phase4_LogisticaVendas'.
+2026-05-23 21:57:02.338 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [ContasReceber] (
+    [Id] uniqueidentifier NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [Descricao] nvarchar(max) NOT NULL,
+    [Valor] decimal(18,2) NOT NULL,
+    [DataEmissao] datetime2 NOT NULL,
+    [DataVencimento] datetime2 NOT NULL,
+    [DataRecebimento] datetime2 NULL,
+    [Status] int NOT NULL,
+    [PedidoVendaId] uniqueidentifier NULL,
+    CONSTRAINT [PK_ContasReceber] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_ContasReceber_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 21:57:02.344 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [TrocasAvaria] (
+    [Id] uniqueidentifier NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [Quantidade] decimal(18,4) NOT NULL,
+    [DataTroca] datetime2 NOT NULL,
+    [Motivo] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_TrocasAvaria] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_TrocasAvaria_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_TrocasAvaria_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 21:57:02.349 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Veiculos] (
+    [Id] uniqueidentifier NOT NULL,
+    [Placa] nvarchar(max) NOT NULL,
+    [Modelo] nvarchar(max) NOT NULL,
+    [CapacidadeCargaKg] decimal(18,2) NOT NULL,
+    [QuilometragemAtual] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_Veiculos] PRIMARY KEY ([Id])
+);
+2026-05-23 21:57:02.354 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Abastecimentos] (
+    [Id] uniqueidentifier NOT NULL,
+    [VeiculoId] uniqueidentifier NOT NULL,
+    [Data] datetime2 NOT NULL,
+    [QuilometragemRegistrada] decimal(18,2) NOT NULL,
+    [Litros] decimal(18,2) NOT NULL,
+    [ValorTotal] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_Abastecimentos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Abastecimentos_Veiculos_VeiculoId] FOREIGN KEY ([VeiculoId]) REFERENCES [Veiculos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 21:57:02.360 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [ManutencoesVeiculo] (
+    [Id] uniqueidentifier NOT NULL,
+    [VeiculoId] uniqueidentifier NOT NULL,
+    [Data] datetime2 NOT NULL,
+    [Tipo] int NOT NULL,
+    [Descricao] nvarchar(max) NOT NULL,
+    [CustoTotal] decimal(18,2) NOT NULL,
+    [QuilometragemRegistrada] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_ManutencoesVeiculo] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_ManutencoesVeiculo_Veiculos_VeiculoId] FOREIGN KEY ([VeiculoId]) REFERENCES [Veiculos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 21:57:02.366 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [PedidosVenda] (
+    [Id] uniqueidentifier NOT NULL,
+    [NumeroPedido] nvarchar(max) NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [VeiculoId] uniqueidentifier NULL,
+    [DataPedido] datetime2 NOT NULL,
+    [DataEntregaPrevista] datetime2 NULL,
+    [DataEntregaRealizada] datetime2 NULL,
+    [ValorTotal] decimal(18,2) NOT NULL,
+    [Status] int NOT NULL,
+    CONSTRAINT [PK_PedidosVenda] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_PedidosVenda_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_PedidosVenda_Veiculos_VeiculoId] FOREIGN KEY ([VeiculoId]) REFERENCES [Veiculos] ([Id])
+);
+2026-05-23 21:57:02.371 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [PedidoVendaItens] (
+    [Id] uniqueidentifier NOT NULL,
+    [PedidoVendaId] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [Quantidade] decimal(18,4) NOT NULL,
+    [PrecoUnitario] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_PedidoVendaItens] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_PedidoVendaItens_PedidosVenda_PedidoVendaId] FOREIGN KEY ([PedidoVendaId]) REFERENCES [PedidosVenda] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_PedidoVendaItens_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE NO ACTION
+);
+2026-05-23 21:57:02.375 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Abastecimentos_VeiculoId] ON [Abastecimentos] ([VeiculoId]);
+2026-05-23 21:57:02.379 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_ContasReceber_ClienteId] ON [ContasReceber] ([ClienteId]);
+2026-05-23 21:57:02.382 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_ManutencoesVeiculo_VeiculoId] ON [ManutencoesVeiculo] ([VeiculoId]);
+2026-05-23 21:57:02.385 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidosVenda_ClienteId] ON [PedidosVenda] ([ClienteId]);
+2026-05-23 21:57:02.388 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidosVenda_VeiculoId] ON [PedidosVenda] ([VeiculoId]);
+2026-05-23 21:57:02.391 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidoVendaItens_PedidoVendaId] ON [PedidoVendaItens] ([PedidoVendaId]);
+2026-05-23 21:57:02.395 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidoVendaItens_ProdutoId] ON [PedidoVendaItens] ([ProdutoId]);
+2026-05-23 21:57:02.399 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_TrocasAvaria_ClienteId] ON [TrocasAvaria] ([ClienteId]);
+2026-05-23 21:57:02.402 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_TrocasAvaria_ProdutoId] ON [TrocasAvaria] ([ProdutoId]);
+2026-05-23 21:57:02.404 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425044153_Phase4_LogisticaVendas', N'10.0.7');
+2026-05-23 21:57:02.407 -04:00 [INF] Applying migration '20260425050345_Phase4b_PortalCRM'.
+2026-05-23 21:57:02.463 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Reunioes] (
+    [Id] uniqueidentifier NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [DataHora] datetime2 NOT NULL,
+    [Pauta] nvarchar(max) NOT NULL,
+    [Ata] nvarchar(max) NOT NULL,
+    [Status] int NOT NULL,
+    CONSTRAINT [PK_Reunioes] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Reunioes_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 21:57:02.467 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Reunioes_ClienteId] ON [Reunioes] ([ClienteId]);
+2026-05-23 21:57:02.469 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425050345_Phase4b_PortalCRM', N'10.0.7');
+2026-05-23 21:57:02.471 -04:00 [INF] Applying migration '20260506011506_AddCategoriaCompra'.
+2026-05-23 21:57:02.525 -04:00 [ERR] Failed executing DbCommand (20ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.columns 
+                    WHERE object_id = OBJECT_ID(N'[Compras]') 
+                    AND name = 'Categoria'
+                )
+                BEGIN
+                    ALTER TABLE [Compras] ADD [Categoria] int NOT NULL DEFAULT 0;
+                END
+2026-05-23 21:59:22.672 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 21:59:22.730 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 21:59:23.303 -04:00 [INF] Executed DbCommand (14ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 21:59:23.318 -04:00 [INF] Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.
+2026-05-23 21:59:23.339 -04:00 [INF] Executed DbCommand (16ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DECLARE @result int;
+EXEC @result = sp_getapplock @Resource = '__EFMigrationsLock', @LockOwner = 'Session', @LockMode = 'Exclusive';
+SELECT @result
+2026-05-23 21:59:23.444 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+BEGIN
+    CREATE TABLE [__EFMigrationsHistory] (
+        [MigrationId] nvarchar(150) NOT NULL,
+        [ProductVersion] nvarchar(32) NOT NULL,
+        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+    );
+END;
+2026-05-23 21:59:23.457 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 21:59:23.460 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2026-05-23 21:59:23.467 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [MigrationId], [ProductVersion]
+FROM [__EFMigrationsHistory]
+ORDER BY [MigrationId];
+2026-05-23 21:59:23.485 -04:00 [INF] Applying migration '20260506011506_AddCategoriaCompra'.
+2026-05-23 21:59:23.525 -04:00 [ERR] Failed executing DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Compras]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[Compras](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [FornecedorId] [uniqueidentifier] NOT NULL,
+                        [DataCompra] [datetime2](7) NOT NULL,
+                        [ValorTotal] [decimal](18,2) NOT NULL,
+                        [Status] [int] NOT NULL,
+                        [Observacao] [nvarchar](max) NULL,
+                        CONSTRAINT [FK_Compras_Fornecedores] FOREIGN KEY ([FornecedorId]) REFERENCES [dbo].[Fornecedores] ([Id])
+                    );
+                END
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CompraItems]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[CompraItems](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [CompraId] [uniqueidentifier] NOT NULL,
+                        [ProdutoId] [uniqueidentifier] NOT NULL,
+                        [Quantidade] [decimal](18,4) NOT NULL,
+                        [PrecoUnitario] [decimal](18,4) NOT NULL,
+                        CONSTRAINT [FK_CompraItems_Compras] FOREIGN KEY([CompraId]) REFERENCES [dbo].[Compras] ([Id]) ON DELETE CASCADE,
+                        CONSTRAINT [FK_CompraItems_Produtos] FOREIGN KEY([ProdutoId]) REFERENCES [dbo].[Produtos] ([Id])
+                    );
+                END
+
+                // Adiciona coluna Categoria apenas se não existir (idempotente)
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.columns 
+                    WHERE object_id = OBJECT_ID(N'[Compras]') 
+                    AND name = 'Categoria'
+                )
+                BEGIN
+                    ALTER TABLE [Compras] ADD [Categoria] int NOT NULL DEFAULT 0;
+                END
+2026-05-23 21:59:59.904 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 21:59:59.963 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 22:00:00.474 -04:00 [INF] Executed DbCommand (12ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 22:00:00.489 -04:00 [INF] Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.
+2026-05-23 22:00:00.510 -04:00 [INF] Executed DbCommand (16ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DECLARE @result int;
+EXEC @result = sp_getapplock @Resource = '__EFMigrationsLock', @LockOwner = 'Session', @LockMode = 'Exclusive';
+SELECT @result
+2026-05-23 22:00:00.620 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+BEGIN
+    CREATE TABLE [__EFMigrationsHistory] (
+        [MigrationId] nvarchar(150) NOT NULL,
+        [ProductVersion] nvarchar(32) NOT NULL,
+        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+    );
+END;
+2026-05-23 22:00:00.635 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 22:00:00.639 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2026-05-23 22:00:00.644 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [MigrationId], [ProductVersion]
+FROM [__EFMigrationsHistory]
+ORDER BY [MigrationId];
+2026-05-23 22:00:00.662 -04:00 [INF] Applying migration '20260506011506_AddCategoriaCompra'.
+2026-05-23 22:00:00.735 -04:00 [INF] Executed DbCommand (38ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Compras]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[Compras](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [FornecedorId] [uniqueidentifier] NOT NULL,
+                        [DataCompra] [datetime2](7) NOT NULL,
+                        [ValorTotal] [decimal](18,2) NOT NULL,
+                        [Status] [int] NOT NULL,
+                        [Observacao] [nvarchar](max) NULL,
+                        CONSTRAINT [FK_Compras_Fornecedores] FOREIGN KEY ([FornecedorId]) REFERENCES [dbo].[Fornecedores] ([Id])
+                    );
+                END
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CompraItems]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[CompraItems](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [CompraId] [uniqueidentifier] NOT NULL,
+                        [ProdutoId] [uniqueidentifier] NOT NULL,
+                        [Quantidade] [decimal](18,4) NOT NULL,
+                        [PrecoUnitario] [decimal](18,4) NOT NULL,
+                        CONSTRAINT [FK_CompraItems_Compras] FOREIGN KEY([CompraId]) REFERENCES [dbo].[Compras] ([Id]) ON DELETE CASCADE,
+                        CONSTRAINT [FK_CompraItems_Produtos] FOREIGN KEY([ProdutoId]) REFERENCES [dbo].[Produtos] ([Id])
+                    );
+                END
+
+                -- Adiciona coluna Categoria apenas se não existir (idempotente)
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.columns 
+                    WHERE object_id = OBJECT_ID(N'[Compras]') 
+                    AND name = 'Categoria'
+                )
+                BEGIN
+                    ALTER TABLE [Compras] ADD [Categoria] int NOT NULL DEFAULT 0;
+                END
+2026-05-23 22:00:00.741 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260506011506_AddCategoriaCompra', N'10.0.7');
+2026-05-23 22:00:00.744 -04:00 [INF] Applying migration '20260507230355_AddEmpresaExpandedFields'.
+2026-05-23 22:00:00.807 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [Email] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 22:00:00.810 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [InscricaoEstadual] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 22:00:00.813 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [LogoUrl] nvarchar(max) NULL;
+2026-05-23 22:00:00.816 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [NomeFantasia] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 22:00:00.819 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [Telefone] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 22:00:00.822 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260507230355_AddEmpresaExpandedFields', N'10.0.7');
+2026-05-23 22:00:00.824 -04:00 [INF] Applying migration '20260508002854_AddInscricaoEnderecoFornecedor'.
+2026-05-23 22:00:00.882 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Fornecedores] ADD [Endereco] nvarchar(max) NULL;
+2026-05-23 22:00:00.886 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Fornecedores] ADD [InscricaoEstadual] nvarchar(max) NULL;
+2026-05-23 22:00:00.889 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508002854_AddInscricaoEnderecoFornecedor', N'10.0.7');
+2026-05-23 22:00:00.892 -04:00 [INF] Applying migration '20260508004320_AddRazaoInscricaoCliente'.
+2026-05-23 22:00:00.974 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Clientes] ADD [InscricaoEstadual] nvarchar(max) NULL;
+2026-05-23 22:00:00.978 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Clientes] ADD [RazaoSocial] nvarchar(max) NULL;
+2026-05-23 22:00:00.980 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508004320_AddRazaoInscricaoCliente', N'10.0.7');
+2026-05-23 22:00:00.983 -04:00 [INF] Applying migration '20260508015936_AddHistoricoPrecoProduto'.
+2026-05-23 22:00:01.055 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [HistoricoPrecos] (
+    [Id] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [PrecoAntigo] decimal(18,4) NOT NULL,
+    [PrecoNovo] decimal(18,4) NOT NULL,
+    [DataAlteracao] datetime2 NOT NULL,
+    [Tipo] int NOT NULL,
+    [Origem] nvarchar(max) NOT NULL,
+    [UsuarioNome] nvarchar(max) NULL,
+    CONSTRAINT [PK_HistoricoPrecos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_HistoricoPrecos_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 22:00:01.059 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_HistoricoPrecos_ProdutoId] ON [HistoricoPrecos] ([ProdutoId]);
+2026-05-23 22:00:01.062 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508015936_AddHistoricoPrecoProduto', N'10.0.7');
+2026-05-23 22:00:01.064 -04:00 [INF] Applying migration '20260508022733_AddDescontoItemVenda'.
+2026-05-23 22:00:01.122 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidoVendaItens] ADD [Desconto] decimal(18,2) NOT NULL DEFAULT 0.0;
+2026-05-23 22:00:01.125 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508022733_AddDescontoItemVenda', N'10.0.7');
+2026-05-23 22:00:01.128 -04:00 [INF] Applying migration '20260512010410_AddAuditLogs'.
+2026-05-23 22:00:01.162 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260512010410_AddAuditLogs', N'10.0.7');
+2026-05-23 22:00:01.165 -04:00 [INF] Applying migration '20260524015631_SyncModelChanges'.
+2026-05-23 22:00:01.229 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [TrocasAvaria] ADD [MotoristaId] uniqueidentifier NULL;
+2026-05-23 22:00:01.233 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidosVenda] ADD [MotoristaId] uniqueidentifier NULL;
+2026-05-23 22:00:01.239 -04:00 [ERR] Failed executing DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [FolhasPagamento] ADD [TotalHorasExtras] decimal(18,2) NOT NULL DEFAULT 0.0;
+2026-05-23 22:09:49.977 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 22:09:50.041 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 22:09:50.553 -04:00 [INF] Executed DbCommand (14ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 22:09:50.568 -04:00 [INF] Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.
+2026-05-23 22:09:50.590 -04:00 [INF] Executed DbCommand (16ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DECLARE @result int;
+EXEC @result = sp_getapplock @Resource = '__EFMigrationsLock', @LockOwner = 'Session', @LockMode = 'Exclusive';
+SELECT @result
+2026-05-23 22:09:50.697 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+BEGIN
+    CREATE TABLE [__EFMigrationsHistory] (
+        [MigrationId] nvarchar(150) NOT NULL,
+        [ProductVersion] nvarchar(32) NOT NULL,
+        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+    );
+END;
+2026-05-23 22:09:50.711 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 22:09:50.714 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2026-05-23 22:09:50.721 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [MigrationId], [ProductVersion]
+FROM [__EFMigrationsHistory]
+ORDER BY [MigrationId];
+2026-05-23 22:09:50.738 -04:00 [INF] Applying migration '20260524015631_SyncModelChanges'.
+2026-05-23 22:09:50.818 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [TrocasAvaria] ADD [MotoristaId] uniqueidentifier NULL;
+2026-05-23 22:09:50.823 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidosVenda] ADD [MotoristaId] uniqueidentifier NULL;
+2026-05-23 22:09:50.826 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_TrocasAvaria_MotoristaId] ON [TrocasAvaria] ([MotoristaId]);
+2026-05-23 22:09:50.828 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidosVenda_MotoristaId] ON [PedidosVenda] ([MotoristaId]);
+2026-05-23 22:09:50.832 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidosVenda] ADD CONSTRAINT [FK_PedidosVenda_Funcionarios_MotoristaId] FOREIGN KEY ([MotoristaId]) REFERENCES [Funcionarios] ([Id]) ON DELETE NO ACTION;
+2026-05-23 22:09:50.835 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [TrocasAvaria] ADD CONSTRAINT [FK_TrocasAvaria_Funcionarios_MotoristaId] FOREIGN KEY ([MotoristaId]) REFERENCES [Funcionarios] ([Id]);
+2026-05-23 22:09:50.839 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260524015631_SyncModelChanges', N'10.0.7');
+2026-05-23 22:09:50.844 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DECLARE @result int;
+EXEC @result = sp_releaseapplock @Resource = '__EFMigrationsLock', @LockOwner = 'Session';
+SELECT @result
+2026-05-23 22:25:08.524 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 22:25:08.585 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 22:25:09.060 -04:00 [INF] Executed DbCommand (37ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Clientes') AND name = 'Ativo') BEGIN ALTER TABLE Clientes ADD Ativo BIT NOT NULL DEFAULT 1; END
+2026-05-23 22:25:09.080 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Produtos') AND name = 'Ativo') BEGIN ALTER TABLE Produtos ADD Ativo BIT NOT NULL DEFAULT 1; END
+2026-05-23 22:25:09.091 -04:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Usuarios') AND name = 'Nome') BEGIN ALTER TABLE Usuarios ADD Nome NVARCHAR(MAX) NOT NULL DEFAULT ''; END
+2026-05-23 22:25:09.136 -04:00 [INF] Executed DbCommand (39ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+            DECLARE @fkName NVARCHAR(200);
+            SELECT @fkName = fk.name
+            FROM sys.foreign_keys fk
+            JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+            JOIN sys.columns c ON fkc.parent_object_id = c.object_id AND fkc.parent_column_id = c.column_id
+            WHERE OBJECT_NAME(fk.parent_object_id) = 'Funcionarios' AND c.name = 'EmpresaId';
+            IF @fkName IS NOT NULL
+                EXEC('ALTER TABLE Funcionarios DROP CONSTRAINT [' + @fkName + ']');
+            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Funcionarios') AND name = 'EmpresaId' AND is_nullable = 0)
+                ALTER TABLE Funcionarios ALTER COLUMN EmpresaId UNIQUEIDENTIFIER NULL;
+2026-05-23 22:25:09.151 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Funcionarios') AND name = 'DataDemissao') BEGIN ALTER TABLE Funcionarios ADD DataDemissao DATETIME2 NULL; END
+2026-05-23 22:25:09.162 -04:00 [INF] Executed DbCommand (8ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Funcionarios') AND name = 'Ativo') BEGIN ALTER TABLE Funcionarios ADD Ativo BIT NOT NULL DEFAULT 1; END
+2026-05-23 22:25:09.169 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Funcionarios') AND name = 'UsuarioId') BEGIN ALTER TABLE Funcionarios ADD UsuarioId UNIQUEIDENTIFIER NULL; END
+2026-05-23 22:25:09.179 -04:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+UPDATE Funcionarios SET Ativo = 1 WHERE Ativo = 0
+2026-05-23 22:25:09.186 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Veiculos') AND name = 'Ativo') BEGIN ALTER TABLE Veiculos ADD Ativo BIT NOT NULL DEFAULT 1; END
+2026-05-23 22:25:09.218 -04:00 [INF] Executed DbCommand (21ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'PixChave') BEGIN ALTER TABLE Empresas ADD PixChave NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.236 -04:00 [INF] Executed DbCommand (15ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'BancoNome') BEGIN ALTER TABLE Empresas ADD BancoNome NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.254 -04:00 [INF] Executed DbCommand (12ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'BancoAgencia') BEGIN ALTER TABLE Empresas ADD BancoAgencia NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.270 -04:00 [INF] Executed DbCommand (11ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'BancoConta') BEGIN ALTER TABLE Empresas ADD BancoConta NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.291 -04:00 [INF] Executed DbCommand (15ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'GatewayToken') BEGIN ALTER TABLE Empresas ADD GatewayToken NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.300 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'RazaoSocial') BEGIN ALTER TABLE Fornecedores ADD RazaoSocial NVARCHAR(MAX) NOT NULL DEFAULT ''; END
+2026-05-23 22:25:09.401 -04:00 [INF] Executed DbCommand (79ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'Contato') BEGIN ALTER TABLE Fornecedores ADD Contato NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.425 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'Telefone') BEGIN ALTER TABLE Fornecedores ADD Telefone NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.431 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'Email') BEGIN ALTER TABLE Fornecedores ADD Email NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.438 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'Ativo') BEGIN ALTER TABLE Fornecedores ADD Ativo BIT NOT NULL DEFAULT 1; END
+2026-05-23 22:25:09.444 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+UPDATE Fornecedores SET Ativo = 1 WHERE Ativo = 0
+2026-05-23 22:25:09.449 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+UPDATE Veiculos SET Ativo = 1 WHERE Ativo = 0
+2026-05-23 22:25:09.454 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'TipoFornecimento') BEGIN ALTER TABLE Fornecedores ALTER COLUMN TipoFornecimento NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.461 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'CNPJ') BEGIN ALTER TABLE Fornecedores ADD CNPJ NVARCHAR(MAX) NOT NULL DEFAULT ''; END
+2026-05-23 22:25:09.470 -04:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Afastamentos]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[Afastamentos](
+                    [Id] [uniqueidentifier] NOT NULL,
+                    [FuncionarioId] [uniqueidentifier] NOT NULL,
+                    [DataInicio] [datetime2](7) NOT NULL,
+                    [DataFim] [datetime2](7) NOT NULL,
+                    [Motivo] [nvarchar](max) NOT NULL,
+                    [Observacao] [nvarchar](max) NULL,
+                    [Status] [nvarchar](max) NOT NULL,
+                    [DataCriacao] [datetime2](7) NOT NULL,
+                 CONSTRAINT [PK_Afastamentos] PRIMARY KEY CLUSTERED 
+                (
+                    [Id] ASC
+                )
+                ) ON [PRIMARY]
+                
+                ALTER TABLE [dbo].[Afastamentos]  WITH CHECK ADD  CONSTRAINT [FK_Afastamentos_Funcionarios_FuncionarioId] FOREIGN KEY([FuncionarioId])
+                REFERENCES [dbo].[Funcionarios] ([Id])
+                ON DELETE CASCADE
+                
+                ALTER TABLE [dbo].[Afastamentos] CHECK CONSTRAINT [FK_Afastamentos_Funcionarios_FuncionarioId]
+            END
+2026-05-23 22:25:09.480 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'Tipo') BEGIN ALTER TABLE Afastamentos ALTER COLUMN Tipo NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.485 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'Motivo') BEGIN ALTER TABLE Afastamentos ADD Motivo NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.491 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'Observacao') BEGIN ALTER TABLE Afastamentos ADD Observacao NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.498 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'Status') BEGIN ALTER TABLE Afastamentos ADD Status NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.504 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'AnexoNome') BEGIN ALTER TABLE Afastamentos ADD AnexoNome NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.511 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'AnexoBase64') BEGIN ALTER TABLE Afastamentos ADD AnexoBase64 NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.516 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'DataCriacao') BEGIN ALTER TABLE Afastamentos ADD DataCriacao DATETIME2 NOT NULL DEFAULT GETDATE(); END
+2026-05-23 22:25:09.522 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Usuarios') AND name = 'Ativo') BEGIN ALTER TABLE Usuarios ADD Ativo BIT NOT NULL DEFAULT 1; END
+2026-05-23 22:25:09.538 -04:00 [INF] Executed DbCommand (13ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'FormaPagamento') BEGIN ALTER TABLE PedidosVenda ADD FormaPagamento INT NOT NULL DEFAULT 0; END
+2026-05-23 22:25:09.555 -04:00 [INF] Executed DbCommand (13ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'Pago') BEGIN ALTER TABLE PedidosVenda ADD Pago BIT NOT NULL DEFAULT 0; END
+2026-05-23 22:25:09.570 -04:00 [INF] Executed DbCommand (12ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'PixQrCode') BEGIN ALTER TABLE PedidosVenda ADD PixQrCode NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.586 -04:00 [INF] Executed DbCommand (12ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'BoletoCodigoBarras') BEGIN ALTER TABLE PedidosVenda ADD BoletoCodigoBarras NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.600 -04:00 [INF] Executed DbCommand (13ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'MotoristaId') BEGIN ALTER TABLE PedidosVenda ADD MotoristaId UNIQUEIDENTIFIER NULL; END
+2026-05-23 22:25:09.619 -04:00 [INF] Executed DbCommand (15ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'OrdensProducao' AND COLUMN_NAME = 'UsuarioPlanejouId') BEGIN ALTER TABLE OrdensProducao ADD UsuarioPlanejouId UNIQUEIDENTIFIER NULL; END
+2026-05-23 22:25:09.636 -04:00 [INF] Executed DbCommand (12ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'OrdensProducao' AND COLUMN_NAME = 'UsuarioIniciouId') BEGIN ALTER TABLE OrdensProducao ADD UsuarioIniciouId UNIQUEIDENTIFIER NULL; END
+2026-05-23 22:25:09.653 -04:00 [INF] Executed DbCommand (12ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'OrdensProducao' AND COLUMN_NAME = 'UsuarioFinalizouId') BEGIN ALTER TABLE OrdensProducao ADD UsuarioFinalizouId UNIQUEIDENTIFIER NULL; END
+2026-05-23 22:25:09.665 -04:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'MesReferencia') BEGIN ALTER TABLE ContasPagar ADD MesReferencia NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.671 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'FornecedorId') BEGIN ALTER TABLE ContasPagar ADD FornecedorId UNIQUEIDENTIFIER NULL; END
+2026-05-23 22:25:09.683 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'DataEmissao') BEGIN ALTER TABLE ContasPagar ADD DataEmissao DATETIME2 NOT NULL DEFAULT GETDATE(); END
+2026-05-23 22:25:09.691 -04:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'DataVencimento' AND is_nullable = 0) BEGIN ALTER TABLE ContasPagar ALTER COLUMN DataVencimento DATETIME2 NULL; END
+2026-05-23 22:25:09.700 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Usuarios') AND name = 'PrecisaTrocarSenha') BEGIN ALTER TABLE Usuarios ADD PrecisaTrocarSenha BIT NOT NULL DEFAULT 1; END
+2026-05-23 22:25:09.711 -04:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('TrocasAvaria') AND name = 'MotoristaId') BEGIN ALTER TABLE TrocasAvaria ADD MotoristaId UNIQUEIDENTIFIER NULL; END
+2026-05-23 22:25:09.718 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FolhasPagamento') AND name = 'TotalHorasExtras50') BEGIN ALTER TABLE FolhasPagamento ADD TotalHorasExtras50 DECIMAL(18,2) NOT NULL DEFAULT 0; END
+2026-05-23 22:25:09.727 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FolhasPagamento') AND name = 'ValorHorasExtras50') BEGIN ALTER TABLE FolhasPagamento ADD ValorHorasExtras50 DECIMAL(18,2) NOT NULL DEFAULT 0; END
+2026-05-23 22:25:09.736 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FolhasPagamento') AND name = 'TotalHorasExtras100') BEGIN ALTER TABLE FolhasPagamento ADD TotalHorasExtras100 DECIMAL(18,2) NOT NULL DEFAULT 0; END
+2026-05-23 22:25:09.747 -04:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FolhasPagamento') AND name = 'ValorHorasExtras100') BEGIN ALTER TABLE FolhasPagamento ADD ValorHorasExtras100 DECIMAL(18,2) NOT NULL DEFAULT 0; END
+2026-05-23 22:25:09.753 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FolhasPagamento') AND name = 'ValorAdicionalNoturno') BEGIN ALTER TABLE FolhasPagamento ADD ValorAdicionalNoturno DECIMAL(18,2) NOT NULL DEFAULT 0; END
+2026-05-23 22:25:09.769 -04:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AgendaEventos]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[AgendaEventos](
+                    [Id] [uniqueidentifier] NOT NULL,
+                    [Titulo] [nvarchar](max) NOT NULL,
+                    [Data] [datetime2](7) NOT NULL,
+                    [Tipo] [nvarchar](max) NOT NULL,
+                    [Descricao] [nvarchar](max) NULL,
+                 CONSTRAINT [PK_AgendaEventos] PRIMARY KEY CLUSTERED ([Id] ASC)
+                ) ON [PRIMARY]
+            END
+2026-05-23 22:25:09.785 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Compras]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[Compras](
+                    [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                    [FornecedorId] [uniqueidentifier] NOT NULL,
+                    [DataCompra] [datetime2](7) NOT NULL,
+                    [ValorTotal] [decimal](18,2) NOT NULL,
+                    [Status] [int] NOT NULL,
+                    [Observacao] [nvarchar](max) NULL
+                )
+            END
+2026-05-23 22:25:09.801 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CompraItems]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[CompraItems](
+                    [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                    [CompraId] [uniqueidentifier] NOT NULL,
+                    [ProdutoId] [uniqueidentifier] NOT NULL,
+                    [Quantidade] [decimal](18,4) NOT NULL,
+                    [PrecoUnitario] [decimal](18,4) NOT NULL,
+                    CONSTRAINT [FK_CompraItems_Compras] FOREIGN KEY([CompraId]) REFERENCES [dbo].[Compras] ([Id]) ON DELETE CASCADE,
+                    CONSTRAINT [FK_CompraItems_Produtos] FOREIGN KEY([ProdutoId]) REFERENCES [dbo].[Produtos] ([Id])
+                )
+            END
+2026-05-23 22:25:09.821 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ContasBancarias]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[ContasBancarias](
+                    [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                    [Nome] [nvarchar](max) NOT NULL,
+                    [Tipo] [int] NOT NULL,
+                    [SaldoInicial] [decimal](18,2) NOT NULL,
+                    [SaldoAtual] [decimal](18,2) NOT NULL,
+                    [DataAbertura] [datetime2](7) NOT NULL,
+                    [Ativa] [bit] NOT NULL DEFAULT 1,
+                    [IsPadrao] [bit] NOT NULL DEFAULT 0,
+                    [PixChave] [nvarchar](max) NULL,
+                    [BancoNome] [nvarchar](max) NULL,
+                    [Agencia] [nvarchar](max) NULL,
+                    [NumeroConta] [nvarchar](max) NULL
+                )
+            END
+2026-05-23 22:25:09.832 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'IsPadrao') BEGIN ALTER TABLE ContasBancarias ADD IsPadrao BIT NOT NULL DEFAULT 0; END
+2026-05-23 22:25:09.838 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'PixChave') BEGIN ALTER TABLE ContasBancarias ADD PixChave NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.848 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'BancoNome') BEGIN ALTER TABLE ContasBancarias ADD BancoNome NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.853 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'Agencia') BEGIN ALTER TABLE ContasBancarias ADD Agencia NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.863 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'NumeroConta') BEGIN ALTER TABLE ContasBancarias ADD NumeroConta NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.868 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'GatewayToken') BEGIN ALTER TABLE ContasBancarias ADD GatewayToken NVARCHAR(MAX) NULL; END
+2026-05-23 22:25:09.881 -04:00 [INF] Executed DbCommand (10ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AuditLogs]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[AuditLogs](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [TableName] [nvarchar](max) NOT NULL,
+                        [Action] [nvarchar](max) NOT NULL,
+                        [KeyValues] [nvarchar](max) NOT NULL,
+                        [OldValues] [nvarchar](max) NULL,
+                        [NewValues] [nvarchar](max) NULL,
+                        [Timestamp] [datetime2](7) NOT NULL,
+                        [UserId] [uniqueidentifier] NULL
+                    )
+                END
+2026-05-23 22:25:09.892 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SystemLogs]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[SystemLogs](
+                        [Id] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                        [Message] [nvarchar](max) NULL,
+                        [MessageTemplate] [nvarchar](max) NULL,
+                        [Level] [nvarchar](128) NULL,
+                        [TimeStamp] [datetimeoffset](7) NOT NULL,
+                        [Exception] [nvarchar](max) NULL,
+                        [Properties] [xml] NULL,
+                        [LogEvent] [nvarchar](max) NULL
+                    )
+                END
+2026-05-23 22:25:10.054 -04:00 [INF] User profile is available. Using 'C:\Users\Domingos\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-05-23 22:25:10.168 -04:00 [INF] Now listening on: http://localhost:5137
+2026-05-23 22:25:10.172 -04:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-05-23 22:25:10.173 -04:00 [INF] Hosting environment: Development
+2026-05-23 22:25:10.174 -04:00 [INF] Content root path: C:\Users\Domingos\source\repos\SistemaDeGestaoDePanificacao_e_Fabrica_Salu\Backend\SGPF.WebApi
+2026-05-23 23:14:17.966 -04:00 [INF] Application is shutting down...
+2026-05-23 23:15:28.713 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:15:28.772 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:15:39.069 -04:00 [ERR] An error occurred using the connection to database 'SGPF_Db_Salu' on server 'localhost'.
+2026-05-23 23:15:39.329 -04:00 [INF] User profile is available. Using 'C:\Users\Domingos\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-05-23 23:15:39.437 -04:00 [INF] Now listening on: http://localhost:5137
+2026-05-23 23:15:39.440 -04:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-05-23 23:15:39.442 -04:00 [INF] Hosting environment: Development
+2026-05-23 23:15:39.443 -04:00 [INF] Content root path: C:\Users\Domingos\source\repos\SistemaDeGestaoDePanificacao_e_Fabrica_Salu\Backend\SGPF.WebApi
+2026-05-23 23:15:43.460 -04:00 [INF] Application is shutting down...
+2026-05-23 23:15:59.722 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:15:59.780 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:16:00.548 -04:00 [INF] Executed DbCommand (197ms) [Parameters=[], CommandType='"Text"', CommandTimeout='60']
+CREATE DATABASE [SGPF_Db_Salu];
+2026-05-23 23:16:00.692 -04:00 [INF] Executed DbCommand (137ms) [Parameters=[], CommandType='"Text"', CommandTimeout='60']
+IF SERVERPROPERTY('EngineEdition') <> 5
+BEGIN
+    ALTER DATABASE [SGPF_Db_Salu] SET READ_COMMITTED_SNAPSHOT ON;
+END;
+2026-05-23 23:16:00.722 -04:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 23:16:00.732 -04:00 [INF] Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.
+2026-05-23 23:16:00.757 -04:00 [INF] Executed DbCommand (20ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DECLARE @result int;
+EXEC @result = sp_getapplock @Resource = '__EFMigrationsLock', @LockOwner = 'Session', @LockMode = 'Exclusive';
+SELECT @result
+2026-05-23 23:16:00.857 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+BEGIN
+    CREATE TABLE [__EFMigrationsHistory] (
+        [MigrationId] nvarchar(150) NOT NULL,
+        [ProductVersion] nvarchar(32) NOT NULL,
+        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+    );
+END;
+2026-05-23 23:16:00.872 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 23:16:00.875 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2026-05-23 23:16:00.882 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [MigrationId], [ProductVersion]
+FROM [__EFMigrationsHistory]
+ORDER BY [MigrationId];
+2026-05-23 23:16:00.899 -04:00 [INF] Applying migration '20260425033453_InitialCreate'.
+2026-05-23 23:16:00.937 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Clientes] (
+    [Id] uniqueidentifier NOT NULL,
+    [NomeFantasia] nvarchar(max) NOT NULL,
+    [CNPJ_CPF] nvarchar(max) NOT NULL,
+    [Endereco] nvarchar(max) NOT NULL,
+    [Telefone] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Clientes] PRIMARY KEY ([Id])
+);
+2026-05-23 23:16:00.942 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Empresas] (
+    [Id] uniqueidentifier NOT NULL,
+    [RazaoSocial] nvarchar(max) NOT NULL,
+    [CNPJ] nvarchar(max) NOT NULL,
+    [Endereco] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Empresas] PRIMARY KEY ([Id])
+);
+2026-05-23 23:16:00.946 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Fornecedores] (
+    [Id] uniqueidentifier NOT NULL,
+    [NomeFantasia] nvarchar(max) NOT NULL,
+    [CNPJ] nvarchar(max) NOT NULL,
+    [TipoFornecimento] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Fornecedores] PRIMARY KEY ([Id])
+);
+2026-05-23 23:16:00.951 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Usuarios] (
+    [Id] uniqueidentifier NOT NULL,
+    [Email] nvarchar(max) NOT NULL,
+    [SenhaHash] nvarchar(max) NOT NULL,
+    [Role] nvarchar(max) NOT NULL,
+    [ClienteId] uniqueidentifier NULL,
+    CONSTRAINT [PK_Usuarios] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Usuarios_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id])
+);
+2026-05-23 23:16:00.955 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Funcionarios] (
+    [Id] uniqueidentifier NOT NULL,
+    [Nome] nvarchar(max) NOT NULL,
+    [CPF] nvarchar(max) NOT NULL,
+    [Cargo] nvarchar(max) NOT NULL,
+    [SalarioBase] decimal(18,2) NOT NULL,
+    [DataAdmissao] datetime2 NOT NULL,
+    [EmpresaId] uniqueidentifier NOT NULL,
+    CONSTRAINT [PK_Funcionarios] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Funcionarios_Empresas_EmpresaId] FOREIGN KEY ([EmpresaId]) REFERENCES [Empresas] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:16:00.960 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Funcionarios_EmpresaId] ON [Funcionarios] ([EmpresaId]);
+2026-05-23 23:16:00.963 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Usuarios_ClienteId] ON [Usuarios] ([ClienteId]);
+2026-05-23 23:16:00.967 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425033453_InitialCreate', N'10.0.7');
+2026-05-23 23:16:00.970 -04:00 [INF] Applying migration '20260425041126_Phase2_FabricaEstoque'.
+2026-05-23 23:16:01.017 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Produtos] (
+    [Id] uniqueidentifier NOT NULL,
+    [Nome] nvarchar(max) NOT NULL,
+    [Tipo] int NOT NULL,
+    [UnidadeMedida] nvarchar(max) NOT NULL,
+    [PrecoCusto] decimal(18,4) NOT NULL,
+    [PrecoVenda] decimal(18,2) NOT NULL,
+    [QuantidadeEstoque] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_Produtos] PRIMARY KEY ([Id])
+);
+2026-05-23 23:16:01.021 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [FichasTecnicas] (
+    [Id] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [RendimentoPadrao] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_FichasTecnicas] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_FichasTecnicas_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:16:01.027 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [MovimentacoesEstoque] (
+    [Id] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [Tipo] int NOT NULL,
+    [Quantidade] decimal(18,4) NOT NULL,
+    [DataMovimentacao] datetime2 NOT NULL,
+    [Origem] nvarchar(max) NOT NULL,
+    [Observacao] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_MovimentacoesEstoque] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_MovimentacoesEstoque_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:16:01.032 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [OrdensProducao] (
+    [Id] uniqueidentifier NOT NULL,
+    [NumeroOP] nvarchar(max) NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [QuantidadePlanejada] decimal(18,4) NOT NULL,
+    [QuantidadeRealizada] decimal(18,4) NOT NULL,
+    [Status] int NOT NULL,
+    [DataAbertura] datetime2 NOT NULL,
+    [DataFinalizacao] datetime2 NULL,
+    [CustoTotalCalculado] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_OrdensProducao] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_OrdensProducao_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:16:01.037 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [FichaTecnicaInsumos] (
+    [Id] uniqueidentifier NOT NULL,
+    [FichaTecnicaId] uniqueidentifier NOT NULL,
+    [InsumoId] uniqueidentifier NOT NULL,
+    [QuantidadeNecessaria] decimal(18,4) NOT NULL,
+    [PerdaPercentual] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_FichaTecnicaInsumos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_FichaTecnicaInsumos_FichasTecnicas_FichaTecnicaId] FOREIGN KEY ([FichaTecnicaId]) REFERENCES [FichasTecnicas] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_FichaTecnicaInsumos_Produtos_InsumoId] FOREIGN KEY ([InsumoId]) REFERENCES [Produtos] ([Id]) ON DELETE NO ACTION
+);
+2026-05-23 23:16:01.043 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [OrdemProducaoInsumos] (
+    [Id] uniqueidentifier NOT NULL,
+    [OrdemProducaoId] uniqueidentifier NOT NULL,
+    [InsumoId] uniqueidentifier NOT NULL,
+    [QuantidadePlanejada] decimal(18,4) NOT NULL,
+    [QuantidadeConsumida] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_OrdemProducaoInsumos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_OrdemProducaoInsumos_OrdensProducao_OrdemProducaoId] FOREIGN KEY ([OrdemProducaoId]) REFERENCES [OrdensProducao] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_OrdemProducaoInsumos_Produtos_InsumoId] FOREIGN KEY ([InsumoId]) REFERENCES [Produtos] ([Id]) ON DELETE NO ACTION
+);
+2026-05-23 23:16:01.046 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FichasTecnicas_ProdutoId] ON [FichasTecnicas] ([ProdutoId]);
+2026-05-23 23:16:01.050 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FichaTecnicaInsumos_FichaTecnicaId] ON [FichaTecnicaInsumos] ([FichaTecnicaId]);
+2026-05-23 23:16:01.053 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FichaTecnicaInsumos_InsumoId] ON [FichaTecnicaInsumos] ([InsumoId]);
+2026-05-23 23:16:01.056 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_MovimentacoesEstoque_ProdutoId] ON [MovimentacoesEstoque] ([ProdutoId]);
+2026-05-23 23:16:01.060 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_OrdemProducaoInsumos_InsumoId] ON [OrdemProducaoInsumos] ([InsumoId]);
+2026-05-23 23:16:01.063 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_OrdemProducaoInsumos_OrdemProducaoId] ON [OrdemProducaoInsumos] ([OrdemProducaoId]);
+2026-05-23 23:16:01.066 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_OrdensProducao_ProdutoId] ON [OrdensProducao] ([ProdutoId]);
+2026-05-23 23:16:01.069 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425041126_Phase2_FabricaEstoque', N'10.0.7');
+2026-05-23 23:16:01.072 -04:00 [INF] Applying migration '20260425043014_Phase3_RHFolha'.
+2026-05-23 23:16:01.121 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [ContasPagar] (
+    [Id] uniqueidentifier NOT NULL,
+    [Descricao] nvarchar(max) NOT NULL,
+    [Valor] decimal(18,2) NOT NULL,
+    [DataVencimento] datetime2 NOT NULL,
+    [DataPagamento] datetime2 NULL,
+    [Status] int NOT NULL,
+    [Categoria] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_ContasPagar] PRIMARY KEY ([Id])
+);
+2026-05-23 23:16:01.127 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [FolhasPagamento] (
+    [Id] uniqueidentifier NOT NULL,
+    [FuncionarioId] uniqueidentifier NOT NULL,
+    [MesReferencia] int NOT NULL,
+    [AnoReferencia] int NOT NULL,
+    [SalarioBaseCalculado] decimal(18,2) NOT NULL,
+    [TotalHorasExtras] decimal(18,2) NOT NULL,
+    [ValorHorasExtras] decimal(18,2) NOT NULL,
+    [TotalDescontos] decimal(18,2) NOT NULL,
+    [SalarioLiquido] decimal(18,2) NOT NULL,
+    [Status] int NOT NULL,
+    [DataGeracao] datetime2 NOT NULL,
+    CONSTRAINT [PK_FolhasPagamento] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_FolhasPagamento_Funcionarios_FuncionarioId] FOREIGN KEY ([FuncionarioId]) REFERENCES [Funcionarios] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:16:01.132 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [RegistrosPonto] (
+    [Id] uniqueidentifier NOT NULL,
+    [FuncionarioId] uniqueidentifier NOT NULL,
+    [DataHoraEntrada] datetime2 NOT NULL,
+    [DataHoraSaida] datetime2 NULL,
+    [TotalHorasTrabalhadas] decimal(18,2) NOT NULL,
+    [TotalHorasExtras] decimal(18,2) NOT NULL,
+    [Observacao] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_RegistrosPonto] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_RegistrosPonto_Funcionarios_FuncionarioId] FOREIGN KEY ([FuncionarioId]) REFERENCES [Funcionarios] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:16:01.136 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FolhasPagamento_FuncionarioId] ON [FolhasPagamento] ([FuncionarioId]);
+2026-05-23 23:16:01.139 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_RegistrosPonto_FuncionarioId] ON [RegistrosPonto] ([FuncionarioId]);
+2026-05-23 23:16:01.144 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425043014_Phase3_RHFolha', N'10.0.7');
+2026-05-23 23:16:01.146 -04:00 [INF] Applying migration '20260425044153_Phase4_LogisticaVendas'.
+2026-05-23 23:16:01.225 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [ContasReceber] (
+    [Id] uniqueidentifier NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [Descricao] nvarchar(max) NOT NULL,
+    [Valor] decimal(18,2) NOT NULL,
+    [DataEmissao] datetime2 NOT NULL,
+    [DataVencimento] datetime2 NOT NULL,
+    [DataRecebimento] datetime2 NULL,
+    [Status] int NOT NULL,
+    [PedidoVendaId] uniqueidentifier NULL,
+    CONSTRAINT [PK_ContasReceber] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_ContasReceber_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:16:01.231 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [TrocasAvaria] (
+    [Id] uniqueidentifier NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [Quantidade] decimal(18,4) NOT NULL,
+    [DataTroca] datetime2 NOT NULL,
+    [Motivo] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_TrocasAvaria] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_TrocasAvaria_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_TrocasAvaria_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:16:01.236 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Veiculos] (
+    [Id] uniqueidentifier NOT NULL,
+    [Placa] nvarchar(max) NOT NULL,
+    [Modelo] nvarchar(max) NOT NULL,
+    [CapacidadeCargaKg] decimal(18,2) NOT NULL,
+    [QuilometragemAtual] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_Veiculos] PRIMARY KEY ([Id])
+);
+2026-05-23 23:16:01.244 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Abastecimentos] (
+    [Id] uniqueidentifier NOT NULL,
+    [VeiculoId] uniqueidentifier NOT NULL,
+    [Data] datetime2 NOT NULL,
+    [QuilometragemRegistrada] decimal(18,2) NOT NULL,
+    [Litros] decimal(18,2) NOT NULL,
+    [ValorTotal] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_Abastecimentos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Abastecimentos_Veiculos_VeiculoId] FOREIGN KEY ([VeiculoId]) REFERENCES [Veiculos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:16:01.249 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [ManutencoesVeiculo] (
+    [Id] uniqueidentifier NOT NULL,
+    [VeiculoId] uniqueidentifier NOT NULL,
+    [Data] datetime2 NOT NULL,
+    [Tipo] int NOT NULL,
+    [Descricao] nvarchar(max) NOT NULL,
+    [CustoTotal] decimal(18,2) NOT NULL,
+    [QuilometragemRegistrada] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_ManutencoesVeiculo] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_ManutencoesVeiculo_Veiculos_VeiculoId] FOREIGN KEY ([VeiculoId]) REFERENCES [Veiculos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:16:01.254 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [PedidosVenda] (
+    [Id] uniqueidentifier NOT NULL,
+    [NumeroPedido] nvarchar(max) NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [VeiculoId] uniqueidentifier NULL,
+    [DataPedido] datetime2 NOT NULL,
+    [DataEntregaPrevista] datetime2 NULL,
+    [DataEntregaRealizada] datetime2 NULL,
+    [ValorTotal] decimal(18,2) NOT NULL,
+    [Status] int NOT NULL,
+    CONSTRAINT [PK_PedidosVenda] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_PedidosVenda_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_PedidosVenda_Veiculos_VeiculoId] FOREIGN KEY ([VeiculoId]) REFERENCES [Veiculos] ([Id])
+);
+2026-05-23 23:16:01.265 -04:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [PedidoVendaItens] (
+    [Id] uniqueidentifier NOT NULL,
+    [PedidoVendaId] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [Quantidade] decimal(18,4) NOT NULL,
+    [PrecoUnitario] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_PedidoVendaItens] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_PedidoVendaItens_PedidosVenda_PedidoVendaId] FOREIGN KEY ([PedidoVendaId]) REFERENCES [PedidosVenda] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_PedidoVendaItens_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE NO ACTION
+);
+2026-05-23 23:16:01.269 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Abastecimentos_VeiculoId] ON [Abastecimentos] ([VeiculoId]);
+2026-05-23 23:16:01.360 -04:00 [INF] Executed DbCommand (51ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_ContasReceber_ClienteId] ON [ContasReceber] ([ClienteId]);
+2026-05-23 23:16:01.456 -04:00 [INF] Executed DbCommand (19ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_ManutencoesVeiculo_VeiculoId] ON [ManutencoesVeiculo] ([VeiculoId]);
+2026-05-23 23:16:01.468 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidosVenda_ClienteId] ON [PedidosVenda] ([ClienteId]);
+2026-05-23 23:16:01.472 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidosVenda_VeiculoId] ON [PedidosVenda] ([VeiculoId]);
+2026-05-23 23:16:01.479 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidoVendaItens_PedidoVendaId] ON [PedidoVendaItens] ([PedidoVendaId]);
+2026-05-23 23:16:01.482 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidoVendaItens_ProdutoId] ON [PedidoVendaItens] ([ProdutoId]);
+2026-05-23 23:16:01.486 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_TrocasAvaria_ClienteId] ON [TrocasAvaria] ([ClienteId]);
+2026-05-23 23:16:01.489 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_TrocasAvaria_ProdutoId] ON [TrocasAvaria] ([ProdutoId]);
+2026-05-23 23:16:01.495 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425044153_Phase4_LogisticaVendas', N'10.0.7');
+2026-05-23 23:16:01.499 -04:00 [INF] Applying migration '20260425050345_Phase4b_PortalCRM'.
+2026-05-23 23:16:01.556 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Reunioes] (
+    [Id] uniqueidentifier NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [DataHora] datetime2 NOT NULL,
+    [Pauta] nvarchar(max) NOT NULL,
+    [Ata] nvarchar(max) NOT NULL,
+    [Status] int NOT NULL,
+    CONSTRAINT [PK_Reunioes] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Reunioes_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:16:01.565 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Reunioes_ClienteId] ON [Reunioes] ([ClienteId]);
+2026-05-23 23:16:01.567 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425050345_Phase4b_PortalCRM', N'10.0.7');
+2026-05-23 23:16:01.570 -04:00 [INF] Applying migration '20260506011506_AddCategoriaCompra'.
+2026-05-23 23:16:01.670 -04:00 [INF] Executed DbCommand (37ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Compras]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[Compras](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [FornecedorId] [uniqueidentifier] NOT NULL,
+                        [DataCompra] [datetime2](7) NOT NULL,
+                        [ValorTotal] [decimal](18,2) NOT NULL,
+                        [Status] [int] NOT NULL,
+                        [Observacao] [nvarchar](max) NULL,
+                        CONSTRAINT [FK_Compras_Fornecedores] FOREIGN KEY ([FornecedorId]) REFERENCES [dbo].[Fornecedores] ([Id])
+                    );
+                END
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CompraItems]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[CompraItems](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [CompraId] [uniqueidentifier] NOT NULL,
+                        [ProdutoId] [uniqueidentifier] NOT NULL,
+                        [Quantidade] [decimal](18,4) NOT NULL,
+                        [PrecoUnitario] [decimal](18,4) NOT NULL,
+                        CONSTRAINT [FK_CompraItems_Compras] FOREIGN KEY([CompraId]) REFERENCES [dbo].[Compras] ([Id]) ON DELETE CASCADE,
+                        CONSTRAINT [FK_CompraItems_Produtos] FOREIGN KEY([ProdutoId]) REFERENCES [dbo].[Produtos] ([Id])
+                    );
+                END
+
+                -- Adiciona coluna Categoria apenas se não existir (idempotente)
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.columns 
+                    WHERE object_id = OBJECT_ID(N'[Compras]') 
+                    AND name = 'Categoria'
+                )
+                BEGIN
+                    ALTER TABLE [Compras] ADD [Categoria] int NOT NULL DEFAULT 0;
+                END
+2026-05-23 23:16:01.674 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260506011506_AddCategoriaCompra', N'10.0.7');
+2026-05-23 23:16:01.679 -04:00 [INF] Applying migration '20260507230355_AddEmpresaExpandedFields'.
+2026-05-23 23:16:01.746 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [Email] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 23:16:01.750 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [InscricaoEstadual] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 23:16:01.754 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [LogoUrl] nvarchar(max) NULL;
+2026-05-23 23:16:01.757 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [NomeFantasia] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 23:16:01.765 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [Telefone] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 23:16:01.767 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260507230355_AddEmpresaExpandedFields', N'10.0.7');
+2026-05-23 23:16:01.774 -04:00 [INF] Applying migration '20260508002854_AddInscricaoEnderecoFornecedor'.
+2026-05-23 23:16:01.839 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Fornecedores] ADD [Endereco] nvarchar(max) NULL;
+2026-05-23 23:16:01.843 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Fornecedores] ADD [InscricaoEstadual] nvarchar(max) NULL;
+2026-05-23 23:16:01.845 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508002854_AddInscricaoEnderecoFornecedor', N'10.0.7');
+2026-05-23 23:16:01.848 -04:00 [INF] Applying migration '20260508004320_AddRazaoInscricaoCliente'.
+2026-05-23 23:16:01.911 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Clientes] ADD [InscricaoEstadual] nvarchar(max) NULL;
+2026-05-23 23:16:01.914 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Clientes] ADD [RazaoSocial] nvarchar(max) NULL;
+2026-05-23 23:16:01.916 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508004320_AddRazaoInscricaoCliente', N'10.0.7');
+2026-05-23 23:16:01.918 -04:00 [INF] Applying migration '20260508015936_AddHistoricoPrecoProduto'.
+2026-05-23 23:16:01.988 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [HistoricoPrecos] (
+    [Id] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [PrecoAntigo] decimal(18,4) NOT NULL,
+    [PrecoNovo] decimal(18,4) NOT NULL,
+    [DataAlteracao] datetime2 NOT NULL,
+    [Tipo] int NOT NULL,
+    [Origem] nvarchar(max) NOT NULL,
+    [UsuarioNome] nvarchar(max) NULL,
+    CONSTRAINT [PK_HistoricoPrecos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_HistoricoPrecos_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:16:01.992 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_HistoricoPrecos_ProdutoId] ON [HistoricoPrecos] ([ProdutoId]);
+2026-05-23 23:16:01.995 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508015936_AddHistoricoPrecoProduto', N'10.0.7');
+2026-05-23 23:16:01.998 -04:00 [INF] Applying migration '20260508022733_AddDescontoItemVenda'.
+2026-05-23 23:16:02.065 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidoVendaItens] ADD [Desconto] decimal(18,2) NOT NULL DEFAULT 0.0;
+2026-05-23 23:16:02.068 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508022733_AddDescontoItemVenda', N'10.0.7');
+2026-05-23 23:16:02.070 -04:00 [INF] Applying migration '20260512010410_AddAuditLogs'.
+2026-05-23 23:16:02.107 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260512010410_AddAuditLogs', N'10.0.7');
+2026-05-23 23:16:02.111 -04:00 [INF] Applying migration '20260524015631_SyncModelChanges'.
+2026-05-23 23:16:02.186 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [TrocasAvaria] ADD [MotoristaId] uniqueidentifier NULL;
+2026-05-23 23:16:02.189 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidosVenda] ADD [MotoristaId] uniqueidentifier NULL;
+2026-05-23 23:16:02.192 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_TrocasAvaria_MotoristaId] ON [TrocasAvaria] ([MotoristaId]);
+2026-05-23 23:16:02.195 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidosVenda_MotoristaId] ON [PedidosVenda] ([MotoristaId]);
+2026-05-23 23:16:02.198 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidosVenda] ADD CONSTRAINT [FK_PedidosVenda_Funcionarios_MotoristaId] FOREIGN KEY ([MotoristaId]) REFERENCES [Funcionarios] ([Id]) ON DELETE NO ACTION;
+2026-05-23 23:16:02.201 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [TrocasAvaria] ADD CONSTRAINT [FK_TrocasAvaria_Funcionarios_MotoristaId] FOREIGN KEY ([MotoristaId]) REFERENCES [Funcionarios] ([Id]);
+2026-05-23 23:16:02.204 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260524015631_SyncModelChanges', N'10.0.7');
+2026-05-23 23:16:02.208 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DECLARE @result int;
+EXEC @result = sp_releaseapplock @Resource = '__EFMigrationsLock', @LockOwner = 'Session';
+SELECT @result
+2026-05-23 23:45:28.561 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:45:28.622 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:45:29.176 -04:00 [INF] Executed DbCommand (14ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 23:45:29.192 -04:00 [INF] Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.
+2026-05-23 23:45:29.216 -04:00 [INF] Executed DbCommand (20ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DECLARE @result int;
+EXEC @result = sp_getapplock @Resource = '__EFMigrationsLock', @LockOwner = 'Session', @LockMode = 'Exclusive';
+SELECT @result
+2026-05-23 23:45:29.351 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+BEGIN
+    CREATE TABLE [__EFMigrationsHistory] (
+        [MigrationId] nvarchar(150) NOT NULL,
+        [ProductVersion] nvarchar(32) NOT NULL,
+        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+    );
+END;
+2026-05-23 23:45:29.364 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 23:45:29.368 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2026-05-23 23:45:29.374 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [MigrationId], [ProductVersion]
+FROM [__EFMigrationsHistory]
+ORDER BY [MigrationId];
+2026-05-23 23:45:29.391 -04:00 [INF] Applying migration '20260425033453_InitialCreate'.
+2026-05-23 23:45:29.430 -04:00 [ERR] Failed executing DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Clientes] (
+    [Id] uniqueidentifier NOT NULL,
+    [NomeFantasia] nvarchar(max) NOT NULL,
+    [CNPJ_CPF] nvarchar(max) NOT NULL,
+    [Endereco] nvarchar(max) NOT NULL,
+    [Telefone] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Clientes] PRIMARY KEY ([Id])
+);
+2026-05-23 23:47:49.994 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:47:50.060 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:47:50.364 -04:00 [INF] Executed DbCommand (22ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 23:47:53.508 -04:00 [INF] Executed DbCommand (3,041ms) [Parameters=[], CommandType='"Text"', CommandTimeout='60']
+IF SERVERPROPERTY('EngineEdition') <> 5
+BEGIN
+    ALTER DATABASE [SGPF_Db_Salu] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+END;
+2026-05-23 23:47:53.542 -04:00 [INF] Executed DbCommand (28ms) [Parameters=[], CommandType='"Text"', CommandTimeout='60']
+DROP DATABASE [SGPF_Db_Salu];
+2026-05-23 23:48:07.651 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:48:07.711 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:48:08.495 -04:00 [INF] Executed DbCommand (236ms) [Parameters=[], CommandType='"Text"', CommandTimeout='60']
+CREATE DATABASE [SGPF_Db_Salu];
+2026-05-23 23:48:08.550 -04:00 [INF] Executed DbCommand (47ms) [Parameters=[], CommandType='"Text"', CommandTimeout='60']
+IF SERVERPROPERTY('EngineEdition') <> 5
+BEGIN
+    ALTER DATABASE [SGPF_Db_Salu] SET READ_COMMITTED_SNAPSHOT ON;
+END;
+2026-05-23 23:48:08.598 -04:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 23:48:08.608 -04:00 [INF] Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.
+2026-05-23 23:48:08.640 -04:00 [INF] Executed DbCommand (27ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DECLARE @result int;
+EXEC @result = sp_getapplock @Resource = '__EFMigrationsLock', @LockOwner = 'Session', @LockMode = 'Exclusive';
+SELECT @result
+2026-05-23 23:48:08.749 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+BEGIN
+    CREATE TABLE [__EFMigrationsHistory] (
+        [MigrationId] nvarchar(150) NOT NULL,
+        [ProductVersion] nvarchar(32) NOT NULL,
+        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+    );
+END;
+2026-05-23 23:48:08.764 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 23:48:08.767 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2026-05-23 23:48:08.774 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [MigrationId], [ProductVersion]
+FROM [__EFMigrationsHistory]
+ORDER BY [MigrationId];
+2026-05-23 23:48:08.791 -04:00 [INF] Applying migration '20260425033453_InitialCreate'.
+2026-05-23 23:48:08.872 -04:00 [INF] Executed DbCommand (34ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Clientes] (
+    [Id] uniqueidentifier NOT NULL,
+    [NomeFantasia] nvarchar(max) NOT NULL,
+    [CNPJ_CPF] nvarchar(max) NOT NULL,
+    [Endereco] nvarchar(max) NOT NULL,
+    [Telefone] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Clientes] PRIMARY KEY ([Id])
+);
+2026-05-23 23:48:08.930 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Empresas] (
+    [Id] uniqueidentifier NOT NULL,
+    [RazaoSocial] nvarchar(max) NOT NULL,
+    [CNPJ] nvarchar(max) NOT NULL,
+    [Endereco] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Empresas] PRIMARY KEY ([Id])
+);
+2026-05-23 23:48:08.935 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Fornecedores] (
+    [Id] uniqueidentifier NOT NULL,
+    [NomeFantasia] nvarchar(max) NOT NULL,
+    [CNPJ] nvarchar(max) NOT NULL,
+    [TipoFornecimento] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Fornecedores] PRIMARY KEY ([Id])
+);
+2026-05-23 23:48:08.971 -04:00 [INF] Executed DbCommand (12ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Usuarios] (
+    [Id] uniqueidentifier NOT NULL,
+    [Email] nvarchar(max) NOT NULL,
+    [SenhaHash] nvarchar(max) NOT NULL,
+    [Role] nvarchar(max) NOT NULL,
+    [ClienteId] uniqueidentifier NULL,
+    CONSTRAINT [PK_Usuarios] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Usuarios_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id])
+);
+2026-05-23 23:48:08.978 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Funcionarios] (
+    [Id] uniqueidentifier NOT NULL,
+    [Nome] nvarchar(max) NOT NULL,
+    [CPF] nvarchar(max) NOT NULL,
+    [Cargo] nvarchar(max) NOT NULL,
+    [SalarioBase] decimal(18,2) NOT NULL,
+    [DataAdmissao] datetime2 NOT NULL,
+    [EmpresaId] uniqueidentifier NOT NULL,
+    CONSTRAINT [PK_Funcionarios] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Funcionarios_Empresas_EmpresaId] FOREIGN KEY ([EmpresaId]) REFERENCES [Empresas] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:48:08.982 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Funcionarios_EmpresaId] ON [Funcionarios] ([EmpresaId]);
+2026-05-23 23:48:08.986 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Usuarios_ClienteId] ON [Usuarios] ([ClienteId]);
+2026-05-23 23:48:08.989 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425033453_InitialCreate', N'10.0.7');
+2026-05-23 23:48:08.992 -04:00 [INF] Applying migration '20260425041126_Phase2_FabricaEstoque'.
+2026-05-23 23:48:09.041 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Produtos] (
+    [Id] uniqueidentifier NOT NULL,
+    [Nome] nvarchar(max) NOT NULL,
+    [Tipo] int NOT NULL,
+    [UnidadeMedida] nvarchar(max) NOT NULL,
+    [PrecoCusto] decimal(18,4) NOT NULL,
+    [PrecoVenda] decimal(18,2) NOT NULL,
+    [QuantidadeEstoque] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_Produtos] PRIMARY KEY ([Id])
+);
+2026-05-23 23:48:09.045 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [FichasTecnicas] (
+    [Id] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [RendimentoPadrao] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_FichasTecnicas] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_FichasTecnicas_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:48:09.050 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [MovimentacoesEstoque] (
+    [Id] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [Tipo] int NOT NULL,
+    [Quantidade] decimal(18,4) NOT NULL,
+    [DataMovimentacao] datetime2 NOT NULL,
+    [Origem] nvarchar(max) NOT NULL,
+    [Observacao] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_MovimentacoesEstoque] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_MovimentacoesEstoque_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:48:09.058 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [OrdensProducao] (
+    [Id] uniqueidentifier NOT NULL,
+    [NumeroOP] nvarchar(max) NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [QuantidadePlanejada] decimal(18,4) NOT NULL,
+    [QuantidadeRealizada] decimal(18,4) NOT NULL,
+    [Status] int NOT NULL,
+    [DataAbertura] datetime2 NOT NULL,
+    [DataFinalizacao] datetime2 NULL,
+    [CustoTotalCalculado] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_OrdensProducao] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_OrdensProducao_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:48:09.063 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [FichaTecnicaInsumos] (
+    [Id] uniqueidentifier NOT NULL,
+    [FichaTecnicaId] uniqueidentifier NOT NULL,
+    [InsumoId] uniqueidentifier NOT NULL,
+    [QuantidadeNecessaria] decimal(18,4) NOT NULL,
+    [PerdaPercentual] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_FichaTecnicaInsumos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_FichaTecnicaInsumos_FichasTecnicas_FichaTecnicaId] FOREIGN KEY ([FichaTecnicaId]) REFERENCES [FichasTecnicas] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_FichaTecnicaInsumos_Produtos_InsumoId] FOREIGN KEY ([InsumoId]) REFERENCES [Produtos] ([Id]) ON DELETE NO ACTION
+);
+2026-05-23 23:48:09.069 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [OrdemProducaoInsumos] (
+    [Id] uniqueidentifier NOT NULL,
+    [OrdemProducaoId] uniqueidentifier NOT NULL,
+    [InsumoId] uniqueidentifier NOT NULL,
+    [QuantidadePlanejada] decimal(18,4) NOT NULL,
+    [QuantidadeConsumida] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_OrdemProducaoInsumos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_OrdemProducaoInsumos_OrdensProducao_OrdemProducaoId] FOREIGN KEY ([OrdemProducaoId]) REFERENCES [OrdensProducao] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_OrdemProducaoInsumos_Produtos_InsumoId] FOREIGN KEY ([InsumoId]) REFERENCES [Produtos] ([Id]) ON DELETE NO ACTION
+);
+2026-05-23 23:48:09.073 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FichasTecnicas_ProdutoId] ON [FichasTecnicas] ([ProdutoId]);
+2026-05-23 23:48:09.076 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FichaTecnicaInsumos_FichaTecnicaId] ON [FichaTecnicaInsumos] ([FichaTecnicaId]);
+2026-05-23 23:48:09.080 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FichaTecnicaInsumos_InsumoId] ON [FichaTecnicaInsumos] ([InsumoId]);
+2026-05-23 23:48:09.083 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_MovimentacoesEstoque_ProdutoId] ON [MovimentacoesEstoque] ([ProdutoId]);
+2026-05-23 23:48:09.087 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_OrdemProducaoInsumos_InsumoId] ON [OrdemProducaoInsumos] ([InsumoId]);
+2026-05-23 23:48:09.090 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_OrdemProducaoInsumos_OrdemProducaoId] ON [OrdemProducaoInsumos] ([OrdemProducaoId]);
+2026-05-23 23:48:09.093 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_OrdensProducao_ProdutoId] ON [OrdensProducao] ([ProdutoId]);
+2026-05-23 23:48:09.096 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425041126_Phase2_FabricaEstoque', N'10.0.7');
+2026-05-23 23:48:09.098 -04:00 [INF] Applying migration '20260425043014_Phase3_RHFolha'.
+2026-05-23 23:48:09.147 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [ContasPagar] (
+    [Id] uniqueidentifier NOT NULL,
+    [Descricao] nvarchar(max) NOT NULL,
+    [Valor] decimal(18,2) NOT NULL,
+    [DataVencimento] datetime2 NOT NULL,
+    [DataPagamento] datetime2 NULL,
+    [Status] int NOT NULL,
+    [Categoria] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_ContasPagar] PRIMARY KEY ([Id])
+);
+2026-05-23 23:48:09.152 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [FolhasPagamento] (
+    [Id] uniqueidentifier NOT NULL,
+    [FuncionarioId] uniqueidentifier NOT NULL,
+    [MesReferencia] int NOT NULL,
+    [AnoReferencia] int NOT NULL,
+    [SalarioBaseCalculado] decimal(18,2) NOT NULL,
+    [TotalHorasExtras] decimal(18,2) NOT NULL,
+    [ValorHorasExtras] decimal(18,2) NOT NULL,
+    [TotalDescontos] decimal(18,2) NOT NULL,
+    [SalarioLiquido] decimal(18,2) NOT NULL,
+    [Status] int NOT NULL,
+    [DataGeracao] datetime2 NOT NULL,
+    CONSTRAINT [PK_FolhasPagamento] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_FolhasPagamento_Funcionarios_FuncionarioId] FOREIGN KEY ([FuncionarioId]) REFERENCES [Funcionarios] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:48:09.157 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [RegistrosPonto] (
+    [Id] uniqueidentifier NOT NULL,
+    [FuncionarioId] uniqueidentifier NOT NULL,
+    [DataHoraEntrada] datetime2 NOT NULL,
+    [DataHoraSaida] datetime2 NULL,
+    [TotalHorasTrabalhadas] decimal(18,2) NOT NULL,
+    [TotalHorasExtras] decimal(18,2) NOT NULL,
+    [Observacao] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_RegistrosPonto] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_RegistrosPonto_Funcionarios_FuncionarioId] FOREIGN KEY ([FuncionarioId]) REFERENCES [Funcionarios] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:48:09.160 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FolhasPagamento_FuncionarioId] ON [FolhasPagamento] ([FuncionarioId]);
+2026-05-23 23:48:09.163 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_RegistrosPonto_FuncionarioId] ON [RegistrosPonto] ([FuncionarioId]);
+2026-05-23 23:48:09.165 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425043014_Phase3_RHFolha', N'10.0.7');
+2026-05-23 23:48:09.168 -04:00 [INF] Applying migration '20260425044153_Phase4_LogisticaVendas'.
+2026-05-23 23:48:09.246 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [ContasReceber] (
+    [Id] uniqueidentifier NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [Descricao] nvarchar(max) NOT NULL,
+    [Valor] decimal(18,2) NOT NULL,
+    [DataEmissao] datetime2 NOT NULL,
+    [DataVencimento] datetime2 NOT NULL,
+    [DataRecebimento] datetime2 NULL,
+    [Status] int NOT NULL,
+    [PedidoVendaId] uniqueidentifier NULL,
+    CONSTRAINT [PK_ContasReceber] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_ContasReceber_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:48:09.251 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [TrocasAvaria] (
+    [Id] uniqueidentifier NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [Quantidade] decimal(18,4) NOT NULL,
+    [DataTroca] datetime2 NOT NULL,
+    [Motivo] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_TrocasAvaria] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_TrocasAvaria_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_TrocasAvaria_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:48:09.256 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Veiculos] (
+    [Id] uniqueidentifier NOT NULL,
+    [Placa] nvarchar(max) NOT NULL,
+    [Modelo] nvarchar(max) NOT NULL,
+    [CapacidadeCargaKg] decimal(18,2) NOT NULL,
+    [QuilometragemAtual] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_Veiculos] PRIMARY KEY ([Id])
+);
+2026-05-23 23:48:09.260 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Abastecimentos] (
+    [Id] uniqueidentifier NOT NULL,
+    [VeiculoId] uniqueidentifier NOT NULL,
+    [Data] datetime2 NOT NULL,
+    [QuilometragemRegistrada] decimal(18,2) NOT NULL,
+    [Litros] decimal(18,2) NOT NULL,
+    [ValorTotal] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_Abastecimentos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Abastecimentos_Veiculos_VeiculoId] FOREIGN KEY ([VeiculoId]) REFERENCES [Veiculos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:48:09.263 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [ManutencoesVeiculo] (
+    [Id] uniqueidentifier NOT NULL,
+    [VeiculoId] uniqueidentifier NOT NULL,
+    [Data] datetime2 NOT NULL,
+    [Tipo] int NOT NULL,
+    [Descricao] nvarchar(max) NOT NULL,
+    [CustoTotal] decimal(18,2) NOT NULL,
+    [QuilometragemRegistrada] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_ManutencoesVeiculo] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_ManutencoesVeiculo_Veiculos_VeiculoId] FOREIGN KEY ([VeiculoId]) REFERENCES [Veiculos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:48:09.268 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [PedidosVenda] (
+    [Id] uniqueidentifier NOT NULL,
+    [NumeroPedido] nvarchar(max) NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [VeiculoId] uniqueidentifier NULL,
+    [DataPedido] datetime2 NOT NULL,
+    [DataEntregaPrevista] datetime2 NULL,
+    [DataEntregaRealizada] datetime2 NULL,
+    [ValorTotal] decimal(18,2) NOT NULL,
+    [Status] int NOT NULL,
+    CONSTRAINT [PK_PedidosVenda] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_PedidosVenda_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_PedidosVenda_Veiculos_VeiculoId] FOREIGN KEY ([VeiculoId]) REFERENCES [Veiculos] ([Id])
+);
+2026-05-23 23:48:09.273 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [PedidoVendaItens] (
+    [Id] uniqueidentifier NOT NULL,
+    [PedidoVendaId] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [Quantidade] decimal(18,4) NOT NULL,
+    [PrecoUnitario] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_PedidoVendaItens] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_PedidoVendaItens_PedidosVenda_PedidoVendaId] FOREIGN KEY ([PedidoVendaId]) REFERENCES [PedidosVenda] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_PedidoVendaItens_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE NO ACTION
+);
+2026-05-23 23:48:09.278 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Abastecimentos_VeiculoId] ON [Abastecimentos] ([VeiculoId]);
+2026-05-23 23:48:09.281 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_ContasReceber_ClienteId] ON [ContasReceber] ([ClienteId]);
+2026-05-23 23:48:09.283 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_ManutencoesVeiculo_VeiculoId] ON [ManutencoesVeiculo] ([VeiculoId]);
+2026-05-23 23:48:09.286 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidosVenda_ClienteId] ON [PedidosVenda] ([ClienteId]);
+2026-05-23 23:48:09.289 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidosVenda_VeiculoId] ON [PedidosVenda] ([VeiculoId]);
+2026-05-23 23:48:09.292 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidoVendaItens_PedidoVendaId] ON [PedidoVendaItens] ([PedidoVendaId]);
+2026-05-23 23:48:09.295 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidoVendaItens_ProdutoId] ON [PedidoVendaItens] ([ProdutoId]);
+2026-05-23 23:48:09.298 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_TrocasAvaria_ClienteId] ON [TrocasAvaria] ([ClienteId]);
+2026-05-23 23:48:09.300 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_TrocasAvaria_ProdutoId] ON [TrocasAvaria] ([ProdutoId]);
+2026-05-23 23:48:09.303 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425044153_Phase4_LogisticaVendas', N'10.0.7');
+2026-05-23 23:48:09.307 -04:00 [INF] Applying migration '20260425050345_Phase4b_PortalCRM'.
+2026-05-23 23:48:09.361 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Reunioes] (
+    [Id] uniqueidentifier NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [DataHora] datetime2 NOT NULL,
+    [Pauta] nvarchar(max) NOT NULL,
+    [Ata] nvarchar(max) NOT NULL,
+    [Status] int NOT NULL,
+    CONSTRAINT [PK_Reunioes] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Reunioes_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:48:09.364 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Reunioes_ClienteId] ON [Reunioes] ([ClienteId]);
+2026-05-23 23:48:09.366 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425050345_Phase4b_PortalCRM', N'10.0.7');
+2026-05-23 23:48:09.369 -04:00 [INF] Applying migration '20260506011506_AddCategoriaCompra'.
+2026-05-23 23:48:09.460 -04:00 [INF] Executed DbCommand (32ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Compras]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[Compras](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [FornecedorId] [uniqueidentifier] NOT NULL,
+                        [DataCompra] [datetime2](7) NOT NULL,
+                        [ValorTotal] [decimal](18,2) NOT NULL,
+                        [Status] [int] NOT NULL,
+                        [Observacao] [nvarchar](max) NULL,
+                        CONSTRAINT [FK_Compras_Fornecedores] FOREIGN KEY ([FornecedorId]) REFERENCES [dbo].[Fornecedores] ([Id])
+                    );
+                END
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CompraItems]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[CompraItems](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [CompraId] [uniqueidentifier] NOT NULL,
+                        [ProdutoId] [uniqueidentifier] NOT NULL,
+                        [Quantidade] [decimal](18,4) NOT NULL,
+                        [PrecoUnitario] [decimal](18,4) NOT NULL,
+                        CONSTRAINT [FK_CompraItems_Compras] FOREIGN KEY([CompraId]) REFERENCES [dbo].[Compras] ([Id]) ON DELETE CASCADE,
+                        CONSTRAINT [FK_CompraItems_Produtos] FOREIGN KEY([ProdutoId]) REFERENCES [dbo].[Produtos] ([Id])
+                    );
+                END
+
+                -- Adiciona coluna Categoria apenas se não existir (idempotente)
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.columns 
+                    WHERE object_id = OBJECT_ID(N'[Compras]') 
+                    AND name = 'Categoria'
+                )
+                BEGIN
+                    ALTER TABLE [Compras] ADD [Categoria] int NOT NULL DEFAULT 0;
+                END
+2026-05-23 23:48:09.465 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260506011506_AddCategoriaCompra', N'10.0.7');
+2026-05-23 23:48:09.467 -04:00 [INF] Applying migration '20260507230355_AddEmpresaExpandedFields'.
+2026-05-23 23:48:09.530 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [Email] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 23:48:09.534 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [InscricaoEstadual] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 23:48:09.538 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [LogoUrl] nvarchar(max) NULL;
+2026-05-23 23:48:09.541 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [NomeFantasia] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 23:48:09.544 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [Telefone] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 23:48:09.546 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260507230355_AddEmpresaExpandedFields', N'10.0.7');
+2026-05-23 23:48:09.549 -04:00 [INF] Applying migration '20260508002854_AddInscricaoEnderecoFornecedor'.
+2026-05-23 23:48:09.611 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Fornecedores] ADD [Endereco] nvarchar(max) NULL;
+2026-05-23 23:48:09.615 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Fornecedores] ADD [InscricaoEstadual] nvarchar(max) NULL;
+2026-05-23 23:48:09.617 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508002854_AddInscricaoEnderecoFornecedor', N'10.0.7');
+2026-05-23 23:48:09.621 -04:00 [INF] Applying migration '20260508004320_AddRazaoInscricaoCliente'.
+2026-05-23 23:48:09.682 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Clientes] ADD [InscricaoEstadual] nvarchar(max) NULL;
+2026-05-23 23:48:09.685 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Clientes] ADD [RazaoSocial] nvarchar(max) NULL;
+2026-05-23 23:48:09.688 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508004320_AddRazaoInscricaoCliente', N'10.0.7');
+2026-05-23 23:48:09.691 -04:00 [INF] Applying migration '20260508015936_AddHistoricoPrecoProduto'.
+2026-05-23 23:48:09.761 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [HistoricoPrecos] (
+    [Id] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [PrecoAntigo] decimal(18,4) NOT NULL,
+    [PrecoNovo] decimal(18,4) NOT NULL,
+    [DataAlteracao] datetime2 NOT NULL,
+    [Tipo] int NOT NULL,
+    [Origem] nvarchar(max) NOT NULL,
+    [UsuarioNome] nvarchar(max) NULL,
+    CONSTRAINT [PK_HistoricoPrecos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_HistoricoPrecos_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:48:09.765 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_HistoricoPrecos_ProdutoId] ON [HistoricoPrecos] ([ProdutoId]);
+2026-05-23 23:48:09.767 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508015936_AddHistoricoPrecoProduto', N'10.0.7');
+2026-05-23 23:48:09.771 -04:00 [INF] Applying migration '20260508022733_AddDescontoItemVenda'.
+2026-05-23 23:48:09.836 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidoVendaItens] ADD [Desconto] decimal(18,2) NOT NULL DEFAULT 0.0;
+2026-05-23 23:48:09.839 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508022733_AddDescontoItemVenda', N'10.0.7');
+2026-05-23 23:48:09.843 -04:00 [INF] Applying migration '20260512010410_AddAuditLogs'.
+2026-05-23 23:48:09.880 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260512010410_AddAuditLogs', N'10.0.7');
+2026-05-23 23:48:09.883 -04:00 [INF] Applying migration '20260524015631_SyncModelChanges'.
+2026-05-23 23:48:09.953 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [TrocasAvaria] ADD [MotoristaId] uniqueidentifier NULL;
+2026-05-23 23:48:09.957 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidosVenda] ADD [MotoristaId] uniqueidentifier NULL;
+2026-05-23 23:48:09.960 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_TrocasAvaria_MotoristaId] ON [TrocasAvaria] ([MotoristaId]);
+2026-05-23 23:48:09.963 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidosVenda_MotoristaId] ON [PedidosVenda] ([MotoristaId]);
+2026-05-23 23:48:09.966 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidosVenda] ADD CONSTRAINT [FK_PedidosVenda_Funcionarios_MotoristaId] FOREIGN KEY ([MotoristaId]) REFERENCES [Funcionarios] ([Id]) ON DELETE NO ACTION;
+2026-05-23 23:48:09.970 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [TrocasAvaria] ADD CONSTRAINT [FK_TrocasAvaria_Funcionarios_MotoristaId] FOREIGN KEY ([MotoristaId]) REFERENCES [Funcionarios] ([Id]);
+2026-05-23 23:48:09.973 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260524015631_SyncModelChanges', N'10.0.7');
+2026-05-23 23:48:09.978 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DECLARE @result int;
+EXEC @result = sp_releaseapplock @Resource = '__EFMigrationsLock', @LockOwner = 'Session';
+SELECT @result
+2026-05-23 23:48:28.599 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:48:28.664 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:48:28.934 -04:00 [INF] Executed DbCommand (38ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Clientes') AND name = 'Ativo') BEGIN ALTER TABLE Clientes ADD Ativo BIT NOT NULL DEFAULT 1; END
+2026-05-23 23:48:28.956 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Produtos') AND name = 'Ativo') BEGIN ALTER TABLE Produtos ADD Ativo BIT NOT NULL DEFAULT 1; END
+2026-05-23 23:48:28.968 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Usuarios') AND name = 'Nome') BEGIN ALTER TABLE Usuarios ADD Nome NVARCHAR(MAX) NOT NULL DEFAULT ''; END
+2026-05-23 23:48:29.017 -04:00 [INF] Executed DbCommand (46ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+            DECLARE @fkName NVARCHAR(200);
+            SELECT @fkName = fk.name
+            FROM sys.foreign_keys fk
+            JOIN sys.foreign_key_columns fkc ON fk.object_id = fkc.constraint_object_id
+            JOIN sys.columns c ON fkc.parent_object_id = c.object_id AND fkc.parent_column_id = c.column_id
+            WHERE OBJECT_NAME(fk.parent_object_id) = 'Funcionarios' AND c.name = 'EmpresaId';
+            IF @fkName IS NOT NULL
+                EXEC('ALTER TABLE Funcionarios DROP CONSTRAINT [' + @fkName + ']');
+            IF EXISTS (SELECT 1 FROM sys.columns WHERE object_id = OBJECT_ID('Funcionarios') AND name = 'EmpresaId' AND is_nullable = 0)
+                ALTER TABLE Funcionarios ALTER COLUMN EmpresaId UNIQUEIDENTIFIER NULL;
+2026-05-23 23:48:29.033 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Funcionarios') AND name = 'DataDemissao') BEGIN ALTER TABLE Funcionarios ADD DataDemissao DATETIME2 NULL; END
+2026-05-23 23:48:29.051 -04:00 [INF] Executed DbCommand (8ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Funcionarios') AND name = 'Ativo') BEGIN ALTER TABLE Funcionarios ADD Ativo BIT NOT NULL DEFAULT 1; END
+2026-05-23 23:48:29.057 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Funcionarios') AND name = 'UsuarioId') BEGIN ALTER TABLE Funcionarios ADD UsuarioId UNIQUEIDENTIFIER NULL; END
+2026-05-23 23:48:29.068 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+UPDATE Funcionarios SET Ativo = 1 WHERE Ativo = 0
+2026-05-23 23:48:29.076 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Veiculos') AND name = 'Ativo') BEGIN ALTER TABLE Veiculos ADD Ativo BIT NOT NULL DEFAULT 1; END
+2026-05-23 23:48:29.099 -04:00 [INF] Executed DbCommand (16ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'PixChave') BEGIN ALTER TABLE Empresas ADD PixChave NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.113 -04:00 [INF] Executed DbCommand (12ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'BancoNome') BEGIN ALTER TABLE Empresas ADD BancoNome NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.129 -04:00 [INF] Executed DbCommand (13ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'BancoAgencia') BEGIN ALTER TABLE Empresas ADD BancoAgencia NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.140 -04:00 [INF] Executed DbCommand (9ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'BancoConta') BEGIN ALTER TABLE Empresas ADD BancoConta NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.157 -04:00 [INF] Executed DbCommand (9ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'GatewayToken') BEGIN ALTER TABLE Empresas ADD GatewayToken NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.168 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'RazaoSocial') BEGIN ALTER TABLE Fornecedores ADD RazaoSocial NVARCHAR(MAX) NOT NULL DEFAULT ''; END
+2026-05-23 23:48:29.178 -04:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'Contato') BEGIN ALTER TABLE Fornecedores ADD Contato NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.186 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'Telefone') BEGIN ALTER TABLE Fornecedores ADD Telefone NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.196 -04:00 [INF] Executed DbCommand (8ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'Email') BEGIN ALTER TABLE Fornecedores ADD Email NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.205 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'Ativo') BEGIN ALTER TABLE Fornecedores ADD Ativo BIT NOT NULL DEFAULT 1; END
+2026-05-23 23:48:29.213 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+UPDATE Fornecedores SET Ativo = 1 WHERE Ativo = 0
+2026-05-23 23:48:29.217 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+UPDATE Veiculos SET Ativo = 1 WHERE Ativo = 0
+2026-05-23 23:48:29.223 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'TipoFornecimento') BEGIN ALTER TABLE Fornecedores ALTER COLUMN TipoFornecimento NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.231 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Fornecedores') AND name = 'CNPJ') BEGIN ALTER TABLE Fornecedores ADD CNPJ NVARCHAR(MAX) NOT NULL DEFAULT ''; END
+2026-05-23 23:48:29.239 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Afastamentos]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[Afastamentos](
+                    [Id] [uniqueidentifier] NOT NULL,
+                    [FuncionarioId] [uniqueidentifier] NOT NULL,
+                    [DataInicio] [datetime2](7) NOT NULL,
+                    [DataFim] [datetime2](7) NOT NULL,
+                    [Motivo] [nvarchar](max) NOT NULL,
+                    [Observacao] [nvarchar](max) NULL,
+                    [Status] [nvarchar](max) NOT NULL,
+                    [DataCriacao] [datetime2](7) NOT NULL,
+                 CONSTRAINT [PK_Afastamentos] PRIMARY KEY CLUSTERED 
+                (
+                    [Id] ASC
+                )
+                ) ON [PRIMARY]
+                
+                ALTER TABLE [dbo].[Afastamentos]  WITH CHECK ADD  CONSTRAINT [FK_Afastamentos_Funcionarios_FuncionarioId] FOREIGN KEY([FuncionarioId])
+                REFERENCES [dbo].[Funcionarios] ([Id])
+                ON DELETE CASCADE
+                
+                ALTER TABLE [dbo].[Afastamentos] CHECK CONSTRAINT [FK_Afastamentos_Funcionarios_FuncionarioId]
+            END
+2026-05-23 23:48:29.250 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'Tipo') BEGIN ALTER TABLE Afastamentos ALTER COLUMN Tipo NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.255 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'Motivo') BEGIN ALTER TABLE Afastamentos ADD Motivo NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.262 -04:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'Observacao') BEGIN ALTER TABLE Afastamentos ADD Observacao NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.268 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'Status') BEGIN ALTER TABLE Afastamentos ADD Status NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.386 -04:00 [INF] Executed DbCommand (80ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'AnexoNome') BEGIN ALTER TABLE Afastamentos ADD AnexoNome NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.418 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'AnexoBase64') BEGIN ALTER TABLE Afastamentos ADD AnexoBase64 NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.456 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Afastamentos') AND name = 'DataCriacao') BEGIN ALTER TABLE Afastamentos ADD DataCriacao DATETIME2 NOT NULL DEFAULT GETDATE(); END
+2026-05-23 23:48:29.466 -04:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Usuarios') AND name = 'Ativo') BEGIN ALTER TABLE Usuarios ADD Ativo BIT NOT NULL DEFAULT 1; END
+2026-05-23 23:48:29.479 -04:00 [INF] Executed DbCommand (11ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'FormaPagamento') BEGIN ALTER TABLE PedidosVenda ADD FormaPagamento INT NOT NULL DEFAULT 0; END
+2026-05-23 23:48:29.493 -04:00 [INF] Executed DbCommand (10ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'Pago') BEGIN ALTER TABLE PedidosVenda ADD Pago BIT NOT NULL DEFAULT 0; END
+2026-05-23 23:48:29.507 -04:00 [INF] Executed DbCommand (10ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'PixQrCode') BEGIN ALTER TABLE PedidosVenda ADD PixQrCode NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.520 -04:00 [INF] Executed DbCommand (10ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'BoletoCodigoBarras') BEGIN ALTER TABLE PedidosVenda ADD BoletoCodigoBarras NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.536 -04:00 [INF] Executed DbCommand (13ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'PedidosVenda' AND COLUMN_NAME = 'MotoristaId') BEGIN ALTER TABLE PedidosVenda ADD MotoristaId UNIQUEIDENTIFIER NULL; END
+2026-05-23 23:48:29.549 -04:00 [INF] Executed DbCommand (10ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'OrdensProducao' AND COLUMN_NAME = 'UsuarioPlanejouId') BEGIN ALTER TABLE OrdensProducao ADD UsuarioPlanejouId UNIQUEIDENTIFIER NULL; END
+2026-05-23 23:48:29.561 -04:00 [INF] Executed DbCommand (10ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'OrdensProducao' AND COLUMN_NAME = 'UsuarioIniciouId') BEGIN ALTER TABLE OrdensProducao ADD UsuarioIniciouId UNIQUEIDENTIFIER NULL; END
+2026-05-23 23:48:29.574 -04:00 [INF] Executed DbCommand (10ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'OrdensProducao' AND COLUMN_NAME = 'UsuarioFinalizouId') BEGIN ALTER TABLE OrdensProducao ADD UsuarioFinalizouId UNIQUEIDENTIFIER NULL; END
+2026-05-23 23:48:29.582 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'MesReferencia') BEGIN ALTER TABLE ContasPagar ADD MesReferencia NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.588 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'FornecedorId') BEGIN ALTER TABLE ContasPagar ADD FornecedorId UNIQUEIDENTIFIER NULL; END
+2026-05-23 23:48:29.595 -04:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'DataEmissao') BEGIN ALTER TABLE ContasPagar ADD DataEmissao DATETIME2 NOT NULL DEFAULT GETDATE(); END
+2026-05-23 23:48:29.604 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasPagar') AND name = 'DataVencimento' AND is_nullable = 0) BEGIN ALTER TABLE ContasPagar ALTER COLUMN DataVencimento DATETIME2 NULL; END
+2026-05-23 23:48:29.611 -04:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Usuarios') AND name = 'PrecisaTrocarSenha') BEGIN ALTER TABLE Usuarios ADD PrecisaTrocarSenha BIT NOT NULL DEFAULT 1; END
+2026-05-23 23:48:29.617 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('TrocasAvaria') AND name = 'MotoristaId') BEGIN ALTER TABLE TrocasAvaria ADD MotoristaId UNIQUEIDENTIFIER NULL; END
+2026-05-23 23:48:29.626 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FolhasPagamento') AND name = 'TotalHorasExtras50') BEGIN ALTER TABLE FolhasPagamento ADD TotalHorasExtras50 DECIMAL(18,2) NOT NULL DEFAULT 0; END
+2026-05-23 23:48:29.635 -04:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FolhasPagamento') AND name = 'ValorHorasExtras50') BEGIN ALTER TABLE FolhasPagamento ADD ValorHorasExtras50 DECIMAL(18,2) NOT NULL DEFAULT 0; END
+2026-05-23 23:48:29.642 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FolhasPagamento') AND name = 'TotalHorasExtras100') BEGIN ALTER TABLE FolhasPagamento ADD TotalHorasExtras100 DECIMAL(18,2) NOT NULL DEFAULT 0; END
+2026-05-23 23:48:29.651 -04:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FolhasPagamento') AND name = 'ValorHorasExtras100') BEGIN ALTER TABLE FolhasPagamento ADD ValorHorasExtras100 DECIMAL(18,2) NOT NULL DEFAULT 0; END
+2026-05-23 23:48:29.658 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FolhasPagamento') AND name = 'ValorAdicionalNoturno') BEGIN ALTER TABLE FolhasPagamento ADD ValorAdicionalNoturno DECIMAL(18,2) NOT NULL DEFAULT 0; END
+2026-05-23 23:48:29.668 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AgendaEventos]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[AgendaEventos](
+                    [Id] [uniqueidentifier] NOT NULL,
+                    [Titulo] [nvarchar](max) NOT NULL,
+                    [Data] [datetime2](7) NOT NULL,
+                    [Tipo] [nvarchar](max) NOT NULL,
+                    [Descricao] [nvarchar](max) NULL,
+                 CONSTRAINT [PK_AgendaEventos] PRIMARY KEY CLUSTERED ([Id] ASC)
+                ) ON [PRIMARY]
+            END
+2026-05-23 23:48:29.676 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Compras]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[Compras](
+                    [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                    [FornecedorId] [uniqueidentifier] NOT NULL,
+                    [DataCompra] [datetime2](7) NOT NULL,
+                    [ValorTotal] [decimal](18,2) NOT NULL,
+                    [Status] [int] NOT NULL,
+                    [Observacao] [nvarchar](max) NULL
+                )
+            END
+2026-05-23 23:48:29.686 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CompraItems]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[CompraItems](
+                    [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                    [CompraId] [uniqueidentifier] NOT NULL,
+                    [ProdutoId] [uniqueidentifier] NOT NULL,
+                    [Quantidade] [decimal](18,4) NOT NULL,
+                    [PrecoUnitario] [decimal](18,4) NOT NULL,
+                    CONSTRAINT [FK_CompraItems_Compras] FOREIGN KEY([CompraId]) REFERENCES [dbo].[Compras] ([Id]) ON DELETE CASCADE,
+                    CONSTRAINT [FK_CompraItems_Produtos] FOREIGN KEY([ProdutoId]) REFERENCES [dbo].[Produtos] ([Id])
+                )
+            END
+2026-05-23 23:48:29.700 -04:00 [INF] Executed DbCommand (9ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+            IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[ContasBancarias]') AND type in (N'U'))
+            BEGIN
+                CREATE TABLE [dbo].[ContasBancarias](
+                    [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                    [Nome] [nvarchar](max) NOT NULL,
+                    [Tipo] [int] NOT NULL,
+                    [SaldoInicial] [decimal](18,2) NOT NULL,
+                    [SaldoAtual] [decimal](18,2) NOT NULL,
+                    [DataAbertura] [datetime2](7) NOT NULL,
+                    [Ativa] [bit] NOT NULL DEFAULT 1,
+                    [IsPadrao] [bit] NOT NULL DEFAULT 0,
+                    [PixChave] [nvarchar](max) NULL,
+                    [BancoNome] [nvarchar](max) NULL,
+                    [Agencia] [nvarchar](max) NULL,
+                    [NumeroConta] [nvarchar](max) NULL
+                )
+            END
+2026-05-23 23:48:29.707 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'IsPadrao') BEGIN ALTER TABLE ContasBancarias ADD IsPadrao BIT NOT NULL DEFAULT 0; END
+2026-05-23 23:48:29.718 -04:00 [INF] Executed DbCommand (5ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'PixChave') BEGIN ALTER TABLE ContasBancarias ADD PixChave NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.724 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'BancoNome') BEGIN ALTER TABLE ContasBancarias ADD BancoNome NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.734 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'Agencia') BEGIN ALTER TABLE ContasBancarias ADD Agencia NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.739 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'NumeroConta') BEGIN ALTER TABLE ContasBancarias ADD NumeroConta NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.745 -04:00 [INF] Executed DbCommand (4ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ContasBancarias') AND name = 'GatewayToken') BEGIN ALTER TABLE ContasBancarias ADD GatewayToken NVARCHAR(MAX) NULL; END
+2026-05-23 23:48:29.755 -04:00 [INF] Executed DbCommand (6ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[AuditLogs]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[AuditLogs](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [TableName] [nvarchar](max) NOT NULL,
+                        [Action] [nvarchar](max) NOT NULL,
+                        [KeyValues] [nvarchar](max) NOT NULL,
+                        [OldValues] [nvarchar](max) NULL,
+                        [NewValues] [nvarchar](max) NULL,
+                        [Timestamp] [datetime2](7) NOT NULL,
+                        [UserId] [uniqueidentifier] NULL
+                    )
+                END
+2026-05-23 23:48:29.767 -04:00 [INF] Executed DbCommand (8ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[SystemLogs]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[SystemLogs](
+                        [Id] [int] IDENTITY(1,1) NOT NULL PRIMARY KEY,
+                        [Message] [nvarchar](max) NULL,
+                        [MessageTemplate] [nvarchar](max) NULL,
+                        [Level] [nvarchar](128) NULL,
+                        [TimeStamp] [datetimeoffset](7) NOT NULL,
+                        [Exception] [nvarchar](max) NULL,
+                        [Properties] [xml] NULL,
+                        [LogEvent] [nvarchar](max) NULL
+                    )
+                END
+2026-05-23 23:48:29.920 -04:00 [INF] User profile is available. Using 'C:\Users\Domingos\AppData\Local\ASP.NET\DataProtection-Keys' as key repository and Windows DPAPI to encrypt keys at rest.
+2026-05-23 23:48:30.023 -04:00 [INF] Now listening on: http://localhost:5137
+2026-05-23 23:48:30.026 -04:00 [INF] Application started. Press Ctrl+C to shut down.
+2026-05-23 23:48:30.027 -04:00 [INF] Hosting environment: Development
+2026-05-23 23:48:30.028 -04:00 [INF] Content root path: C:\Users\Domingos\source\repos\SistemaDeGestaoDePanificacao_e_Fabrica_Salu\Backend\SGPF.WebApi
+2026-05-23 23:51:57.911 -04:00 [INF] Application is shutting down...
+2026-05-23 23:53:42.131 -04:00 [WRN] No store type was specified for the decimal property 'TotalHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:53:42.189 -04:00 [WRN] No store type was specified for the decimal property 'ValorHorasExtras' on entity type 'FolhaPagamento'. This will cause values to be silently truncated if they do not fit in the default precision and scale. Explicitly specify the SQL server column type that can accommodate all the values in 'OnModelCreating' using 'HasColumnType', specify precision and scale using 'HasPrecision', or configure a value converter using 'HasConversion'.
+2026-05-23 23:53:43.034 -04:00 [INF] Executed DbCommand (310ms) [Parameters=[], CommandType='"Text"', CommandTimeout='60']
+CREATE DATABASE [SGPF_Db_Salu];
+2026-05-23 23:53:43.088 -04:00 [INF] Executed DbCommand (46ms) [Parameters=[], CommandType='"Text"', CommandTimeout='60']
+IF SERVERPROPERTY('EngineEdition') <> 5
+BEGIN
+    ALTER DATABASE [SGPF_Db_Salu] SET READ_COMMITTED_SNAPSHOT ON;
+END;
+2026-05-23 23:53:43.116 -04:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 23:53:43.124 -04:00 [INF] Acquiring an exclusive lock for migration application. See https://aka.ms/efcore-docs-migrations-lock for more information if this takes too long.
+2026-05-23 23:53:43.150 -04:00 [INF] Executed DbCommand (20ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DECLARE @result int;
+EXEC @result = sp_getapplock @Resource = '__EFMigrationsLock', @LockOwner = 'Session', @LockMode = 'Exclusive';
+SELECT @result
+2026-05-23 23:53:43.254 -04:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+IF OBJECT_ID(N'[__EFMigrationsHistory]') IS NULL
+BEGIN
+    CREATE TABLE [__EFMigrationsHistory] (
+        [MigrationId] nvarchar(150) NOT NULL,
+        [ProductVersion] nvarchar(32) NOT NULL,
+        CONSTRAINT [PK___EFMigrationsHistory] PRIMARY KEY ([MigrationId])
+    );
+END;
+2026-05-23 23:53:43.269 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT 1
+2026-05-23 23:53:43.272 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT OBJECT_ID(N'[__EFMigrationsHistory]');
+2026-05-23 23:53:43.279 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+SELECT [MigrationId], [ProductVersion]
+FROM [__EFMigrationsHistory]
+ORDER BY [MigrationId];
+2026-05-23 23:53:43.297 -04:00 [INF] Applying migration '20260425033453_InitialCreate'.
+2026-05-23 23:53:43.336 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Clientes] (
+    [Id] uniqueidentifier NOT NULL,
+    [NomeFantasia] nvarchar(max) NOT NULL,
+    [CNPJ_CPF] nvarchar(max) NOT NULL,
+    [Endereco] nvarchar(max) NOT NULL,
+    [Telefone] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Clientes] PRIMARY KEY ([Id])
+);
+2026-05-23 23:53:43.343 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Empresas] (
+    [Id] uniqueidentifier NOT NULL,
+    [RazaoSocial] nvarchar(max) NOT NULL,
+    [CNPJ] nvarchar(max) NOT NULL,
+    [Endereco] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Empresas] PRIMARY KEY ([Id])
+);
+2026-05-23 23:53:43.348 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Fornecedores] (
+    [Id] uniqueidentifier NOT NULL,
+    [NomeFantasia] nvarchar(max) NOT NULL,
+    [CNPJ] nvarchar(max) NOT NULL,
+    [TipoFornecimento] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_Fornecedores] PRIMARY KEY ([Id])
+);
+2026-05-23 23:53:43.353 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Usuarios] (
+    [Id] uniqueidentifier NOT NULL,
+    [Email] nvarchar(max) NOT NULL,
+    [SenhaHash] nvarchar(max) NOT NULL,
+    [Role] nvarchar(max) NOT NULL,
+    [ClienteId] uniqueidentifier NULL,
+    CONSTRAINT [PK_Usuarios] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Usuarios_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id])
+);
+2026-05-23 23:53:43.359 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Funcionarios] (
+    [Id] uniqueidentifier NOT NULL,
+    [Nome] nvarchar(max) NOT NULL,
+    [CPF] nvarchar(max) NOT NULL,
+    [Cargo] nvarchar(max) NOT NULL,
+    [SalarioBase] decimal(18,2) NOT NULL,
+    [DataAdmissao] datetime2 NOT NULL,
+    [EmpresaId] uniqueidentifier NOT NULL,
+    CONSTRAINT [PK_Funcionarios] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Funcionarios_Empresas_EmpresaId] FOREIGN KEY ([EmpresaId]) REFERENCES [Empresas] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:53:43.364 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Funcionarios_EmpresaId] ON [Funcionarios] ([EmpresaId]);
+2026-05-23 23:53:43.366 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Usuarios_ClienteId] ON [Usuarios] ([ClienteId]);
+2026-05-23 23:53:43.370 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425033453_InitialCreate', N'10.0.7');
+2026-05-23 23:53:43.373 -04:00 [INF] Applying migration '20260425041126_Phase2_FabricaEstoque'.
+2026-05-23 23:53:43.475 -04:00 [INF] Executed DbCommand (9ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Produtos] (
+    [Id] uniqueidentifier NOT NULL,
+    [Nome] nvarchar(max) NOT NULL,
+    [Tipo] int NOT NULL,
+    [UnidadeMedida] nvarchar(max) NOT NULL,
+    [PrecoCusto] decimal(18,4) NOT NULL,
+    [PrecoVenda] decimal(18,2) NOT NULL,
+    [QuantidadeEstoque] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_Produtos] PRIMARY KEY ([Id])
+);
+2026-05-23 23:53:43.510 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [FichasTecnicas] (
+    [Id] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [RendimentoPadrao] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_FichasTecnicas] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_FichasTecnicas_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:53:43.520 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [MovimentacoesEstoque] (
+    [Id] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [Tipo] int NOT NULL,
+    [Quantidade] decimal(18,4) NOT NULL,
+    [DataMovimentacao] datetime2 NOT NULL,
+    [Origem] nvarchar(max) NOT NULL,
+    [Observacao] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_MovimentacoesEstoque] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_MovimentacoesEstoque_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:53:43.555 -04:00 [INF] Executed DbCommand (32ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [OrdensProducao] (
+    [Id] uniqueidentifier NOT NULL,
+    [NumeroOP] nvarchar(max) NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [QuantidadePlanejada] decimal(18,4) NOT NULL,
+    [QuantidadeRealizada] decimal(18,4) NOT NULL,
+    [Status] int NOT NULL,
+    [DataAbertura] datetime2 NOT NULL,
+    [DataFinalizacao] datetime2 NULL,
+    [CustoTotalCalculado] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_OrdensProducao] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_OrdensProducao_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:53:43.568 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [FichaTecnicaInsumos] (
+    [Id] uniqueidentifier NOT NULL,
+    [FichaTecnicaId] uniqueidentifier NOT NULL,
+    [InsumoId] uniqueidentifier NOT NULL,
+    [QuantidadeNecessaria] decimal(18,4) NOT NULL,
+    [PerdaPercentual] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_FichaTecnicaInsumos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_FichaTecnicaInsumos_FichasTecnicas_FichaTecnicaId] FOREIGN KEY ([FichaTecnicaId]) REFERENCES [FichasTecnicas] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_FichaTecnicaInsumos_Produtos_InsumoId] FOREIGN KEY ([InsumoId]) REFERENCES [Produtos] ([Id]) ON DELETE NO ACTION
+);
+2026-05-23 23:53:43.572 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [OrdemProducaoInsumos] (
+    [Id] uniqueidentifier NOT NULL,
+    [OrdemProducaoId] uniqueidentifier NOT NULL,
+    [InsumoId] uniqueidentifier NOT NULL,
+    [QuantidadePlanejada] decimal(18,4) NOT NULL,
+    [QuantidadeConsumida] decimal(18,4) NOT NULL,
+    CONSTRAINT [PK_OrdemProducaoInsumos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_OrdemProducaoInsumos_OrdensProducao_OrdemProducaoId] FOREIGN KEY ([OrdemProducaoId]) REFERENCES [OrdensProducao] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_OrdemProducaoInsumos_Produtos_InsumoId] FOREIGN KEY ([InsumoId]) REFERENCES [Produtos] ([Id]) ON DELETE NO ACTION
+);
+2026-05-23 23:53:43.579 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FichasTecnicas_ProdutoId] ON [FichasTecnicas] ([ProdutoId]);
+2026-05-23 23:53:43.588 -04:00 [INF] Executed DbCommand (7ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FichaTecnicaInsumos_FichaTecnicaId] ON [FichaTecnicaInsumos] ([FichaTecnicaId]);
+2026-05-23 23:53:43.593 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FichaTecnicaInsumos_InsumoId] ON [FichaTecnicaInsumos] ([InsumoId]);
+2026-05-23 23:53:43.596 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_MovimentacoesEstoque_ProdutoId] ON [MovimentacoesEstoque] ([ProdutoId]);
+2026-05-23 23:53:43.599 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_OrdemProducaoInsumos_InsumoId] ON [OrdemProducaoInsumos] ([InsumoId]);
+2026-05-23 23:53:43.602 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_OrdemProducaoInsumos_OrdemProducaoId] ON [OrdemProducaoInsumos] ([OrdemProducaoId]);
+2026-05-23 23:53:43.605 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_OrdensProducao_ProdutoId] ON [OrdensProducao] ([ProdutoId]);
+2026-05-23 23:53:43.608 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425041126_Phase2_FabricaEstoque', N'10.0.7');
+2026-05-23 23:53:43.611 -04:00 [INF] Applying migration '20260425043014_Phase3_RHFolha'.
+2026-05-23 23:53:43.650 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [ContasPagar] (
+    [Id] uniqueidentifier NOT NULL,
+    [Descricao] nvarchar(max) NOT NULL,
+    [Valor] decimal(18,2) NOT NULL,
+    [DataVencimento] datetime2 NOT NULL,
+    [DataPagamento] datetime2 NULL,
+    [Status] int NOT NULL,
+    [Categoria] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_ContasPagar] PRIMARY KEY ([Id])
+);
+2026-05-23 23:53:43.654 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [FolhasPagamento] (
+    [Id] uniqueidentifier NOT NULL,
+    [FuncionarioId] uniqueidentifier NOT NULL,
+    [MesReferencia] int NOT NULL,
+    [AnoReferencia] int NOT NULL,
+    [SalarioBaseCalculado] decimal(18,2) NOT NULL,
+    [TotalHorasExtras] decimal(18,2) NOT NULL,
+    [ValorHorasExtras] decimal(18,2) NOT NULL,
+    [TotalDescontos] decimal(18,2) NOT NULL,
+    [SalarioLiquido] decimal(18,2) NOT NULL,
+    [Status] int NOT NULL,
+    [DataGeracao] datetime2 NOT NULL,
+    CONSTRAINT [PK_FolhasPagamento] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_FolhasPagamento_Funcionarios_FuncionarioId] FOREIGN KEY ([FuncionarioId]) REFERENCES [Funcionarios] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:53:43.660 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [RegistrosPonto] (
+    [Id] uniqueidentifier NOT NULL,
+    [FuncionarioId] uniqueidentifier NOT NULL,
+    [DataHoraEntrada] datetime2 NOT NULL,
+    [DataHoraSaida] datetime2 NULL,
+    [TotalHorasTrabalhadas] decimal(18,2) NOT NULL,
+    [TotalHorasExtras] decimal(18,2) NOT NULL,
+    [Observacao] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_RegistrosPonto] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_RegistrosPonto_Funcionarios_FuncionarioId] FOREIGN KEY ([FuncionarioId]) REFERENCES [Funcionarios] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:53:43.664 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_FolhasPagamento_FuncionarioId] ON [FolhasPagamento] ([FuncionarioId]);
+2026-05-23 23:53:43.667 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_RegistrosPonto_FuncionarioId] ON [RegistrosPonto] ([FuncionarioId]);
+2026-05-23 23:53:43.669 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425043014_Phase3_RHFolha', N'10.0.7');
+2026-05-23 23:53:43.671 -04:00 [INF] Applying migration '20260425044153_Phase4_LogisticaVendas'.
+2026-05-23 23:53:43.737 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [ContasReceber] (
+    [Id] uniqueidentifier NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [Descricao] nvarchar(max) NOT NULL,
+    [Valor] decimal(18,2) NOT NULL,
+    [DataEmissao] datetime2 NOT NULL,
+    [DataVencimento] datetime2 NOT NULL,
+    [DataRecebimento] datetime2 NULL,
+    [Status] int NOT NULL,
+    [PedidoVendaId] uniqueidentifier NULL,
+    CONSTRAINT [PK_ContasReceber] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_ContasReceber_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:53:43.743 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [TrocasAvaria] (
+    [Id] uniqueidentifier NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [Quantidade] decimal(18,4) NOT NULL,
+    [DataTroca] datetime2 NOT NULL,
+    [Motivo] nvarchar(max) NOT NULL,
+    CONSTRAINT [PK_TrocasAvaria] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_TrocasAvaria_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_TrocasAvaria_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:53:43.749 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Veiculos] (
+    [Id] uniqueidentifier NOT NULL,
+    [Placa] nvarchar(max) NOT NULL,
+    [Modelo] nvarchar(max) NOT NULL,
+    [CapacidadeCargaKg] decimal(18,2) NOT NULL,
+    [QuilometragemAtual] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_Veiculos] PRIMARY KEY ([Id])
+);
+2026-05-23 23:53:43.754 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Abastecimentos] (
+    [Id] uniqueidentifier NOT NULL,
+    [VeiculoId] uniqueidentifier NOT NULL,
+    [Data] datetime2 NOT NULL,
+    [QuilometragemRegistrada] decimal(18,2) NOT NULL,
+    [Litros] decimal(18,2) NOT NULL,
+    [ValorTotal] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_Abastecimentos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Abastecimentos_Veiculos_VeiculoId] FOREIGN KEY ([VeiculoId]) REFERENCES [Veiculos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:53:43.760 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [ManutencoesVeiculo] (
+    [Id] uniqueidentifier NOT NULL,
+    [VeiculoId] uniqueidentifier NOT NULL,
+    [Data] datetime2 NOT NULL,
+    [Tipo] int NOT NULL,
+    [Descricao] nvarchar(max) NOT NULL,
+    [CustoTotal] decimal(18,2) NOT NULL,
+    [QuilometragemRegistrada] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_ManutencoesVeiculo] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_ManutencoesVeiculo_Veiculos_VeiculoId] FOREIGN KEY ([VeiculoId]) REFERENCES [Veiculos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:53:43.767 -04:00 [INF] Executed DbCommand (3ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [PedidosVenda] (
+    [Id] uniqueidentifier NOT NULL,
+    [NumeroPedido] nvarchar(max) NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [VeiculoId] uniqueidentifier NULL,
+    [DataPedido] datetime2 NOT NULL,
+    [DataEntregaPrevista] datetime2 NULL,
+    [DataEntregaRealizada] datetime2 NULL,
+    [ValorTotal] decimal(18,2) NOT NULL,
+    [Status] int NOT NULL,
+    CONSTRAINT [PK_PedidosVenda] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_PedidosVenda_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_PedidosVenda_Veiculos_VeiculoId] FOREIGN KEY ([VeiculoId]) REFERENCES [Veiculos] ([Id])
+);
+2026-05-23 23:53:43.773 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [PedidoVendaItens] (
+    [Id] uniqueidentifier NOT NULL,
+    [PedidoVendaId] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [Quantidade] decimal(18,4) NOT NULL,
+    [PrecoUnitario] decimal(18,2) NOT NULL,
+    CONSTRAINT [PK_PedidoVendaItens] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_PedidoVendaItens_PedidosVenda_PedidoVendaId] FOREIGN KEY ([PedidoVendaId]) REFERENCES [PedidosVenda] ([Id]) ON DELETE CASCADE,
+    CONSTRAINT [FK_PedidoVendaItens_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE NO ACTION
+);
+2026-05-23 23:53:43.778 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Abastecimentos_VeiculoId] ON [Abastecimentos] ([VeiculoId]);
+2026-05-23 23:53:43.781 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_ContasReceber_ClienteId] ON [ContasReceber] ([ClienteId]);
+2026-05-23 23:53:43.784 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_ManutencoesVeiculo_VeiculoId] ON [ManutencoesVeiculo] ([VeiculoId]);
+2026-05-23 23:53:43.786 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidosVenda_ClienteId] ON [PedidosVenda] ([ClienteId]);
+2026-05-23 23:53:43.789 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidosVenda_VeiculoId] ON [PedidosVenda] ([VeiculoId]);
+2026-05-23 23:53:43.792 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidoVendaItens_PedidoVendaId] ON [PedidoVendaItens] ([PedidoVendaId]);
+2026-05-23 23:53:43.795 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidoVendaItens_ProdutoId] ON [PedidoVendaItens] ([ProdutoId]);
+2026-05-23 23:53:43.797 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_TrocasAvaria_ClienteId] ON [TrocasAvaria] ([ClienteId]);
+2026-05-23 23:53:43.801 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_TrocasAvaria_ProdutoId] ON [TrocasAvaria] ([ProdutoId]);
+2026-05-23 23:53:43.803 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425044153_Phase4_LogisticaVendas', N'10.0.7');
+2026-05-23 23:53:43.806 -04:00 [INF] Applying migration '20260425050345_Phase4b_PortalCRM'.
+2026-05-23 23:53:43.857 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [Reunioes] (
+    [Id] uniqueidentifier NOT NULL,
+    [ClienteId] uniqueidentifier NOT NULL,
+    [DataHora] datetime2 NOT NULL,
+    [Pauta] nvarchar(max) NOT NULL,
+    [Ata] nvarchar(max) NOT NULL,
+    [Status] int NOT NULL,
+    CONSTRAINT [PK_Reunioes] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_Reunioes_Clientes_ClienteId] FOREIGN KEY ([ClienteId]) REFERENCES [Clientes] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:53:43.861 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_Reunioes_ClienteId] ON [Reunioes] ([ClienteId]);
+2026-05-23 23:53:43.863 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260425050345_Phase4b_PortalCRM', N'10.0.7');
+2026-05-23 23:53:43.865 -04:00 [INF] Applying migration '20260506011506_AddCategoriaCompra'.
+2026-05-23 23:53:43.956 -04:00 [INF] Executed DbCommand (32ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Compras]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[Compras](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [FornecedorId] [uniqueidentifier] NOT NULL,
+                        [DataCompra] [datetime2](7) NOT NULL,
+                        [ValorTotal] [decimal](18,2) NOT NULL,
+                        [Status] [int] NOT NULL,
+                        [Observacao] [nvarchar](max) NULL,
+                        CONSTRAINT [FK_Compras_Fornecedores] FOREIGN KEY ([FornecedorId]) REFERENCES [dbo].[Fornecedores] ([Id])
+                    );
+                END
+
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[CompraItems]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[CompraItems](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [CompraId] [uniqueidentifier] NOT NULL,
+                        [ProdutoId] [uniqueidentifier] NOT NULL,
+                        [Quantidade] [decimal](18,4) NOT NULL,
+                        [PrecoUnitario] [decimal](18,4) NOT NULL,
+                        CONSTRAINT [FK_CompraItems_Compras] FOREIGN KEY([CompraId]) REFERENCES [dbo].[Compras] ([Id]) ON DELETE CASCADE,
+                        CONSTRAINT [FK_CompraItems_Produtos] FOREIGN KEY([ProdutoId]) REFERENCES [dbo].[Produtos] ([Id])
+                    );
+                END
+
+                -- Adiciona coluna Categoria apenas se não existir (idempotente)
+                IF NOT EXISTS (
+                    SELECT 1 FROM sys.columns 
+                    WHERE object_id = OBJECT_ID(N'[Compras]') 
+                    AND name = 'Categoria'
+                )
+                BEGIN
+                    ALTER TABLE [Compras] ADD [Categoria] int NOT NULL DEFAULT 0;
+                END
+2026-05-23 23:53:43.961 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260506011506_AddCategoriaCompra', N'10.0.7');
+2026-05-23 23:53:43.966 -04:00 [INF] Applying migration '20260507230355_AddEmpresaExpandedFields'.
+2026-05-23 23:53:44.029 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [Email] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 23:53:44.032 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [InscricaoEstadual] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 23:53:44.034 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [LogoUrl] nvarchar(max) NULL;
+2026-05-23 23:53:44.037 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [NomeFantasia] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 23:53:44.042 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Empresas] ADD [Telefone] nvarchar(max) NOT NULL DEFAULT N'';
+2026-05-23 23:53:44.046 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260507230355_AddEmpresaExpandedFields', N'10.0.7');
+2026-05-23 23:53:44.048 -04:00 [INF] Applying migration '20260508002854_AddInscricaoEnderecoFornecedor'.
+2026-05-23 23:53:44.109 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Fornecedores] ADD [Endereco] nvarchar(max) NULL;
+2026-05-23 23:53:44.113 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Fornecedores] ADD [InscricaoEstadual] nvarchar(max) NULL;
+2026-05-23 23:53:44.116 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508002854_AddInscricaoEnderecoFornecedor', N'10.0.7');
+2026-05-23 23:53:44.118 -04:00 [INF] Applying migration '20260508004320_AddRazaoInscricaoCliente'.
+2026-05-23 23:53:44.179 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Clientes] ADD [InscricaoEstadual] nvarchar(max) NULL;
+2026-05-23 23:53:44.183 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [Clientes] ADD [RazaoSocial] nvarchar(max) NULL;
+2026-05-23 23:53:44.185 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508004320_AddRazaoInscricaoCliente', N'10.0.7');
+2026-05-23 23:53:44.188 -04:00 [INF] Applying migration '20260508015936_AddHistoricoPrecoProduto'.
+2026-05-23 23:53:44.258 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE TABLE [HistoricoPrecos] (
+    [Id] uniqueidentifier NOT NULL,
+    [ProdutoId] uniqueidentifier NOT NULL,
+    [PrecoAntigo] decimal(18,4) NOT NULL,
+    [PrecoNovo] decimal(18,4) NOT NULL,
+    [DataAlteracao] datetime2 NOT NULL,
+    [Tipo] int NOT NULL,
+    [Origem] nvarchar(max) NOT NULL,
+    [UsuarioNome] nvarchar(max) NULL,
+    CONSTRAINT [PK_HistoricoPrecos] PRIMARY KEY ([Id]),
+    CONSTRAINT [FK_HistoricoPrecos_Produtos_ProdutoId] FOREIGN KEY ([ProdutoId]) REFERENCES [Produtos] ([Id]) ON DELETE CASCADE
+);
+2026-05-23 23:53:44.263 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_HistoricoPrecos_ProdutoId] ON [HistoricoPrecos] ([ProdutoId]);
+2026-05-23 23:53:44.265 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508015936_AddHistoricoPrecoProduto', N'10.0.7');
+2026-05-23 23:53:44.268 -04:00 [INF] Applying migration '20260508022733_AddDescontoItemVenda'.
+2026-05-23 23:53:44.332 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidoVendaItens] ADD [Desconto] decimal(18,2) NOT NULL DEFAULT 0.0;
+2026-05-23 23:53:44.335 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260508022733_AddDescontoItemVenda', N'10.0.7');
+2026-05-23 23:53:44.338 -04:00 [INF] Applying migration '20260512010410_AddAuditLogs'.
+2026-05-23 23:53:44.374 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260512010410_AddAuditLogs', N'10.0.7');
+2026-05-23 23:53:44.378 -04:00 [INF] Applying migration '20260524015631_SyncModelChanges'.
+2026-05-23 23:53:44.448 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [TrocasAvaria] ADD [MotoristaId] uniqueidentifier NULL;
+2026-05-23 23:53:44.451 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidosVenda] ADD [MotoristaId] uniqueidentifier NULL;
+2026-05-23 23:53:44.453 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_TrocasAvaria_MotoristaId] ON [TrocasAvaria] ([MotoristaId]);
+2026-05-23 23:53:44.456 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+CREATE INDEX [IX_PedidosVenda_MotoristaId] ON [PedidosVenda] ([MotoristaId]);
+2026-05-23 23:53:44.459 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [PedidosVenda] ADD CONSTRAINT [FK_PedidosVenda_Funcionarios_MotoristaId] FOREIGN KEY ([MotoristaId]) REFERENCES [Funcionarios] ([Id]) ON DELETE NO ACTION;
+2026-05-23 23:53:44.464 -04:00 [INF] Executed DbCommand (2ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+ALTER TABLE [TrocasAvaria] ADD CONSTRAINT [FK_TrocasAvaria_Funcionarios_MotoristaId] FOREIGN KEY ([MotoristaId]) REFERENCES [Funcionarios] ([Id]);
+2026-05-23 23:53:44.466 -04:00 [INF] Executed DbCommand (0ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+INSERT INTO [__EFMigrationsHistory] ([MigrationId], [ProductVersion])
+VALUES (N'20260524015631_SyncModelChanges', N'10.0.7');
+2026-05-23 23:53:44.470 -04:00 [INF] Executed DbCommand (1ms) [Parameters=[], CommandType='"Text"', CommandTimeout='30']
+DECLARE @result int;
+EXEC @result = sp_releaseapplock @Resource = '__EFMigrationsLock', @LockOwner = 'Session';
+SELECT @result

@@ -19,6 +19,7 @@ public class Afastamento
     public string? AnexoBase64 { get; set; }
     
     // Legacy column support
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
     public string Tipo { get; set; } = "Legado";
     
     public DateTime DataCriacao { get; set; } = DateTime.Now;

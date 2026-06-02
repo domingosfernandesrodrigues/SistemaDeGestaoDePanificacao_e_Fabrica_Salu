@@ -112,6 +112,7 @@ export default function AfastamentosRH() {
           <optgroup label="Afastamentos por convenção ou acordo">
             <option value="Licença remunerada">Licença remunerada</option>
             <option value="Licença não remunerada">Licença não remunerada</option>
+            <option value="Falta Justificada">Falta Justificada</option>
             <option value="Afastamento para capacitação">Afastamento para capacitação</option>
           </optgroup>
 

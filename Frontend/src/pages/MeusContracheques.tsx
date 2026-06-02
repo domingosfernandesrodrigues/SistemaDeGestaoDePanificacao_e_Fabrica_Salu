@@ -112,11 +112,22 @@ export function MeusContracheques() {
                 <div className="bg-indigo-600 p-2.5 rounded-xl text-white shadow-lg shadow-indigo-200">
                   <Calendar size={20} />
                 </div>
-                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-tight ${
-                  c.status === 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
-                }`}>
-                  {c.status === 0 ? 'Processando' : 'Liberado'}
-                </span>
+                <div className="flex flex-col items-end gap-1.5">
+                  <span className={`px-2.5 py-1 rounded-lg text-[10px] font-extrabold uppercase tracking-tight ${
+                    c.status === 0 ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
+                  }`}>
+                    {c.status === 0 ? 'Processando' : 'Liberado'}
+                  </span>
+                  <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
+                    c.tipo === 1 ? 'bg-blue-100 text-blue-800' :
+                    c.tipo === 2 ? 'bg-emerald-100 text-emerald-800' :
+                    'bg-slate-100 text-slate-800'
+                  }`}>
+                    {c.tipo === 1 ? '13º Adiant.' :
+                     c.tipo === 2 ? '13º Final' :
+                     'Mensal'}
+                  </span>
+                </div>
               </div>
               
               <div className="mb-6 relative">
@@ -153,7 +164,7 @@ export function MeusContracheques() {
         <div>
           <h4 className="text-sm font-bold text-amber-900">Dúvidas sobre os valores?</h4>
           <p className="text-xs text-amber-800 leading-relaxed">
-            Se você identificar qualquer divergência nos valores de horas extras ou descontos, 
+            Se você identificar qualquer divergência nos valores de adicionais ou descontos, 
             por favor procure o setor de RH para esclarecimentos.
           </p>
         </div>

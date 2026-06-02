@@ -636,7 +636,10 @@ export function Trocas() {
                 label="Produto"
                 required
                 placeholder="Pesquise o produto..."
-                options={produtos?.filter(p => p.tipo !== 0).map(p => ({ value: p.id, label: p.nome })) || []}
+                options={produtos?.filter(p => p.tipo !== 0).map(p => ({
+                  value: p.id,
+                  label: `${Number(p.tipo) === 1 ? '🍞' : '📦'} ${p.nome} (${p.unidadeMedida}) - Saldo: ${p.quantidadeEstoque}`
+                })) || []}
                 value={field.value}
                 onChange={field.onChange}
                 error={errors.produtoId?.message as string}

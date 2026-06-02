@@ -15,6 +15,8 @@ export interface EmpresaConfig {
   bancoAgencia?: string;
   bancoConta?: string;
   gatewayToken?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 let _cachedConfig: EmpresaConfig | null = null;

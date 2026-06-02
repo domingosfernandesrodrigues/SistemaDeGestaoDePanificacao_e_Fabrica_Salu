@@ -116,7 +116,47 @@ export function ConfiguracoesEmpresa() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCompressing, setIsCompressing] = useState(false);
   const [isBuscandoEndereco, setIsBuscandoEndereco] = useState(false);
+  const [isCalibrandoGps, setIsCalibrandoGps] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const obterGpsAltaPrecisao = (): Promise<GeolocationPosition> => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error("Geolocalização não suportada"));
+        return;
+      }
+
+      let lastPosition: GeolocationPosition | null = null;
+      let watchId: number | null = null;
+      
+      const timer = setTimeout(() => {
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        if (lastPosition) {
+          resolve(lastPosition);
+        } else {
+          reject(new Error("Tempo esgotado para obter localização precisa."));
+        }
+      }, 5000); // 5 segundos máximo para calibração
+
+      watchId = navigator.geolocation.watchPosition(
+        (position) => {
+          lastPosition = position;
+          // Se a precisão atingir 20 metros ou menos, resolvemos imediatamente
+          if (position.coords.accuracy <= 20) {
+            clearTimeout(timer);
+            if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+            resolve(position);
+          }
+        },
+        (error) => {
+          clearTimeout(timer);
+          if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+          reject(error);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      );
+    });
+  };
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors, isSubmitting } } = useForm<EmpresaForm>({
     resolver: zodResolver(empresaSchema),
@@ -504,23 +544,33 @@ export function ConfiguracoesEmpresa() {
                       const confirmar = window.confirm("Deseja definir a localização atual deste dispositivo como o endereço oficial da empresa?");
                       if (!confirmar) return;
 
-                      navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                          setValue('latitude', position.coords.latitude, { shouldDirty: true, shouldValidate: true });
-                          setValue('longitude', position.coords.longitude, { shouldDirty: true, shouldValidate: true });
-                          alert("Coordenadas obtidas com sucesso! Não se esqueça de salvar os dados abaixo no botão final da página.");
-                        },
-                        (error) => {
-                          console.error(error);
-                          alert("Não foi possível obter a localização. Certifique-se de que a permissão de GPS foi concedida no navegador.");
-                        },
-                        { enableHighAccuracy: true }
-                      );
+                      try {
+                        setIsCalibrandoGps(true);
+                        const position = await obterGpsAltaPrecisao();
+                        setValue('latitude', position.coords.latitude, { shouldDirty: true, shouldValidate: true });
+                        setValue('longitude', position.coords.longitude, { shouldDirty: true, shouldValidate: true });
+                        alert(`Coordenadas obtidas com alta precisão (precisão: ${position.coords.accuracy.toFixed(1)} metros)!\nNão se esqueça de salvar os dados abaixo no botão final da página.`);
+                      } catch (error: any) {
+                        console.error("Erro ao obter geolocalização precisa:", error);
+                        alert("Não foi possível obter a localização com alta precisão. Certifique-se de que a permissão de GPS foi concedida no navegador.");
+                      } finally {
+                        setIsCalibrandoGps(false);
+                      }
                     }}
                     className="w-full bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-medium py-2 rounded-xl flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] text-xs"
+                    disabled={isCalibrandoGps}
                   >
-                    <MapPin size={14} className="text-slate-500" />
-                    GPS do Dispositivo
+                    {isCalibrandoGps ? (
+                      <>
+                        <Loader2 className="animate-spin text-blue-600" size={14} />
+                        Calibrando GPS...
+                      </>
+                    ) : (
+                      <>
+                        <MapPin size={14} className="text-slate-500" />
+                        GPS do Dispositivo
+                      </>
+                    )}
                   </Button>
 
                   <Button
@@ -585,24 +635,50 @@ export function ConfiguracoesEmpresa() {
 
                       let coordenadasEncontradas: { latitude: number; longitude: number } | null = null;
 
-                      // Tentativa 1: CEP estruturado (mais preciso, evita conflito entre estados)
+                      const streetAndNumberEncoded = encodeURIComponent(`${logradouro}${numero ? ', ' + numero : ''}`);
+                      const streetOnlyEncoded = encodeURIComponent(logradouro);
+                      const cityEncoded = encodeURIComponent(cidade);
+                      const stateEncoded = encodeURIComponent(estado);
+
+                      // Tentativa 1: Rua + Número + CEP estruturado (Máxima precisão padrão BR: "Rua, Número")
+                      if (!coordenadasEncontradas && logradouro && numero && cleanCep.length === 8) {
+                        coordenadasEncontradas = await buscarNominatim(
+                          `street=${streetAndNumberEncoded}&city=${cityEncoded}&state=${stateEncoded}&postalcode=${cleanCep}`
+                        );
+                        if (coordenadasEncontradas) console.log('[GEOCODE] Achou via Rua + Número + CEP');
+                      }
+
+                      // Tentativa 2: Rua + Número + Cidade/Estado (Sem CEP, caso o CEP no OSM não cubra o número)
+                      if (!coordenadasEncontradas && logradouro && numero) {
+                        coordenadasEncontradas = await buscarNominatim(
+                          `street=${streetAndNumberEncoded}&city=${cityEncoded}&state=${stateEncoded}`
+                        );
+                        if (coordenadasEncontradas) console.log('[GEOCODE] Achou via Rua + Número (sem CEP)');
+                      }
+
+                      // Tentativa 3: Rua + CEP estruturado (Sem o número exato, caso o número falhe mas a rua seja mapeada com CEP)
+                      if (!coordenadasEncontradas && logradouro && cleanCep.length === 8) {
+                        coordenadasEncontradas = await buscarNominatim(
+                          `street=${streetOnlyEncoded}&city=${cityEncoded}&state=${stateEncoded}&postalcode=${cleanCep}`
+                        );
+                        if (coordenadasEncontradas) console.log('[GEOCODE] Achou via Rua + CEP');
+                      }
+
+                      // Tentativa 4: Apenas CEP estruturado (Centro do CEP da rua/bairro)
                       if (!coordenadasEncontradas && cleanCep.length === 8) {
-                        coordenadasEncontradas = await buscarNominatim(`postalcode=${cleanCep}&countrycodes=br`);
+                        coordenadasEncontradas = await buscarNominatim(`postalcode=${cleanCep}`);
                         if (coordenadasEncontradas) console.log('[GEOCODE] Achou via CEP estruturado');
                       }
 
-                      // Tentativa 2: Logradouro + cidade + estado estruturado
+                      // Tentativa 5: Rua + Cidade/Estado estruturado (Sem CEP e sem número)
                       if (!coordenadasEncontradas && logradouro) {
-                        const street = encodeURIComponent(`${numero ? numero + ' ' : ''}${logradouro}`);
-                        const city = encodeURIComponent(cidade);
-                        const stateParam = encodeURIComponent(cidade); // usa cidade pois Nominatim aceita melhor
                         coordenadasEncontradas = await buscarNominatim(
-                          `street=${street}&city=${city}&state=${encodeURIComponent(estado)}&countrycodes=br`
+                          `street=${streetOnlyEncoded}&city=${cityEncoded}&state=${stateEncoded}`
                         );
-                        if (coordenadasEncontradas) console.log('[GEOCODE] Achou via logradouro estruturado');
+                        if (coordenadasEncontradas) console.log('[GEOCODE] Achou via Rua + Cidade (sem CEP/número)');
                       }
 
-                      // Tentativa 3: Cidade + estado em texto livre (fallback)
+                      // Tentativa 6: Cidade + estado em texto livre (fallback final)
                       if (!coordenadasEncontradas) {
                         coordenadasEncontradas = await buscarNominatim(
                           `q=${encodeURIComponent(`${cidade}, ${estado}, Brasil`)}`

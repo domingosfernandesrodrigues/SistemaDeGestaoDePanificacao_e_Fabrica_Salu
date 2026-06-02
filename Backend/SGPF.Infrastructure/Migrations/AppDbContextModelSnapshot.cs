@@ -88,10 +88,6 @@ namespace SGPF.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("Tipo")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
 
                     b.HasIndex("FuncionarioId");
@@ -424,8 +420,14 @@ namespace SGPF.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("float");
+
                     b.Property<string>("LogoUrl")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("float");
 
                     b.Property<string>("NomeFantasia")
                         .IsRequired()
@@ -684,6 +686,44 @@ namespace SGPF.Infrastructure.Migrations
                     b.ToTable("HistoricoPrecos");
                 });
 
+            modelBuilder.Entity("SGPF.Domain.Entities.LancamentoAlimentacao", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ContaPagarId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("Data")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("DataCriacao")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("FuncionarioId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Observacao")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TipoRefeicao")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Valor")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContaPagarId");
+
+                    b.HasIndex("FuncionarioId");
+
+                    b.ToTable("LancamentosAlimentacao");
+                });
+
             modelBuilder.Entity("SGPF.Domain.Entities.ManutencaoVeiculo", b =>
                 {
                     b.Property<Guid>("Id")
@@ -716,6 +756,43 @@ namespace SGPF.Infrastructure.Migrations
                     b.HasIndex("VeiculoId");
 
                     b.ToTable("ManutencoesVeiculo");
+                });
+
+            modelBuilder.Entity("SGPF.Domain.Entities.MovimentacaoBancaria", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ContaBancariaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("DataMovimentacao")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Descricao")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Origem")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("ReferenciaId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Tipo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<decimal>("Valor")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ContaBancariaId");
+
+                    b.ToTable("MovimentacoesBancarias");
                 });
 
             modelBuilder.Entity("SGPF.Domain.Entities.MovimentacaoEstoque", b =>
@@ -1267,6 +1344,24 @@ namespace SGPF.Infrastructure.Migrations
                     b.Navigation("Produto");
                 });
 
+            modelBuilder.Entity("SGPF.Domain.Entities.LancamentoAlimentacao", b =>
+                {
+                    b.HasOne("SGPF.Domain.Entities.ContaPagar", "ContaPagar")
+                        .WithMany()
+                        .HasForeignKey("ContaPagarId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("SGPF.Domain.Entities.Funcionario", "Funcionario")
+                        .WithMany()
+                        .HasForeignKey("FuncionarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ContaPagar");
+
+                    b.Navigation("Funcionario");
+                });
+
             modelBuilder.Entity("SGPF.Domain.Entities.ManutencaoVeiculo", b =>
                 {
                     b.HasOne("SGPF.Domain.Entities.Veiculo", "Veiculo")
@@ -1276,6 +1371,17 @@ namespace SGPF.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Veiculo");
+                });
+
+            modelBuilder.Entity("SGPF.Domain.Entities.MovimentacaoBancaria", b =>
+                {
+                    b.HasOne("SGPF.Domain.Entities.ContaBancaria", "ContaBancaria")
+                        .WithMany()
+                        .HasForeignKey("ContaBancariaId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ContaBancaria");
                 });
 
             modelBuilder.Entity("SGPF.Domain.Entities.MovimentacaoEstoque", b =>

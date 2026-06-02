@@ -11,6 +11,8 @@ import { Ponto } from './pages/Ponto';
 import AfastamentosRH from './pages/AfastamentosRH';
 import { FolhaPagamento } from './pages/FolhaPagamento';
 import { MeusContracheques } from './pages/MeusContracheques';
+import Alimentacao from './pages/Alimentacao';
+import { PlanejamentoFerias } from './pages/PlanejamentoFerias';
 import { Vendas } from './pages/Vendas';
 import { Frota, Trocas } from './pages/Logistica';
 import { Compras } from './pages/Compras';
@@ -64,8 +66,10 @@ function App() {
             <Route path="/trocas" element={<Trocas />} />
             <Route path="/rh/ponto" element={<Ponto />} />
             <Route path="/rh/afastamentos" element={<AfastamentosRH />} />
+            <Route path="/rh/ferias" element={<PlanejamentoFerias />} />
             <Route path="/rh/folha" element={<FolhaPagamento />} />
             <Route path="/rh/meus-contracheques" element={<MeusContracheques />} />
+            <Route path="/rh/alimentacao" element={<Alimentacao />} />
             <Route path="/rh/funcionarios" element={<Funcionarios />} />
             <Route path="/financeiro/despesas" element={<Despesas />} />
             <Route path="/financeiro/contas" element={<ContasBancarias />} />

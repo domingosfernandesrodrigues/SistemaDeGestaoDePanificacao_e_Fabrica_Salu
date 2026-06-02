@@ -18,10 +18,11 @@ public class Repository<T> : IRepository<T> where T : class
 
     public async Task<T?> GetByIdAsync(Guid id) => await _dbSet.FindAsync(id);
 
-    public async Task<IEnumerable<T>> GetAllAsync() => await _dbSet.ToListAsync();
+    public async Task<IEnumerable<T>> GetAllAsync(bool asNoTracking = false) 
+        => asNoTracking ? await _dbSet.AsNoTracking().ToListAsync() : await _dbSet.ToListAsync();
 
-    public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate) 
-        => await _dbSet.Where(predicate).ToListAsync();
+    public async Task<IEnumerable<T>> FindAsync(Expression<Func<T, bool>> predicate, bool asNoTracking = false) 
+        => asNoTracking ? await _dbSet.AsNoTracking().Where(predicate).ToListAsync() : await _dbSet.Where(predicate).ToListAsync();
 
     public async Task AddAsync(T entity)
     {

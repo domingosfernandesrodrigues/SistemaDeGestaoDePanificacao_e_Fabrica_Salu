@@ -27,6 +27,7 @@ public class AppDbContext : DbContext
     public DbSet<FolhaPagamento> FolhasPagamento { get; set; }
     public DbSet<ContaPagar> ContasPagar { get; set; }
     public DbSet<Afastamento> Afastamentos { get; set; }
+    public DbSet<LancamentoAlimentacao> LancamentosAlimentacao { get; set; }
     
     // Fase 4 - Vendas e Frota
     public DbSet<ContaReceber> ContasReceber { get; set; }
@@ -41,11 +42,15 @@ public class AppDbContext : DbContext
     public DbSet<Reuniao> Reunioes { get; set; }
     public DbSet<AgendaEvento> AgendaEventos { get; set; }
 
+    // Fase 5 - Planejamento de Férias (CLT Arts. 129-153)
+    public DbSet<PlanejamentoFerias> PlanejamentosFerias { get; set; }
+
     // Fase Complementar - Compras
     public DbSet<Compra> Compras { get; set; }
     public DbSet<CompraItem> CompraItems { get; set; }
     public DbSet<HistoricoPrecoProduto> HistoricoPrecos { get; set; }
     public DbSet<ContaBancaria> ContasBancarias { get; set; }
+    public DbSet<MovimentacaoBancaria> MovimentacoesBancarias { get; set; }
 
     // Auditoria
     public DbSet<AuditLog> AuditLogs { get; set; }
@@ -107,6 +112,21 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<FolhaPagamento>().Property(f => f.SalarioLiquido).HasPrecision(18, 2);
         
         modelBuilder.Entity<ContaPagar>().Property(c => c.Valor).HasPrecision(18, 2);
+
+        // Alimentação
+        modelBuilder.Entity<LancamentoAlimentacao>()
+            .HasOne(la => la.Funcionario)
+            .WithMany()
+            .HasForeignKey(la => la.FuncionarioId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<LancamentoAlimentacao>().Property(la => la.Valor).HasPrecision(18, 2);
+
+        modelBuilder.Entity<LancamentoAlimentacao>()
+            .HasOne(la => la.ContaPagar)
+            .WithMany()
+            .HasForeignKey(la => la.ContaPagarId)
+            .OnDelete(DeleteBehavior.SetNull);
         
         // Relacionamentos e Precision configurations - Fase 4
         modelBuilder.Entity<PedidoVendaItem>()
@@ -174,5 +194,38 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<ContaBancaria>().Property(c => c.SaldoInicial).HasPrecision(18, 2);
         modelBuilder.Entity<ContaBancaria>().Property(c => c.SaldoAtual).HasPrecision(18, 2);
+
+        // Movimentação Bancária
+        modelBuilder.Entity<MovimentacaoBancaria>().Property(m => m.Valor).HasPrecision(18, 2);
+        modelBuilder.Entity<MovimentacaoBancaria>()
+            .HasOne(m => m.ContaBancaria)
+            .WithMany()
+            .HasForeignKey(m => m.ContaBancariaId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Planejamento de Férias — CLT Arts. 129-153
+        modelBuilder.Entity<PlanejamentoFerias>()
+            .HasOne(p => p.Funcionario)
+            .WithMany()
+            .HasForeignKey(p => p.FuncionarioId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<PlanejamentoFerias>().Property(p => p.ValorRemFeriasBruto).HasPrecision(18, 2);
+        modelBuilder.Entity<PlanejamentoFerias>().Property(p => p.ValorTercoConstitucional).HasPrecision(18, 2);
+        modelBuilder.Entity<PlanejamentoFerias>().Property(p => p.ValorAbonoFeriasVendidas).HasPrecision(18, 2);
+        modelBuilder.Entity<PlanejamentoFerias>().Property(p => p.ValorTotalBruto).HasPrecision(18, 2);
+        modelBuilder.Entity<PlanejamentoFerias>().Property(p => p.ValorAdiantamentoDecimoTerceiro).HasPrecision(18, 2);
+
+        // FolhaPagamento — campos de férias e 13º
+        modelBuilder.Entity<FolhaPagamento>().Property(f => f.ValorFerias).HasPrecision(18, 2);
+        modelBuilder.Entity<FolhaPagamento>().Property(f => f.ValorTercoConstitucionalFerias).HasPrecision(18, 2);
+        modelBuilder.Entity<FolhaPagamento>().Property(f => f.ValorAbonoFeriasVendidas).HasPrecision(18, 2);
+        modelBuilder.Entity<FolhaPagamento>().Property(f => f.ValorAdiantamento13Deducao).HasPrecision(18, 2);
+
+        modelBuilder.Entity<FolhaPagamento>()
+            .HasOne(f => f.PlanejamentoFerias)
+            .WithMany()
+            .HasForeignKey(f => f.PlanejamentoFeriasId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

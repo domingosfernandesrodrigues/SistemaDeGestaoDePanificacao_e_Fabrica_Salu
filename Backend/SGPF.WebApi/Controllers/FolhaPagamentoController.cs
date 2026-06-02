@@ -20,23 +20,35 @@ public class FolhaPagamentoController : ControllerBase
 
     [HttpGet]
     [Authorize(Roles = "Admin,Gestor")]
-    public async Task<IActionResult> GetAll([FromQuery] int? mes, [FromQuery] int? ano)
+    public async Task<IActionResult> GetAll([FromQuery] int? mes, [FromQuery] int? ano, [FromQuery] SGPF.Domain.Entities.TipoFolha? tipo)
     {
         if (mes.HasValue && ano.HasValue)
         {
+            if (tipo.HasValue)
+            {
+                return Ok(await _repository.FindAsync(f => f.MesReferencia == mes && f.AnoReferencia == ano && f.Tipo == tipo));
+            }
             return Ok(await _repository.FindAsync(f => f.MesReferencia == mes && f.AnoReferencia == ano));
+        }
+        if (tipo.HasValue)
+        {
+            return Ok(await _repository.FindAsync(f => f.Tipo == tipo));
         }
         return Ok(await _repository.GetAllAsync());
     }
 
     [HttpGet("funcionarios")]
     [Authorize(Roles = "Admin,Gestor")]
-    public async Task<IActionResult> GetComFuncionarios([FromServices] SGPF.Domain.Interfaces.IRepository<SGPF.Domain.Entities.Funcionario> funcRepo)
+    public async Task<IActionResult> GetComFuncionarios([FromServices] SGPF.Domain.Interfaces.IRepository<SGPF.Domain.Entities.Funcionario> funcRepo, [FromQuery] int? mes, [FromQuery] int? ano, [FromQuery] SGPF.Domain.Entities.TipoFolha? tipo)
     {
-        var folhas = await _repository.GetAllAsync();
+        var query = await _repository.GetAllAsync();
+        if (mes.HasValue) query = query.Where(f => f.MesReferencia == mes).ToList();
+        if (ano.HasValue) query = query.Where(f => f.AnoReferencia == ano).ToList();
+        if (tipo.HasValue) query = query.Where(f => f.Tipo == tipo).ToList();
+        
         var funcs = await funcRepo.GetAllAsync();
         
-        var result = folhas.Select(f => new {
+        var result = query.Select(f => new {
             f.Id,
             f.MesReferencia,
             f.AnoReferencia,
@@ -49,6 +61,7 @@ public class FolhaPagamentoController : ControllerBase
             f.TotalDescontos,
             f.SalarioLiquido,
             f.Status,
+            f.Tipo,
             FuncionarioNome = funcs.FirstOrDefault(func => func.Id == f.FuncionarioId)?.Nome ?? "Desconhecido"
         });
 
@@ -72,11 +85,11 @@ public class FolhaPagamentoController : ControllerBase
 
     [HttpPost("processar")]
     [Authorize(Roles = "Admin,Gestor")]
-    public async Task<IActionResult> Processar([FromQuery] int mes, [FromQuery] int ano)
+    public async Task<IActionResult> Processar([FromQuery] int mes, [FromQuery] int ano, [FromQuery] SGPF.Domain.Entities.TipoFolha tipo = SGPF.Domain.Entities.TipoFolha.Mensal)
     {
         try
         {
-            var folhas = await _folhaService.ProcessarFolhaAsync(mes, ano);
+            var folhas = await _folhaService.ProcessarFolhaAsync(mes, ano, tipo);
             return Ok(folhas);
         }
         catch (Exception ex)

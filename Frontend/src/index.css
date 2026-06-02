@@ -34,11 +34,11 @@
 }
 
 :root {
-  --bg-page: #f8fafc;
-  --bg-card: #ffffff;
-  --border-subtle: #e2e8f0;
-  --text-main: #0f172a;
-  --text-dim: #64748b;
+  --bg-page: #FAF7F2;   /* Warm linen/ivory background for cozy, clean bakery feel */
+  --bg-card: #ffffff;   /* Clean white card background to pop off the warm linen page */
+  --border-subtle: #EAE5DB; /* Warm subtle border line to complement linen background */
+  --text-main: #1C1008; /* Salu Charcoal - rich espresso black for premium high readability */
+  --text-dim: #5C4B3E;  /* Warm Charcoal Muted - rich grey-brown for high contrast secondary text */
 }
 
 .dark {

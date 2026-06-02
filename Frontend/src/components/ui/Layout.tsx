@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
-import { Package, ChefHat, Factory, LayoutDashboard, LogOut, Clock, FileText, ShoppingCart, Truck, ArrowRightLeft, Users, Menu, X, KeyRound, Loader2, Save, Lock, Eye, EyeOff, FlaskConical, Wallet } from 'lucide-react';
+import { Package, ChefHat, Factory, LayoutDashboard, LogOut, Clock, FileText, ShoppingCart, Truck, ArrowRightLeft, Users, Menu, X, KeyRound, Loader2, Save, Lock, Eye, EyeOff, FlaskConical, Wallet, Sun } from 'lucide-react';
 import { ThemeToggle } from '../ThemeToggle';
 import { Modal } from './Modal';
 import { Button } from './Button';
@@ -88,9 +88,11 @@ export function Layout() {
     { name: 'Trocas e Avarias', path: '/trocas', icon: ArrowRightLeft, roles: ['Admin', 'Gestor', 'Operador', 'Motorista'] },
     { name: 'Controle de Ponto', path: '/rh/ponto', icon: Clock, roles: ['Admin', 'Gestor', 'Operador', 'Motorista'] },
     { name: 'Afastamentos (RH)', path: '/rh/afastamentos', icon: FileText, roles: ['Admin', 'Gestor'] },
+    { name: 'Férias (CLT)', path: '/rh/ferias', icon: Sun, roles: ['Admin', 'Gestor'] },
     { name: 'Funcionários (RH)', path: '/rh/funcionarios', icon: Users, roles: ['Admin', 'Gestor'] },
     { name: 'Folha de Pagamento', path: '/rh/folha', icon: FileText, roles: ['Admin', 'Gestor'] },
     { name: 'Meus Contracheques', path: '/rh/meus-contracheques', icon: FileText, roles: ['Admin', 'Gestor', 'Operador', 'Funcionario', 'Motorista'] },
+    { name: 'Lançamento de Alimentação', path: '/rh/alimentacao', icon: ChefHat, roles: ['Admin', 'Gestor', 'Operador', 'Funcionario', 'Motorista'] },
     { name: 'Despesas Gerais', path: '/financeiro/despesas', icon: FileText, roles: ['Admin', 'Gestor'] },
     { name: 'Contas e Saldos', path: '/financeiro/contas', icon: Wallet, roles: ['Admin', 'Gestor'] },
     { name: 'Usuários do Sistema', path: '/usuarios', icon: Users, roles: ['Admin', 'Gestor'] },

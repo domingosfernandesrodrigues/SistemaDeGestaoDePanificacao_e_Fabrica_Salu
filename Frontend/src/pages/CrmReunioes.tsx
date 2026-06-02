@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
-import { CalendarDays, Users, FileText, Loader2, Save, CheckCircle, XCircle, Edit2, ChevronLeft, ChevronRight, LayoutList, Calendar as CalendarIcon, Star, Bell } from 'lucide-react';
+import { CalendarDays, Users, FileText, Loader2, Save, CheckCircle, XCircle, Edit2, ChevronLeft, ChevronRight, LayoutList, Calendar as CalendarIcon, Star, Bell, Sun } from 'lucide-react';
 import api from '../services/api';
 
 const getFeriadosNacionais = (ano: number) => [
@@ -70,6 +70,12 @@ export function CrmReunioes() {
       const response = await api.get('/AgendaEventos');
       return response.data;
     },
+  });
+
+  // Férias dos funcionários — leitura apenas para o calendário
+  const { data: feriasCalendario = [] } = useQuery<any[]>({
+    queryKey: ['planejamento-ferias'],
+    queryFn: async () => (await api.get('/planejamento-ferias')).data,
   });
 
   const { data: clientes } = useQuery<any[]>({
@@ -299,6 +305,7 @@ export function CrmReunioes() {
               <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-ember"></div> REUNIÕES</div>
               <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500"></div> FERIADOS</div>
               <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-500"></div> REALIZADAS</div>
+              <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-blue-500"></div> FÉRIAS</div>
             </div>
           </div>
 
@@ -330,6 +337,27 @@ export function CrmReunioes() {
                 const eventosNoDia = (agendaEventos || []).filter(e => 
                   new Date(e.data || e.Data).toISOString().split('T')[0] === dateStr
                 );
+
+                // Férias ocorrendo neste dia (read-only — respeitando dias de gozo com abono)
+                const feriasNoDia = feriasCalendario.filter((f: any) => {
+                  if (!f.dataInicio || !f.dataFim) return false;
+                  
+                  const parts = f.dataInicio.split('T')[0].split('-');
+                  const year = parseInt(parts[0], 10);
+                  const month = parseInt(parts[1], 10) - 1;
+                  const day = parseInt(parts[2], 10);
+                  
+                  const inicioDate = new Date(Date.UTC(year, month, day));
+                  const diasGozo = f.diasEfetivosGozo ?? (f.diasFerias - (f.solicitaAbono ? f.diasAbono : 0));
+                  
+                  const fimDate = new Date(inicioDate);
+                  fimDate.setUTCDate(inicioDate.getUTCDate() + diasGozo - 1);
+                  
+                  const inicio = f.dataInicio.split('T')[0];
+                  const fim = fimDate.toISOString().split('T')[0];
+                  
+                  return dateStr >= inicio && dateStr <= fim && f.status !== 4; // não cancelada
+                });
                 
                 const feriadoFixo = getFeriadosNacionais(currentDate.getFullYear()).find(f => f.data === dateStr);
 
@@ -370,6 +398,22 @@ export function CrmReunioes() {
                           </button>
                         </div>
                       ))}
+
+                      {/* Férias (read-only — somente visualização) */}
+                      {feriasNoDia.map((f: any) => {
+                        const diasGozo = f.diasEfetivosGozo ?? (f.diasFerias - (f.solicitaAbono ? f.diasAbono : 0));
+                        return (
+                          <div
+                            key={f.id}
+                            className="flex items-center gap-1 bg-blue-100 border border-blue-200 text-blue-800 text-[9px] px-1.5 py-0.5 rounded font-bold truncate"
+                            onClick={e => e.stopPropagation()}
+                            title={`Férias: ${f.funcionarioNome} \u2014 ${f.diasFerias} dias${f.solicitaAbono ? ` (Gozo: ${diasGozo}d, Abono: ${f.diasAbono}d)` : ''}. Alterar em: RH > Férias`}
+                          >
+                            <Sun size={8} className="shrink-0" />
+                            <span className="truncate">{f.funcionarioNome?.split(' ')[0]}</span>
+                          </div>
+                        );
+                      })}
 
                       {reunioesNoDia.slice(0, 3).map((r: any) => {
                         const status = Number(r.status ?? r.Status);

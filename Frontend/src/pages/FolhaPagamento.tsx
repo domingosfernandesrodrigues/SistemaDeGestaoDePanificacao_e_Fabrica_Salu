@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../components/ui/Button';
-import { Calculator, Download, CheckCircle, Loader2, Filter, ChevronLeft, ChevronRight, User, Calendar } from 'lucide-react';
+import { Calculator, Download, CheckCircle, Loader2, Filter, ChevronLeft, ChevronRight, User, Calendar, Sun } from 'lucide-react';
 import api from '../services/api';
 
 export function FolhaPagamento() {
@@ -11,11 +11,13 @@ export function FolhaPagamento() {
 
   // Abas
   const [abaAtiva, setAbaAtiva] = useState<'abertas' | 'fechadas'>('abertas');
+  const [tipoFolhaProcessar, setTipoFolhaProcessar] = useState<number>(0);
 
   // Filtros
   const [filtroFuncionario, setFiltroFuncionario] = useState('');
   const [filtroMes, setFiltroMes] = useState('');
   const [filtroAno, setFiltroAno] = useState('');
+  const [filtroTipo, setFiltroTipo] = useState('');
 
   // Paginação
   const [paginaAtual, setPaginaAtual] = useState(1);
@@ -34,8 +36,16 @@ export function FolhaPagamento() {
     },
   });
 
+  // Conta férias planejadas para o próximo mês
+  const proximoMes = currentMonth === 12 ? 1 : currentMonth + 1;
+  const proximoAno = currentMonth === 12 ? currentYear + 1 : currentYear;
+  const { data: feriasProximoMes = [] } = useQuery<any[]>({
+    queryKey: ['ferias-proximo-mes', proximoMes, proximoAno],
+    queryFn: async () => (await api.get(`/planejamento-ferias/mes/${proximoMes}/ano/${proximoAno}`)).data,
+  });
+
   const mutationProcess = useMutation({
-    mutationFn: () => api.post(`/folha-pagamento/processar?mes=${currentMonth}&ano=${currentYear}`),
+    mutationFn: () => api.post(`/folha-pagamento/processar?mes=${currentMonth}&ano=${currentYear}&tipo=${tipoFolhaProcessar}`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['folhas-pagamento'] });
       alert('Folha processada com sucesso!');
@@ -94,7 +104,7 @@ export function FolhaPagamento() {
   // Reset da página ao filtrar
   useEffect(() => {
     setPaginaAtual(1);
-  }, [filtroFuncionario, filtroMes, filtroAno]);
+  }, [filtroFuncionario, filtroMes, filtroAno, filtroTipo]);
 
   // Aplicação de filtros e ordenação decrescente
   const folhasFiltradas = (folhas || [])
@@ -106,6 +116,7 @@ export function FolhaPagamento() {
       if (filtroFuncionario && f.funcionarioNome !== filtroFuncionario) return false;
       if (filtroMes && f.mesReferencia !== parseInt(filtroMes)) return false;
       if (filtroAno && f.anoReferencia !== parseInt(filtroAno)) return false;
+      if (filtroTipo !== '' && f.tipo !== parseInt(filtroTipo)) return false;
       return true;
     })
     .sort((a, b) => {
@@ -125,17 +136,63 @@ export function FolhaPagamento() {
           <h2 className="text-2xl font-bold text-slate-800">Folha de Pagamento</h2>
           <p className="text-slate-500">Gestão de salários e contracheques.</p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-col sm:flex-row gap-3 items-end w-full sm:w-auto">
+          <div className="flex flex-col gap-1 w-full sm:w-48">
+            <select
+              value={tipoFolhaProcessar}
+              onChange={e => setTipoFolhaProcessar(Number(e.target.value))}
+              className="h-11 px-3 rounded-xl border border-slate-200 bg-white text-xs font-bold focus:ring-2 focus:ring-ember/20 outline-none w-full"
+            >
+              <option value={0}>Mensal Padrão</option>
+              <option value={1}>1ª Parcela 13º (Adiant.)</option>
+              <option value={2}>2ª Parcela 13º (Final)</option>
+            </select>
+          </div>
           <Button 
-            className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember h-11 px-6 shadow-md"
+            className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember h-11 px-6 shadow-md w-full sm:w-auto justify-center"
             onClick={() => mutationProcess.mutate()}
             disabled={mutationProcess.isPending}
           >
             {mutationProcess.isPending ? <Loader2 className="animate-spin" size={18} /> : <Calculator size={18} />}
-            Processar Mês Atual ({currentMonth}/{currentYear})
+            Processar ({currentMonth}/{currentYear})
           </Button>
         </div>
       </div>
+
+      {/* Alerta: férias no próximo mês */}
+      {feriasProximoMes.length > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3">
+          <Sun size={18} className="text-blue-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-blue-800">
+              {feriasProximoMes.length} funcionário(s) com férias planejadas para {proximoMes.toString().padStart(2,'0')}/{proximoAno}
+            </p>
+            <p className="text-xs text-blue-600 mt-0.5">
+              Ao processar a folha do mês atual, o financeiro de férias será incluído automaticamente no contracheque (CLT Art. 144).
+              {feriasProximoMes.map((f: any) => (
+                <span key={f.id} className="block font-medium">
+                  • {f.funcionarioNome} — {f.diasEfetivosGozo} dias de gozo {f.solicitaAbono ? `(Abono: ${f.diasAbono}d)` : ''}
+                </span>
+              ))}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Alerta: 1ª Parcela do 13º Salário */}
+      {tipoFolhaProcessar === 1 && (
+        <div className="bg-sky-50 border border-sky-200 rounded-xl p-4 flex items-start gap-3">
+          <Sun size={18} className="text-sky-500 shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-bold text-sky-800">
+              Processamento da 1ª Parcela (Adiantamento) do 13º Salário
+            </p>
+            <p className="text-xs text-sky-600 mt-0.5 font-medium">
+              Atenção: Os funcionários que já solicitaram o adiantamento do 13º em suas férias para este ano serão ignorados automaticamente deste lote para evitar pagamento em duplicidade.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Navegação por Abas Responsiva */}
       <div className="grid grid-cols-2 sm:flex border-b border-slate-200">
@@ -178,7 +235,7 @@ export function FolhaPagamento() {
             ))}
           </select>
         </div>
-        <div className="grid grid-cols-2 gap-4 w-full lg:w-80">
+        <div className="grid grid-cols-3 gap-4 w-full lg:w-[420px]">
           <div className="space-y-1.5">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Calendar size={12} /> Mês</label>
             <select 
@@ -205,8 +262,21 @@ export function FolhaPagamento() {
               ))}
             </select>
           </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center gap-1.5"><Filter size={12} /> Tipo</label>
+            <select 
+              value={filtroTipo} 
+              onChange={e => setFiltroTipo(e.target.value)}
+              className="w-full h-11 px-4 rounded-xl border border-slate-200 bg-slate-50 text-sm font-medium focus:bg-white focus:ring-2 focus:ring-ember/20 focus:border-ember outline-none transition-all"
+            >
+              <option value="">Todos</option>
+              <option value="0">Mensal</option>
+              <option value="1">1ª Parc. 13º</option>
+              <option value="2">2ª Parc. 13º</option>
+            </select>
+          </div>
         </div>
-        <Button variant="secondary" className="h-11 px-5 font-bold w-full lg:w-auto rounded-xl border-slate-200" onClick={() => { setFiltroFuncionario(''); setFiltroMes(''); setFiltroAno(''); }}>
+        <Button variant="secondary" className="h-11 px-5 font-bold w-full lg:w-auto rounded-xl border-slate-200" onClick={() => { setFiltroFuncionario(''); setFiltroMes(''); setFiltroAno(''); setFiltroTipo(''); }}>
           Limpar
         </Button>
       </div>
@@ -219,7 +289,7 @@ export function FolhaPagamento() {
               <tr>
                 <th className="px-4 py-4">Funcionário</th>
                 <th className="px-3 py-4">Ref.</th>
-                <th className="px-3 py-4 text-center">Adic. Noturno</th>
+                <th className="px-3 py-4 text-center">Tipo</th>
                 <th className="px-3 py-4 text-center">Descontos</th>
                 <th className="px-4 py-4 text-right">Salário Líquido</th>
                 <th className="px-4 py-4 text-center">Status</th>
@@ -232,8 +302,16 @@ export function FolhaPagamento() {
                 <tr key={folha.id} className="hover:bg-slate-50/80 transition-colors">
                   <td className="px-4 py-3 font-bold text-slate-800">{folha.funcionarioNome}</td>
                   <td className="px-3 py-3 text-slate-500 font-black">{folha.mesReferencia.toString().padStart(2, '0')}/{folha.anoReferencia}</td>
-                  <td className="px-3 py-3 text-center text-fire font-bold">
-                    {folha.valorAdicionalNoturno > 0 ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorAdicionalNoturno) : '-'}
+                  <td className="px-3 py-3 text-center">
+                    <span className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                      folha.tipo === 1 ? 'bg-blue-100 text-blue-700' :
+                      folha.tipo === 2 ? 'bg-emerald-100 text-emerald-700' :
+                      'bg-slate-100 text-slate-700'
+                    }`}>
+                      {folha.tipo === 1 ? '1ª Parc. 13º' :
+                       folha.tipo === 2 ? '2ª Parc. 13º' :
+                       'Mensal'}
+                    </span>
                   </td>
                   <td className="px-3 py-3 text-center text-red-500 font-bold">
                     - {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.totalDescontos)}
@@ -286,6 +364,15 @@ export function FolhaPagamento() {
                   <h4 className="font-bold text-slate-800 text-base">{folha.funcionarioNome}</h4>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase">{folha.mesReferencia.toString().padStart(2, '0')}/{folha.anoReferencia}</span>
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold uppercase ${
+                      folha.tipo === 1 ? 'bg-blue-100 text-blue-850' :
+                      folha.tipo === 2 ? 'bg-emerald-100 text-emerald-850' :
+                      'bg-slate-100 text-slate-850'
+                    }`}>
+                      {folha.tipo === 1 ? '13º (1ª Parc.)' :
+                       folha.tipo === 2 ? '13º (Final)' :
+                       'Mensal'}
+                    </span>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                       folha.status === 0 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'
                     }`}>
@@ -300,15 +387,6 @@ export function FolhaPagamento() {
               </div>
               
               <div className="grid grid-cols-2 gap-4 py-3 border-y border-slate-50">
-                <div className="col-span-2 space-y-2">
-                  <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Detalhamento CLT</p>
-                  <div className="grid grid-cols-1 gap-2">
-                    <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-200">
-                      <p className="text-[10px] text-slate-500 font-bold">Adicional Noturno</p>
-                      <p className="text-sm font-black text-slate-800">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.valorAdicionalNoturno)}</p>
-                    </div>
-                  </div>
-                </div>
                 <div>
                   <p className="text-[10px] text-slate-400 uppercase font-bold">Descontos</p>
                   <p className="text-sm text-red-500 font-medium">- {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.totalDescontos)}</p>
