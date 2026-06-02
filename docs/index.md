@@ -42,10 +42,20 @@ Este documento é o mapa mestre do Sistema de Gestão de Panificação e Fábric
 - [Valor de Venda (Valuation)](7-gestao/valor-venda-sistema.md) - Precificação e Mercado.
 - [Manual do Administrador](7-gestao/manual-administrador.md) - Guia de implantação e operação.
 
-## 📌 Status Atual do Sistema (28/05/2026)
-O sistema SGP-F encontra-se em estado de **Produção — Estabilidade Geral, Criptografia de Alta Segurança, Conciliação Financeira Genérica e Interface Cinética Futurista**.
+## 📌 Status Atual do Sistema (01/06/2026)
+O sistema SGP-F encontra-se em estado de **Produção — Estabilidade Geral, Criptografia de Alta Segurança, Precisão de GPS Calibrada e Integração Completa de Férias/13º Salário (CLT)**.
 
+- **Precisão de Calibração de GPS (Ponto e Empresa):**
+  - **Calibração Ativa (`watchPosition`):** O registro de ponto do funcionário (`Ponto.tsx`) e a captura de localização da empresa (`ConfiguracoesEmpresa.tsx`) agora contam com escuta ativa do chip GPS por até 5 segundos ou até atingir precisão <= 20 metros, evitando distorções comuns causadas por geolocalização em cache.
+  - **Fallback no Geocodificador:** Busca encadeada no Nominatim (Logradouro/Número -> Logradouro/Cidade -> CEP) eliminando desvios na geolocalização a partir do endereço.
+- **Controle de Férias e Gratificação de 13º Salário (CLT):**
+  - **Integração de Férias e 13º:** Possibilidade de planejar férias solicitando abono pecuniário (CLT Art. 143) de até 10 dias e o adiantamento de 50% do 13º salário (Lei 4.090/62).
+  - **Processamento de Folha Dinâmico:** Nova segmentação de folha por tipo: Mensal Padrão, 1ª Parcela 13º (Adiantamento) e 2ª Parcela 13º (Final).
+  - **Prevenção de Duplicidade (Bloqueio):** Bloqueio automático de pagamento duplo da primeira parcela do 13º; o processamento em lote da 1ª parcela ignora funcionários que já solicitaram/receberam o adiantamento nas férias.
+  - **Cálculo e Dedução Automática:** Dedução da primeira parcela de 13º (via férias ou folha em lote) na folha de 2ª parcela final (rubrica `920`), com aplicação de INSS de 8% (rubrica `900`) sobre o 13º integral.
+  - **Fidelidade no Contracheque PDF:** Correção na persistência e na geração do PDF para exibir detalhadamente todas as rubricas de férias (`810`, `811`, `820`) e de adiantamento de 13º nas férias (`131` - "Adiantamento de 13º Salário (Férias)") de modo que a soma confira exatamente com o salário líquido do funcionário.
 - **Integração Financeira e Conciliação Genérica (Inbound & Webhooks):**
+
   - **Gateway de Pagamento Universal:** Evolução dos endpoints de conciliação para suportar webhooks genéricos (`POST /api/v1/pagamentos/webhook/gateway`), mantendo retrocompatibilidade total com a rota anterior (`/webhook/asaas`).
   - **Cálculo de Liquidez e Tarifas:** Dedução automática de taxas (`NetValue` e `Fee`) informadas pelo processador diretamente na conta bancária durante o faturamento, evitando distorções no faturamento bruto.
   - **Fidelidade Temporal:** Gravação exata da data e hora real em que o cliente realizou o pagamento no gateway (`ClientPaymentDate`), mantendo a precisão cronológica em extratos e balanços.

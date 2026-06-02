@@ -17,9 +17,11 @@
 
 ## Módulo: RH e Folha (Fase 3)
 - `RegistrosPonto`: Id, FuncionarioId, DataHoraEntrada, DataHoraSaida, TotalHorasTrabalhadas, TotalHorasExtras, Observacao.
-- `FolhaPagamento`: Id, FuncionarioId, MesReferencia, AnoReferencia, SalarioBaseCalculado, TotalHorasExtras50, ValorHorasExtras50, TotalHorasExtras100, ValorHorasExtras100, ValorAdicionalNoturno, TotalDescontos, SalarioLiquido, Status (0=Aberta/1=Fechada).
+- `FolhasPagamento`: Id, FuncionarioId, MesReferencia, AnoReferencia, SalarioBaseCalculado, TotalHorasExtras50, ValorHorasExtras50, TotalHorasExtras100, ValorHorasExtras100, ValorAdicionalNoturno, TotalDescontos, SalarioLiquido, Status (0=Aberta/1=Fechada), Tipo (0=Mensal/1=Adiantamento13/2=DecimoTerceiro), ValorAdiantamento13Deducao (DECIMAL), ValorFerias (DECIMAL), ValorTercoConstitucionalFerias (DECIMAL), ValorAbonoFeriasVendidas (DECIMAL), DiasFerias (INT), DiasAbonoFerias (INT), PlanejamentoFeriasId (GUID, Nullable FK), DataGeracao.
+- `PlanejamentosFerias`: Id, FuncionarioId, DataInicio, DataFim, DiasFerias, TipoParcelamento (0=Total/1=Primeira/2=Segunda/3=Terceira), SolicitaAbono (BIT), DiasAbono, SolicitaAdiantamentoDecimoTerceiro (BIT), ValorAdiantamentoDecimoTerceiro (DECIMAL), PeriodoAquisitivoInicio, PeriodoAquisitivoFim, PeriodoConcessivoFim, Status (0=Planejada/1=Aprovada/2=Iniciada/3=Concluida/4=Cancelada), ValorRemFeriasBruto (DECIMAL), ValorTercoConstitucional (DECIMAL), ValorAbonoFeriasVendidas (DECIMAL), ValorTotalBruto (DECIMAL), Observacao, DataCriacao, DataAprovacao, DataCancelamento, MotivoCancelamento.
 - `AgendaEventos`: Id, Titulo, Data, Tipo (Feriado/Lembrete/Aviso), Descricao, IsNacional (BIT).
-- `Afastamentos`: Id, FuncionarioId, Tipo, DataInicio, DataFim, Observacao.
+- `Afastamentos`: Id, FuncionarioId, Tipo, DataInicio, DataFim, Observacao, Motivo, Status, AnexoNome, AnexoBase64, DataCriacao.
+
 
 ## Módulo: Operacional, Vendas e Logística (Fase 4)
 - `PedidosVenda`: Id, NumeroPedido, ClienteId, MotoristaId (GUID, FK Funcionarios), DataPedido, ValorTotal, Status (Novo/Separacao/Rota/Entregue/Cancelado), FormaPagamento, Pago (BIT), PixQrCode, BoletoCodigoBarras, DataEntregaRealizada.
