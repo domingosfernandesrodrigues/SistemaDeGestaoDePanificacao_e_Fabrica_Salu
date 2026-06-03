@@ -64,7 +64,7 @@ export default function AfastamentosRH() {
   });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-[1600px] mx-auto w-full">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Aprovação de Afastamentos</h2>
@@ -72,18 +72,18 @@ export default function AfastamentosRH() {
         </div>
       </div>
 
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col lg:flex-row gap-3">
+      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:flex-wrap items-stretch md:items-center gap-3">
         <input 
           type="text" 
           placeholder="Buscar por funcionário..." 
           value={searchFuncionario}
           onChange={(e) => setSearchFuncionario(e.target.value)}
-          className="flex-1 min-w-[200px] h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="flex-1 min-w-[180px] h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
         />
         <select 
           value={filtroMotivo} 
           onChange={(e) => setFiltroMotivo(e.target.value)}
-          className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none max-w-xs"
+          className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full md:w-[220px]"
         >
           <option value="">Todos os Motivos</option>
           <optgroup label="Afastamentos por saúde">
@@ -133,32 +133,32 @@ export default function AfastamentosRH() {
         <select 
           value={filtroStatus} 
           onChange={(e) => setFiltroStatus(e.target.value)}
-          className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+          className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none w-full md:w-[150px]"
         >
           <option value="">Todos os Status</option>
           <option value="Pendente">Pendente</option>
           <option value="Aprovado">Aprovado</option>
           <option value="Reprovado">Reprovado</option>
         </select>
-        <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+        <div className="flex flex-row items-center gap-2 w-full md:w-auto">
           <input 
             type="date" 
             value={dataInicioFiltro}
             onChange={(e) => setDataInicioFiltro(e.target.value)}
-            className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="flex-1 h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-w-[120px]"
           />
-          <span className="text-slate-400 hidden sm:block">até</span>
+          <span className="text-slate-400">até</span>
           <input 
             type="date" 
             value={dataFimFiltro}
             onChange={(e) => setDataFimFiltro(e.target.value)}
-            className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+            className="flex-1 h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm focus:ring-2 focus:ring-indigo-500 outline-none min-w-[120px]"
           />
         </div>
         {(searchFuncionario || filtroMotivo || filtroStatus || dataInicioFiltro || dataFimFiltro) && (
           <Button 
             variant="secondary" 
-            className="h-10 text-slate-500 whitespace-nowrap"
+            className="h-10 text-slate-500 whitespace-nowrap w-full md:w-auto"
             onClick={() => {
               setSearchFuncionario('');
               setFiltroMotivo('');
@@ -173,90 +173,171 @@ export default function AfastamentosRH() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Versão Desktop: Tabela */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left text-sm min-w-[900px]">
-          <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
-            <tr>
-              <th className="px-4 py-3 font-medium">Funcionário</th>
-              <th className="px-4 py-3 font-medium">Motivo</th>
-              <th className="px-4 py-3 font-medium">Período</th>
-              <th className="px-4 py-3 font-medium">Observação</th>
-              <th className="px-4 py-3 font-medium">Anexo</th>
-              <th className="px-4 py-3 font-medium">Status</th>
-              <th className="px-4 py-3 font-medium text-center">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {isLoading ? (
-              <tr><td colSpan={7} className="py-8 text-center"><Loader2 className="animate-spin mx-auto text-ember" /></td></tr>
-            ) : paginatedAfastamentos?.map((af) => (
-              <tr key={af.id} className="hover:bg-slate-50">
-                <td className="px-4 py-3 font-medium text-slate-800">{af.nomeFuncionario}</td>
-                <td className="px-4 py-3 text-slate-700">{af.motivo}</td>
-                <td className="px-4 py-3 text-slate-700">
-                  {new Date(af.dataInicio).toLocaleDateString()} até {new Date(af.dataFim).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-3 text-slate-500 text-xs max-w-xs truncate" title={af.observacao}>
-                  {af.observacao || '-'}
-                </td>
-                <td className="px-4 py-3">
-                  {af.anexoBase64 ? (
+            <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
+              <tr>
+                <th className="px-4 py-3 font-medium">Funcionário</th>
+                <th className="px-4 py-3 font-medium">Motivo</th>
+                <th className="px-4 py-3 font-medium">Período</th>
+                <th className="px-4 py-3 font-medium">Observação</th>
+                <th className="px-4 py-3 font-medium">Anexo</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium text-center">Ações</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {isLoading ? (
+                <tr><td colSpan={7} className="py-8 text-center"><Loader2 className="animate-spin mx-auto text-ember" /></td></tr>
+              ) : paginatedAfastamentos?.map((af) => (
+                <tr key={af.id} className="hover:bg-slate-50">
+                  <td className="px-4 py-3 font-medium text-slate-800">{af.nomeFuncionario}</td>
+                  <td className="px-4 py-3 text-slate-700">{af.motivo}</td>
+                  <td className="px-4 py-3 text-slate-700">
+                    {new Date(af.dataInicio).toLocaleDateString()} até {new Date(af.dataFim).toLocaleDateString()}
+                  </td>
+                  <td className="px-4 py-3 text-slate-500 text-xs max-w-xs truncate" title={af.observacao}>
+                    {af.observacao || '-'}
+                  </td>
+                  <td className="px-4 py-3">
+                    {af.anexoBase64 ? (
+                      <a
+                        href={af.anexoBase64}
+                        download={af.anexoNome || 'anexo'}
+                        className="text-ember hover:text-fire flex items-center gap-1 text-xs font-medium"
+                        title={af.anexoNome}
+                      >
+                        <FileText size={14} />
+                        Baixar
+                      </a>
+                    ) : (
+                      <span className="text-slate-400 text-xs">-</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase flex items-center w-fit gap-1 ${
+                      af.status === 'Aprovado' ? 'bg-green-100 text-green-700' :
+                      af.status === 'Reprovado' ? 'bg-red-100 text-red-700' :
+                      'bg-amber-100 text-amber-700'
+                    }`}>
+                      {af.status === 'Pendente' && <Clock size={10} />}
+                      {af.status === 'Aprovado' && <Check size={10} />}
+                      {af.status === 'Reprovado' && <X size={10} />}
+                      {af.status}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    {af.status === 'Pendente' ? (
+                      <div className="flex justify-center gap-2">
+                        <button 
+                          onClick={() => confirm('Aprovar afastamento?') && mutationAprovar.mutate(af.id)}
+                          className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
+                          title="Aprovar"
+                        >
+                          <Check size={18} />
+                        </button>
+                        <button 
+                          onClick={() => confirm('Reprovar afastamento?') && mutationReprovar.mutate(af.id)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                          title="Reprovar"
+                        >
+                          <X size={18} />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-slate-300 text-xs">-</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {!isLoading && filteredAfastamentos?.length === 0 && (
+                <tr><td colSpan={7} className="py-10 text-center text-slate-400 italic">Nenhum afastamento encontrado para estes filtros.</td></tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Versão Mobile: Cards (iPhone 14 Pro Max) */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {isLoading ? (
+            <div className="py-8 text-center"><Loader2 className="animate-spin mx-auto text-ember" /></div>
+          ) : paginatedAfastamentos?.map((af) => (
+            <div key={af.id} className="p-4 space-y-3">
+              <div className="flex justify-between items-start">
+                <div>
+                  <h3 className="font-bold text-slate-900">{af.nomeFuncionario}</h3>
+                  <p className="text-xs text-slate-500 font-medium">{af.motivo}</p>
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase flex items-center gap-1 ${
+                  af.status === 'Aprovado' ? 'bg-green-100 text-green-700' :
+                  af.status === 'Reprovado' ? 'bg-red-100 text-red-700' :
+                  'bg-amber-100 text-amber-700'
+                }`}>
+                  {af.status === 'Pendente' && <Clock size={10} />}
+                  {af.status === 'Aprovado' && <Check size={10} />}
+                  {af.status === 'Reprovado' && <X size={10} />}
+                  {af.status}
+                </span>
+              </div>
+
+              <div className="bg-slate-50 rounded-lg p-3 text-xs space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-slate-400 font-bold uppercase text-[9px]">Período</span>
+                  <span className="text-slate-700 font-medium">
+                    {new Date(af.dataInicio).toLocaleDateString()} até {new Date(af.dataFim).toLocaleDateString()}
+                  </span>
+                </div>
+                
+                {af.observacao && (
+                  <div className="border-t border-slate-200 pt-2">
+                    <p className="text-slate-400 font-bold uppercase text-[9px]">Observação</p>
+                    <p className="text-slate-600 mt-0.5 italic">{af.observacao}</p>
+                  </div>
+                )}
+
+                {af.anexoBase64 && (
+                  <div className="border-t border-slate-200 pt-2 flex justify-between items-center">
+                    <span className="text-slate-400 font-bold uppercase text-[9px]">Anexo</span>
                     <a
                       href={af.anexoBase64}
                       download={af.anexoNome || 'anexo'}
-                      className="text-ember hover:text-fire flex items-center gap-1 text-xs font-medium"
-                      title={af.anexoNome}
+                      className="text-ember hover:text-fire flex items-center gap-1 text-xs font-bold"
                     >
                       <FileText size={14} />
-                      Baixar
+                      Baixar Anexo
                     </a>
-                  ) : (
-                    <span className="text-slate-400 text-xs">-</span>
-                  )}
-                </td>
-                <td className="px-4 py-3">
-                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase flex items-center w-fit gap-1 ${
-                    af.status === 'Aprovado' ? 'bg-green-100 text-green-700' :
-                    af.status === 'Reprovado' ? 'bg-red-100 text-red-700' :
-                    'bg-amber-100 text-amber-700'
-                  }`}>
-                    {af.status === 'Pendente' && <Clock size={10} />}
-                    {af.status === 'Aprovado' && <Check size={10} />}
-                    {af.status === 'Reprovado' && <X size={10} />}
-                    {af.status}
-                  </span>
-                </td>
-                <td className="px-4 py-3 text-center">
-                  {af.status === 'Pendente' ? (
-                    <div className="flex justify-center gap-2">
-                      <button 
-                        onClick={() => confirm('Aprovar afastamento?') && mutationAprovar.mutate(af.id)}
-                        className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-colors"
-                        title="Aprovar"
-                      >
-                        <Check size={18} />
-                      </button>
-                      <button 
-                        onClick={() => confirm('Reprovar afastamento?') && mutationReprovar.mutate(af.id)}
-                        className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
-                        title="Reprovar"
-                      >
-                        <X size={18} />
-                      </button>
-                    </div>
-                  ) : (
-                     <span className="text-slate-300 text-xs">-</span>
-                  )}
-                </td>
-              </tr>
-            ))}
-            {!isLoading && filteredAfastamentos?.length === 0 && (
-              <tr><td colSpan={7} className="py-10 text-center text-slate-400 italic">Nenhum afastamento encontrado para estes filtros.</td></tr>
-            )}
-          </tbody>
-        </table>
+                  </div>
+                )}
+              </div>
+
+              {af.status === 'Pendente' && (
+                <div className="flex gap-2 pt-1">
+                  <Button 
+                    size="sm" 
+                    variant="secondary"
+                    className="flex-1 bg-green-50 text-green-700 hover:bg-green-100 border-green-200 flex items-center justify-center gap-1 h-9"
+                    onClick={() => confirm('Aprovar afastamento?') && mutationAprovar.mutate(af.id)}
+                  >
+                    <Check size={14} /> Aprovar
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="secondary"
+                    className="flex-1 bg-red-50 text-red-700 hover:bg-red-100 border-red-200 flex items-center justify-center gap-1 h-9"
+                    onClick={() => confirm('Reprovar afastamento?') && mutationReprovar.mutate(af.id)}
+                  >
+                    <X size={14} /> Reprovar
+                  </Button>
+                </div>
+              )}
+            </div>
+          ))}
+          {!isLoading && filteredAfastamentos?.length === 0 && (
+            <div className="p-8 text-center text-slate-400 italic">Nenhum afastamento encontrado para estes filtros.</div>
+          )}
+        </div>
       </div>
-    </div>
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between bg-white px-4 py-3 sm:px-6 rounded-xl border border-slate-200 shadow-sm">

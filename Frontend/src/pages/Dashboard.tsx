@@ -37,19 +37,45 @@ interface DashboardData {
   };
   production: { totalProduced: number; opCount: number; efficiency: number; averageLeadTimeHours: number; byStatus: { label: string; value: number }[] };
   inventory: { totalProducts: number; lowStockCount: number; inventoryValue: number; totalPurchases: number; lowStockProducts: { label: string; value: number }[]; productsForSaleStock: { label: string; value: number }[] };
-  fleet: { totalVehicles: number; activeDeliveries: number; maintenanceCost: number; totalFuelCost: number };
+  fleet: { 
+    totalVehicles: number; 
+    activeDeliveries: number; 
+    maintenanceCost: number; 
+    totalFuelCost: number;
+    vehicleMetrics: {
+      placa: string;
+      modelo: string;
+      mediaKmLitro: number;
+      mediaCustoPreventivaKm: number;
+      mediaCustoCorretivaKm: number;
+    }[];
+  };
   expenses: { totalExpenses: number; totalPayroll: number; totalOvertime: number; byCategory: { label: string; value: number }[] };
   exchanges: { totalLoss: number; exchangeCount: number; topProducts: { label: string; value: number }[]; topClients: { label: string; value: number }[] };
 }
 
 export function Dashboard() {
-  const [activeTab, setActiveTab] = useState('Geral');
+  const userRole = localStorage.getItem('sgpf_role') || 'Operador';
+
+  const tabs = [
+    { id: 'Geral', icon: LayoutDashboardIcon, roles: ['Admin', 'Gestor'] },
+    { id: 'Vendas', icon: DollarSign, roles: ['Admin', 'Gestor'] },
+    { id: 'Produção', icon: Factory, roles: ['Admin', 'Gestor', 'Operador'] },
+    { id: 'Estoque', icon: Package, roles: ['Admin', 'Gestor', 'Operador'] },
+    { id: 'Logística', icon: Truck, roles: ['Admin', 'Gestor', 'Motorista'] },
+    { id: 'Financeiro', icon: Activity, roles: ['Admin', 'Gestor'] },
+  ];
+
+  const filteredTabs = tabs.filter(t => t.roles.includes(userRole));
+
+  const [activeTab, setActiveTab] = useState(() => {
+    return filteredTabs.length > 0 ? filteredTabs[0].id : 'Geral';
+  });
+
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterDay, setFilterDay] = useState<number | string>('');
   const [filterCliente, setFilterCliente] = useState('');
-  
-  const userRole = localStorage.getItem('sgpf_role') || 'Operador';
   if (userRole === 'Cliente') return <Navigate to="/vendas" replace />;
 
   const { data: clientes } = useQuery<any[]>({
@@ -101,28 +127,19 @@ export function Dashboard() {
 
   const isAdmin = userRole === 'Admin' || userRole === 'Gestor';
 
-  const tabs = [
-    { id: 'Geral', icon: LayoutDashboardIcon, roles: ['Admin', 'Gestor', 'Operador'] },
-    { id: 'Vendas', icon: DollarSign, roles: ['Admin', 'Gestor'] },
-    { id: 'Produção', icon: Factory, roles: ['Admin', 'Gestor', 'Operador'] },
-    { id: 'Estoque', icon: Package, roles: ['Admin', 'Gestor', 'Operador'] },
-    { id: 'Logística', icon: Truck, roles: ['Admin', 'Gestor', 'Operador'] },
-    { id: 'Financeiro', icon: Activity, roles: ['Admin', 'Gestor'] },
-  ];
 
-  const filteredTabs = tabs.filter(t => t.roles.includes(userRole));
 
   return (
-    <div className="space-y-8 pb-12 animate-in fade-in duration-500">
+    <div className="space-y-8 pb-12 animate-in fade-in duration-500 max-w-[1600px] mx-auto w-full">
       {/* Header com Filtros Modernos */}
-      <div className="bg-bg-card p-6 rounded-2xl shadow-sm dark:shadow-[0_4px_20px_rgba(255,255,255,0.06)] border border-border-subtle flex flex-col md:flex-row items-center justify-between gap-6">
-        <div>
+      <div className="bg-bg-card p-6 rounded-2xl shadow-sm dark:shadow-[0_4px_20px_rgba(255,255,255,0.06)] border border-border-subtle flex flex-col lg:flex-row items-center justify-between gap-6">
+        <div className="w-full lg:w-auto">
           <h2 className="text-3xl font-bold text-text-main tracking-tight">Painel Executivo</h2>
           <p className="text-text-dim text-sm">Monitoramento de indicadores em tempo real para a fábrica.</p>
         </div>
         
-        <div className="flex flex-wrap items-center gap-3 bg-bg-page p-2 rounded-xl border border-border-subtle">
-          <div className="flex items-center gap-2 px-2 border-r border-border-subtle mr-2">
+        <div className="flex flex-wrap lg:flex-nowrap items-center gap-2 bg-bg-page p-2 rounded-xl border border-border-subtle w-full lg:w-auto">
+          <div className="flex items-center gap-2 px-2 border-r border-border-subtle mr-1 shrink-0">
             <Filter size={16} className="text-text-dim" />
             <span className="text-[10px] font-bold text-text-dim uppercase tracking-widest">Filtros</span>
           </div>
@@ -130,7 +147,7 @@ export function Dashboard() {
           <select 
             value={filterCliente} 
             onChange={(e) => setFilterCliente(e.target.value)}
-            className="bg-transparent border-none text-sm font-bold text-text-main focus:ring-0 outline-none cursor-pointer max-w-[150px]"
+            className="bg-transparent border-none text-sm font-bold text-text-main focus:ring-0 outline-none cursor-pointer max-w-[130px] sm:max-w-[160px] shrink-0"
           >
             <option value="" className="bg-bg-card text-text-main">Todos Clientes</option>
             {clientes?.map(c => <option key={c.id} value={c.id} className="bg-bg-card text-text-main">{c.nomeFantasia || c.razaoSocial}</option>)}
@@ -139,7 +156,7 @@ export function Dashboard() {
           <select 
             value={filterYear} 
             onChange={(e) => setFilterYear(Number(e.target.value))}
-            className="bg-transparent border-none text-sm font-bold text-text-main focus:ring-0 outline-none cursor-pointer"
+            className="bg-transparent border-none text-sm font-bold text-text-main focus:ring-0 outline-none cursor-pointer shrink-0"
           >
             {[2024, 2025, 2026].map(y => <option key={y} value={y} className="bg-bg-card text-text-main">{y}</option>)}
           </select>
@@ -147,7 +164,7 @@ export function Dashboard() {
           <select 
             value={filterMonth} 
             onChange={(e) => setFilterMonth(Number(e.target.value))}
-            className="bg-transparent border-none text-sm font-bold text-text-main focus:ring-0 outline-none cursor-pointer"
+            className="bg-transparent border-none text-sm font-bold text-text-main focus:ring-0 outline-none cursor-pointer shrink-0"
           >
             <option value={0} className="bg-bg-card text-text-main">Todos os meses</option>
             {Array.from({length: 12}).map((_, i) => (
@@ -155,23 +172,30 @@ export function Dashboard() {
             ))}
           </select>
 
-          <input 
-            type="number" 
-            placeholder="Dia"
-            value={filterDay}
-            onChange={(e) => setFilterDay(e.target.value)}
-            className="w-16 bg-transparent border-none text-sm font-bold text-text-main focus:ring-0 outline-none placeholder:text-text-dim/40"
-            min={1}
-            max={31}
-          />
-          
-          <button 
-            onClick={() => refetch()} 
-            className="p-2 hover:bg-bg-card hover:shadow-sm rounded-lg transition-all active:scale-95 text-ember"
-            title="Atualizar Dados"
-          >
-            <RefreshCw size={18} />
-          </button>
+          <div className="flex items-center gap-2 border-t lg:border-t-0 border-border-subtle pt-2 lg:pt-0 w-full lg:w-auto justify-between lg:justify-start lg:border-l lg:pl-2">
+            <input 
+              type="text" 
+              inputMode="numeric"
+              pattern="[0-9]*"
+              placeholder="Dia"
+              value={filterDay}
+              onChange={(e) => {
+                const val = e.target.value.replace(/[^0-9]/g, '');
+                if (val === '' || (Number(val) >= 1 && Number(val) <= 31)) {
+                  setFilterDay(val);
+                }
+              }}
+              className="w-12 bg-transparent border-none text-sm font-bold text-text-main focus:ring-0 outline-none placeholder:text-text-dim/40"
+            />
+            
+            <button 
+              onClick={() => refetch()} 
+              className="p-2 hover:bg-bg-card hover:shadow-sm rounded-lg transition-all active:scale-95 text-ember shrink-0 ml-auto lg:ml-0"
+              title="Atualizar Dados"
+            >
+              <RefreshCw size={18} />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -201,7 +225,7 @@ export function Dashboard() {
       <div className="space-y-8 transition-all duration-300">
         {activeTab === 'Geral' && (
           <div className="space-y-8 animate-in slide-in-from-bottom-4">
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
               <KPIChip label="Vendas Totais" value={formatCurrency(data?.sales.totalSales || 0)} icon={DollarSign} color="bg-emerald-600" />
               <KPIChip label="Ordens Finalizadas" value={data?.production.opCount || 0} icon={Factory} color="bg-ember" />
               <KPIChip label="Produtos em Estoque" value={data?.inventory.totalProducts || 0} icon={Package} color="bg-mid" />
@@ -513,6 +537,93 @@ export function Dashboard() {
                     </div>
                  </div>
               </div>
+
+               {/* Nova Seção: Desempenho e Eficiência da Frota */}
+               <div className="bg-bg-card p-8 rounded-3xl shadow-sm dark:shadow-[0_4px_20px_rgba(255,255,255,0.06)] border border-border-subtle mt-8">
+                  <h3 className="text-xl font-bold text-text-main mb-6">Desempenho e Eficiência da Frota</h3>
+                  
+                  {/* Versão Desktop: Tabela */}
+                  <div className="hidden md:block overflow-x-auto">
+                     <table className="w-full text-left border-collapse">
+                        <thead>
+                           <tr className="border-b border-border-subtle">
+                              <th className="pb-4 text-[10px] font-bold text-text-dim uppercase tracking-widest">Veículo</th>
+                              <th className="pb-4 text-[10px] font-bold text-text-dim uppercase tracking-widest text-right">Média de Consumo</th>
+                              <th className="pb-4 text-[10px] font-bold text-text-dim uppercase tracking-widest text-right">Manut. Preventiva</th>
+                              <th className="pb-4 text-[10px] font-bold text-text-dim uppercase tracking-widest text-right">Manut. Corretiva</th>
+                           </tr>
+                        </thead>
+                        <tbody className="divide-y divide-border-subtle">
+                           {data?.fleet.vehicleMetrics?.map((v, idx) => (
+                              <tr key={idx} className="group hover:bg-bg-page/50 transition-colors">
+                                 <td className="py-4">
+                                    <p className="text-sm font-bold text-text-main">{v.modelo}</p>
+                                    <p className="text-xs text-text-dim">{v.placa}</p>
+                                 </td>
+                                 <td className="py-4 text-right">
+                                    <p className="text-sm font-bold text-text-main">
+                                       {v.mediaKmLitro > 0 ? `${Number(v.mediaKmLitro).toFixed(2)} KM/L` : 'Sem registros'}
+                                    </p>
+                                 </td>
+                                 <td className="py-4 text-right">
+                                    <p className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
+                                       {v.mediaCustoPreventivaKm > 0 ? `${formatCurrency(v.mediaCustoPreventivaKm)}/KM` : 'R$ 0,00/KM'}
+                                    </p>
+                                 </td>
+                                 <td className="py-4 text-right">
+                                    <p className="text-sm font-bold text-rose-500">
+                                       {v.mediaCustoCorretivaKm > 0 ? `${formatCurrency(v.mediaCustoCorretivaKm)}/KM` : 'R$ 0,00/KM'}
+                                    </p>
+                                 </td>
+                              </tr>
+                           ))}
+                           {(!data?.fleet.vehicleMetrics || data.fleet.vehicleMetrics.length === 0) && (
+                              <tr>
+                                 <td colSpan={4} className="text-center py-8 text-text-dim italic">Nenhum veículo registrado.</td>
+                              </tr>
+                           )}
+                        </tbody>
+                     </table>
+                  </div>
+
+                  {/* Versão Mobile: Cards */}
+                  <div className="md:hidden space-y-4">
+                     {data?.fleet.vehicleMetrics?.map((v, idx) => (
+                        <div key={idx} className="bg-bg-page p-4 rounded-2xl border border-border-subtle space-y-3">
+                           <div className="flex justify-between items-center border-b border-border-subtle pb-2">
+                              <div>
+                                 <h4 className="font-bold text-text-main text-sm">{v.modelo}</h4>
+                                 <p className="text-xs text-text-dim">{v.placa}</p>
+                              </div>
+                           </div>
+                           <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+                              <div>
+                                 <p className="text-[9px] font-bold text-text-dim uppercase tracking-wider">KM/L Médio</p>
+                                 <p className="text-xs font-extrabold text-text-main mt-1">
+                                    {v.mediaKmLitro > 0 ? `${Number(v.mediaKmLitro).toFixed(1)} KM/L` : '-'}
+                                 </p>
+                              </div>
+                              <div>
+                                 <p className="text-[9px] font-bold text-text-dim uppercase tracking-wider">Manut. Prev.</p>
+                                 <p className="text-xs font-extrabold text-emerald-600 mt-1">
+                                    {v.mediaCustoPreventivaKm > 0 ? `${formatCurrency(v.mediaCustoPreventivaKm)}/KM` : '-'}
+                                 </p>
+                              </div>
+                              <div>
+                                 <p className="text-[9px] font-bold text-text-dim uppercase tracking-wider">Manut. Corr.</p>
+                                 <p className="text-xs font-extrabold text-rose-500 mt-1">
+                                    {v.mediaCustoCorretivaKm > 0 ? `${formatCurrency(v.mediaCustoCorretivaKm)}/KM` : '-'}
+                                 </p>
+                              </div>
+                           </div>
+                        </div>
+                     ))}
+                     {(!data?.fleet.vehicleMetrics || data.fleet.vehicleMetrics.length === 0) && (
+                        <p className="text-center text-text-dim py-4 italic">Nenhum veículo registrado.</p>
+                     )}
+                  </div>
+               </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-8">
                  <DataCard title="Produtos com Mais Trocas/Avarias" items={data?.exchanges.topProducts || []} isNumber />
                  <DataCard title="Clientes com Mais Trocas" items={data?.exchanges.topClients || []} isNumber />
@@ -545,18 +656,18 @@ export function Dashboard() {
 
 function KPIChip({ label, value, icon: Icon, color, trend }: any) {
   return (
-    <div className="bg-bg-card p-5 rounded-2xl border border-border-subtle hover:shadow-xl dark:hover:shadow-[0_10px_30px_rgba(255,255,255,0.12)] shadow-sm dark:shadow-[0_4px_20px_rgba(255,255,255,0.06)] hover:scale-[1.02] transition-all cursor-default group relative overflow-hidden">
+    <div className="bg-bg-card p-5 rounded-2xl border border-border-subtle hover:shadow-xl dark:hover:shadow-[0_10px_30px_rgba(255,255,255,0.12)] shadow-sm dark:shadow-[0_4px_20px_rgba(255,255,255,0.06)] hover:scale-[1.02] transition-all cursor-default group relative overflow-hidden flex flex-col justify-between gap-4">
        <div className={`absolute top-0 right-0 w-24 h-24 ${color} opacity-5 rounded-bl-full group-hover:scale-150 transition-transform`}></div>
-       <div className="flex items-center gap-4">
-          <div className={`${color} text-white p-3 rounded-xl shadow-lg`}>
-             <Icon size={20} />
+       <div className="flex items-center justify-between">
+          <div className={`${color} text-white p-2.5 rounded-xl shadow-lg shrink-0`}>
+             <Icon size={18} />
           </div>
-          <div>
-            <p className="text-[10px] font-bold text-text-dim uppercase tracking-widest">{label}</p>
-            <h4 className="text-lg font-bold text-text-main leading-none mt-1">{value}</h4>
-            {trend && <span className="text-[10px] font-bold text-emerald-600">{trend} vs mês ant.</span>}
-          </div>
+          {trend && <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/20 px-2 py-0.5 rounded border border-emerald-100 dark:border-emerald-900/30">{trend}</span>}
        </div>
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold text-text-dim uppercase tracking-widest truncate" title={label}>{label}</p>
+          <h4 className="text-lg font-extrabold text-text-main leading-none mt-1.5 truncate" title={value}>{value}</h4>
+        </div>
     </div>
   );
 }

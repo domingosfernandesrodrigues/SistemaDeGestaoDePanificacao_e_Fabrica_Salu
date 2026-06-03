@@ -13,8 +13,9 @@ public class RelatorioDreDto
 
     public decimal DespesasFolhaPagamento { get; set; }
     public decimal DespesasManutencaoFrota { get; set; }
+    public decimal DespesasGerais { get; set; }
     
-    public decimal LucroLiquidoOperacional => LucroBruto - DespesasFolhaPagamento - DespesasManutencaoFrota;
+    public decimal LucroLiquidoOperacional => LucroBruto - DespesasFolhaPagamento - DespesasManutencaoFrota - DespesasGerais;
 }
 
 public class ResumoFinanceiroDto

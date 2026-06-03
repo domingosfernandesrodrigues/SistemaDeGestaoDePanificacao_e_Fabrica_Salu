@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SGPF.Domain.Entities;
 using SGPF.Infrastructure.Data;
 
 namespace SGPF.WebApi.Services;
@@ -322,6 +324,151 @@ public static class DbPatchesInitializer
             else
             {
                 Console.WriteLine("[SECURITY MIGRATION] Nenhuma senha legada em texto puro encontrada. Base de dados em conformidade criptográfica.");
+            }
+
+            // 3. SEED VEICULOS E DADOS DE FROTA SE NÃO HOUVER ABASTECIMENTOS OU MANUTENÇÕES
+            if (!await context.Abastecimentos.AnyAsync() && !await context.ManutencoesVeiculo.AnyAsync())
+            {
+                Console.WriteLine("[SEED] Semeando dados de teste para Frota (Veículos, Abastecimentos e Manutenções)...");
+                
+                // Garantir que temos pelo menos os veículos de teste
+                var v1 = await context.Veiculos.FirstOrDefaultAsync(v => v.Placa == "SGPF001");
+                if (v1 == null)
+                {
+                    v1 = new Veiculo
+                    {
+                        Id = Guid.NewGuid(),
+                        Modelo = "Renault Master 2.3",
+                        Placa = "SGPF001",
+                        CapacidadeCargaKg = 1500,
+                        QuilometragemAtual = 12450,
+                        Ativo = true
+                    };
+                    await context.Veiculos.AddAsync(v1);
+                }
+
+                var v2 = await context.Veiculos.FirstOrDefaultAsync(v => v.Placa == "SGPF002");
+                if (v2 == null)
+                {
+                    v2 = new Veiculo
+                    {
+                        Id = Guid.NewGuid(),
+                        Modelo = "Fiat Fiorino 1.4",
+                        Placa = "SGPF002",
+                        CapacidadeCargaKg = 650,
+                        QuilometragemAtual = 8900,
+                        Ativo = true
+                    };
+                    await context.Veiculos.AddAsync(v2);
+                }
+                
+                await context.SaveChangesAsync();
+
+                // Semeia os abastecimentos e manutenções
+                int currentYear = DateTime.UtcNow.Year;
+                int currentMonth = DateTime.UtcNow.Month;
+                int prevMonth = currentMonth == 1 ? 12 : currentMonth - 1;
+                int prevYear = currentMonth == 1 ? currentYear - 1 : currentYear;
+
+                var abasts = new List<Abastecimento>
+                {
+                    new Abastecimento
+                    {
+                        Id = Guid.NewGuid(),
+                        VeiculoId = v1.Id,
+                        Data = new DateTime(prevYear, prevMonth, 5, 8, 30, 0, DateTimeKind.Utc),
+                        QuilometragemRegistrada = 11000,
+                        Litros = 65,
+                        ValorTotal = 390
+                    },
+                    new Abastecimento
+                    {
+                        Id = Guid.NewGuid(),
+                        VeiculoId = v1.Id,
+                        Data = new DateTime(prevYear, prevMonth, 20, 17, 0, 0, DateTimeKind.Utc),
+                        QuilometragemRegistrada = 11700, // 700 km
+                        Litros = 70, // 10 km/l
+                        ValorTotal = 420
+                    },
+                    new Abastecimento
+                    {
+                        Id = Guid.NewGuid(),
+                        VeiculoId = v1.Id,
+                        Data = new DateTime(currentYear, currentMonth, 1, 9, 0, 0, DateTimeKind.Utc),
+                        QuilometragemRegistrada = 12450, // 750 km
+                        Litros = 75, // 10 km/l
+                        ValorTotal = 450
+                    },
+
+                    new Abastecimento
+                    {
+                        Id = Guid.NewGuid(),
+                        VeiculoId = v2.Id,
+                        Data = new DateTime(prevYear, prevMonth, 10, 10, 0, 0, DateTimeKind.Utc),
+                        QuilometragemRegistrada = 8000,
+                        Litros = 40,
+                        ValorTotal = 240
+                    },
+                    new Abastecimento
+                    {
+                        Id = Guid.NewGuid(),
+                        VeiculoId = v2.Id,
+                        Data = new DateTime(prevYear, prevMonth, 25, 16, 30, 0, DateTimeKind.Utc),
+                        QuilometragemRegistrada = 8500, // 500 km
+                        Litros = 41.5m, // ~12 km/l
+                        ValorTotal = 249
+                    },
+                    new Abastecimento
+                    {
+                        Id = Guid.NewGuid(),
+                        VeiculoId = v2.Id,
+                        Data = new DateTime(currentYear, currentMonth, 2, 11, 0, 0, DateTimeKind.Utc),
+                        QuilometragemRegistrada = 8900, // 400 km
+                        Litros = 33.3m, // ~12 km/l
+                        ValorTotal = 200
+                    }
+                };
+
+                await context.Abastecimentos.AddRangeAsync(abasts);
+
+                var manus = new List<ManutencaoVeiculo>
+                {
+                    new ManutencaoVeiculo
+                    {
+                        Id = Guid.NewGuid(),
+                        VeiculoId = v1.Id,
+                        Data = new DateTime(prevYear, prevMonth, 15, 14, 0, 0, DateTimeKind.Utc),
+                        Tipo = TipoManutencao.Preventiva,
+                        Descricao = "Troca de óleo e filtro de ar",
+                        CustoTotal = 350,
+                        QuilometragemRegistrada = 11500
+                    },
+                    new ManutencaoVeiculo
+                    {
+                        Id = Guid.NewGuid(),
+                        VeiculoId = v1.Id,
+                        Data = new DateTime(currentYear, currentMonth, 2, 10, 0, 0, DateTimeKind.Utc),
+                        Tipo = TipoManutencao.Corretiva,
+                        Descricao = "Troca de pastilhas de freio dianteiras",
+                        CustoTotal = 480,
+                        QuilometragemRegistrada = 12450
+                    },
+
+                    new ManutencaoVeiculo
+                    {
+                        Id = Guid.NewGuid(),
+                        VeiculoId = v2.Id,
+                        Data = new DateTime(prevYear, prevMonth, 18, 9, 30, 0, DateTimeKind.Utc),
+                        Tipo = TipoManutencao.Preventiva,
+                        Descricao = "Revisão de 10.000 km (antecipada)",
+                        CustoTotal = 600,
+                        QuilometragemRegistrada = 8300
+                    }
+                };
+
+                await context.ManutencoesVeiculo.AddRangeAsync(manus);
+                await context.SaveChangesAsync();
+                Console.WriteLine("[SEED] Dados de teste para Frota semeados com sucesso.");
             }
         }
         catch (Exception ex)

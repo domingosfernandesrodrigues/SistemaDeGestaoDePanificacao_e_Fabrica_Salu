@@ -7,7 +7,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
-import { FlaskConical, CheckCircle, Loader2, Plus, Trash2, Save, AlertCircle, Pencil, Filter, Calendar, XCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { FlaskConical, CheckCircle, Loader2, Plus, Trash2, Save, AlertCircle, Pencil, Filter, Calendar, XCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, DollarSign } from 'lucide-react';
 import api from '../services/api';
 
 const schema = z.object({
@@ -147,7 +147,7 @@ export function EntradaInsumos() {
   if (isLoading) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-orange-600" size={32} /></div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-[1600px] mx-auto w-full">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Entrada de Insumos</h2>
@@ -204,54 +204,67 @@ export function EntradaInsumos() {
           <table className="w-full text-left text-sm">
             <thead className="bg-orange-50 text-orange-800 border-b border-orange-100">
               <tr>
-                <th className="w-10 px-6 py-4"></th>
-                <th className="px-6 py-4 font-medium">Data</th>
-                <th className="px-6 py-4 font-medium">Fornecedor</th>
-                <th className="px-6 py-4 font-medium">Insumos</th>
-                <th className="px-6 py-4 font-medium">Total Itens</th>
-                <th className="px-6 py-4 font-medium">Valor Total</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium text-right">Ações</th>
+                <th className="w-10 px-3 lg:px-4 py-3.5"></th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium">Data</th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium">Fornecedor</th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium">Insumos</th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium">Total Itens</th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium">Valor Total</th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium">Status</th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium text-right w-[130px] min-w-[130px] shrink-0 sticky right-0 bg-orange-50 z-10 border-l border-orange-100/50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.05)]">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {paginated.length === 0 && <tr><td colSpan={8} className="px-6 py-8 text-center text-slate-400">Nenhuma entrada de insumo encontrada.</td></tr>}
+              {paginated.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">Nenhuma entrada de insumo encontrada.</td></tr>}
               {paginated.map(entrada => (
                 <Fragment key={entrada.id}>
-                  <tr className="hover:bg-orange-50/30 transition-colors cursor-pointer" onClick={() => setExpandedRows(p => ({ ...p, [entrada.id]: !p[entrada.id] }))}>
-                    <td className="px-6 py-4 text-slate-400">{expandedRows[entrada.id] ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</td>
-                    <td className="px-6 py-4 text-slate-600">{new Date(entrada.dataCompra).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 font-medium text-slate-900">{entrada.fornecedorNome}</td>
-                    <td className="px-6 py-4 text-slate-500 max-w-[200px] truncate" title={entrada.produtosResumo}>{entrada.produtosResumo || 'Sem itens'}</td>
-                    <td className="px-6 py-4 text-slate-600 font-medium">{Number(entrada.totalItens)} un</td>
-                    <td className="px-6 py-4 font-bold text-slate-700">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(entrada.valorTotal)}</td>
-                    <td className="px-6 py-4">
+                  <tr className="group hover:bg-orange-50/30 transition-colors cursor-pointer" onClick={() => setExpandedRows(p => ({ ...p, [entrada.id]: !p[entrada.id] }))}>
+                    <td className="px-3 lg:px-4 py-3.5 text-slate-400">{expandedRows[entrada.id] ? <ChevronUp size={18} /> : <ChevronDown size={18} />}</td>
+                    <td className="px-3 lg:px-4 py-3.5 text-slate-600">{new Date(entrada.dataCompra).toLocaleDateString()}</td>
+                    <td className="px-3 lg:px-4 py-3.5 font-medium text-slate-900">{entrada.fornecedorNome}</td>
+                    <td className="px-3 lg:px-4 py-3.5 text-slate-500 max-w-[200px] truncate" title={entrada.produtosResumo}>{entrada.produtosResumo || 'Sem itens'}</td>
+                    <td className="px-3 lg:px-4 py-3.5 text-slate-600 font-medium">{Number(entrada.totalItens)} un</td>
+                    <td className="px-3 lg:px-4 py-3.5 font-bold text-slate-700">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(entrada.valorTotal)}</td>
+                    <td className="px-3 lg:px-4 py-3.5">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${entrada.status === 'Rascunho' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'}`}>{entrada.status}</span>
                     </td>
-                    <td className="px-6 py-4 text-right" onClick={e => e.stopPropagation()}>
+                    <td className="px-3 lg:px-4 py-3.5 text-right w-[130px] min-w-[130px] shrink-0 sticky right-0 bg-white group-hover:bg-orange-50/30 transition-colors border-l border-orange-100/50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.05)]" onClick={e => e.stopPropagation()}>
                       {entrada.status === 'Rascunho' && (
-                        <div className="flex justify-end gap-2">
-                          <button onClick={() => handleEdit(entrada)} className="p-1.5 text-slate-500 hover:text-ember hover:bg-ember/5 rounded-lg"><Pencil size={18} /></button>
-                          <button onClick={() => confirm('Excluir este rascunho?') && mutationDelete.mutate(entrada.id)} className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg">
+                        <div className="flex justify-end gap-1.5">
+                          <button 
+                            onClick={() => handleEdit(entrada)} 
+                            className="p-1.5 text-slate-500 hover:text-ember hover:bg-ember/5 rounded-lg transition-colors"
+                            title="Editar Rascunho"
+                          >
+                            <Pencil size={18} />
+                          </button>
+                          <button 
+                            onClick={() => confirm('Excluir este rascunho permanentemente?') && mutationDelete.mutate(entrada.id)} 
+                            className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                            title="Excluir Rascunho"
+                          >
                             {mutationDelete.isPending ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
                           </button>
-                          <Button size="sm" className="bg-orange-600 hover:bg-orange-700 flex items-center gap-1" onClick={() => confirm('Confirmar entrada? Isso atualizará o estoque de insumos.') && mutationConfirm.mutate(entrada.id)} disabled={mutationConfirm.isPending}>
-                            {mutationConfirm.isPending ? <Loader2 className="animate-spin" size={14} /> : <CheckCircle size={14} />} Confirmar
-                          </Button>
+                          <button 
+                            className="p-1.5 text-orange-600 hover:text-orange-800 hover:bg-orange-50 rounded-lg transition-colors"
+                            onClick={() => confirm('Confirmar entrada? Isso atualizará o estoque de insumos.') && mutationConfirm.mutate(entrada.id)}
+                            disabled={mutationConfirm.isPending}
+                            title="Confirmar Entrada (Atualiza Estoque de Insumos)"
+                          >
+                            {mutationConfirm.isPending ? <Loader2 className="animate-spin" size={18} /> : <CheckCircle size={18} />}
+                          </button>
                         </div>
                       )}
                       {entrada.status === 'Confirmada' && !entrada.isPago && (
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="secondary"
-                            className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 border-emerald-200 flex items-center gap-2"
+                        <div className="flex justify-end gap-1.5">
+                          <button 
+                            className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors"
                             onClick={() => confirm('Confirmar pagamento? Isso debitará o valor da sua conta bancária.') && mutationPay.mutate(entrada.id)}
                             disabled={mutationPay.isPending}
+                            title="Registrar Pagamento / Liquidar"
                           >
-                            {mutationPay.isPending ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
-                            Pagar
-                          </Button>
+                            {mutationPay.isPending ? <Loader2 className="animate-spin" size={18} /> : <DollarSign size={18} />}
+                          </button>
                         </div>
                       )}
                       {entrada.status === 'Confirmada' && entrada.isPago && (
@@ -409,8 +422,8 @@ export function EntradaInsumos() {
                       />
                     </div>
                     
-                    <div className="flex items-end gap-3">
-                      <div className="flex-1">
+                    <div className="grid grid-cols-2 sm:flex sm:items-end gap-3">
+                      <div>
                         <Input 
                           label="Quantidade" 
                           required 
@@ -419,22 +432,24 @@ export function EntradaInsumos() {
                           {...register(`itens.${index}.quantidade`)} 
                         />
                       </div>
-                      <div className="flex-1">
-                        <Input 
-                          label="R$ Unitário" 
-                          required 
-                          type="number" 
-                          step="0.0001" 
-                          {...register(`itens.${index}.precoUnitario`)} 
-                        />
+                      <div className="flex items-end gap-2">
+                        <div className="flex-1">
+                          <Input 
+                            label="R$ Unitário" 
+                            required 
+                            type="number" 
+                            step="0.0001" 
+                            {...register(`itens.${index}.precoUnitario`)} 
+                          />
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={() => remove(index)} 
+                          className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors mb-0.5"
+                        >
+                          <Trash2 size={20} />
+                        </button>
                       </div>
-                      <button 
-                        type="button" 
-                        onClick={() => remove(index)} 
-                        className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors mb-0.5"
-                      >
-                        <Trash2 size={20} />
-                      </button>
                     </div>
 
                     <div className="flex justify-between items-center pt-2 border-t border-slate-50">

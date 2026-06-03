@@ -7,7 +7,7 @@ import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
 import { SearchableSelect } from '../components/ui/SearchableSelect';
-import { ShoppingCart, Package, CheckCircle, Loader2, Plus, Trash2, Save, FileText, AlertCircle, Pencil, Filter, Calendar, XCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShoppingCart, Package, CheckCircle, Loader2, Plus, Trash2, Save, FileText, AlertCircle, Pencil, Filter, Calendar, XCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, DollarSign } from 'lucide-react';
 import api from '../services/api';
 
 const compraSchema = z.object({
@@ -186,7 +186,7 @@ export function Compras() {
   if (loadingCompras) return <div className="flex justify-center p-12"><Loader2 className="animate-spin text-ember" size={32} /></div>;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-[1600px] mx-auto w-full">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-slate-800">Módulo de Compras</h2>
@@ -269,43 +269,43 @@ export function Compras() {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-slate-600 border-b border-slate-200">
               <tr>
-                <th className="w-10 px-6 py-4"></th>
-                <th className="px-6 py-4 font-medium">Data</th>
-                <th className="px-6 py-4 font-medium">Fornecedor</th>
-                <th className="px-6 py-4 font-medium">Resumo</th>
-                <th className="px-6 py-4 font-medium">Total Itens</th>
-                <th className="px-6 py-4 font-medium">Valor Total</th>
-                <th className="px-6 py-4 font-medium">Status</th>
-                <th className="px-6 py-4 font-medium text-right">Ações</th>
+                <th className="w-10 px-3 lg:px-4 py-3.5"></th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium">Data</th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium">Fornecedor</th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium">Resumo</th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium">Total Itens</th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium">Valor Total</th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium">Status</th>
+                <th className="px-3 lg:px-4 py-3.5 font-medium text-right w-[130px] min-w-[130px] shrink-0 sticky right-0 bg-slate-50 z-10 border-l border-slate-200/50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.05)]">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {paginatedCompras.length === 0 && <tr><td colSpan={8} className="px-6 py-8 text-center text-slate-400">Nenhuma compra encontrada.</td></tr>}
+              {paginatedCompras.length === 0 && <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">Nenhuma compra encontrada.</td></tr>}
               {paginatedCompras.map(compra => (
                 <Fragment key={compra.id}>
-                  <tr className="hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => toggleRow(compra.id)}>
-                    <td className="px-6 py-4 text-slate-400">
+                  <tr className="group hover:bg-slate-50 transition-colors cursor-pointer" onClick={() => toggleRow(compra.id)}>
+                    <td className="px-3 lg:px-4 py-3.5 text-slate-400">
                       {expandedRows[compra.id] ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                     </td>
-                    <td className="px-6 py-4 text-slate-600">{new Date(compra.dataCompra).toLocaleDateString()}</td>
-                    <td className="px-6 py-4 font-medium text-slate-900">{compra.fornecedorNome}</td>
-                    <td className="px-6 py-4 text-slate-500 max-w-[200px] truncate" title={compra.produtosResumo}>
+                    <td className="px-3 lg:px-4 py-3.5 text-slate-600">{new Date(compra.dataCompra).toLocaleDateString()}</td>
+                    <td className="px-3 lg:px-4 py-3.5 font-medium text-slate-900">{compra.fornecedorNome}</td>
+                    <td className="px-3 lg:px-4 py-3.5 text-slate-500 max-w-[200px] truncate" title={compra.produtosResumo}>
                       {compra.produtosResumo || "Sem itens"}
                     </td>
-                    <td className="px-6 py-4 text-slate-600 font-medium">{Number(compra.totalItens)} un</td>
-                    <td className="px-6 py-4 font-bold text-slate-700">
+                    <td className="px-3 lg:px-4 py-3.5 text-slate-600 font-medium">{Number(compra.totalItens)} un</td>
+                    <td className="px-3 lg:px-4 py-3.5 font-bold text-slate-700">
                       {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(compra.valorTotal)}
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-3 lg:px-4 py-3.5">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
                         compra.status === 'Rascunho' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
                       }`}>
                         {compra.status}
                       </span>
                     </td>
-                    <td className="px-6 py-4 text-right" onClick={(e) => e.stopPropagation()}>
+                    <td className="px-3 lg:px-4 py-3.5 text-right w-[130px] min-w-[130px] shrink-0 sticky right-0 bg-white group-hover:bg-slate-50 transition-colors border-l border-slate-200/50 shadow-[-4px_0_8px_-4px_rgba(0,0,0,0.05)]" onClick={(e) => e.stopPropagation()}>
                       {compra.status === 'Rascunho' && (
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end gap-1.5">
                           <button 
                             onClick={() => handleEdit(compra)}
                             className="p-1.5 text-slate-500 hover:text-ember hover:bg-ember/5 rounded-lg transition-colors"
@@ -320,29 +320,26 @@ export function Compras() {
                           >
                             {mutationDelete.isPending ? <Loader2 className="animate-spin" size={18} /> : <Trash2 size={18} />}
                           </button>
-                          <Button 
-                            size="sm" 
-                            className="bg-gradient-to-r from-fire to-ember hover:opacity-90 flex items-center gap-2"
+                          <button 
+                            className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors"
                             onClick={() => confirm('Deseja confirmar esta compra? Isso atualizará o estoque e gerará uma conta a pagar.') && mutationConfirm.mutate(compra.id)}
                             disabled={mutationConfirm.isPending}
+                            title="Confirmar Compra (Atualiza Estoque e Financeiro)"
                           >
-                            {mutationConfirm.isPending ? <Loader2 className="animate-spin" size={14} /> : <CheckCircle size={14} />}
-                            Confirmar
-                          </Button>
+                            {mutationConfirm.isPending ? <Loader2 className="animate-spin" size={18} /> : <CheckCircle size={18} />}
+                          </button>
                         </div>
                       )}
                       {compra.status === 'Confirmada' && !compra.isPago && (
-                        <div className="flex justify-end gap-2">
-                          <Button 
-                            size="sm" 
-                            variant="secondary"
-                            className="bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:text-emerald-800 border-emerald-200 flex items-center gap-2"
+                        <div className="flex justify-end gap-1.5">
+                          <button 
+                            className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors"
                             onClick={() => confirm('Confirmar pagamento? Isso debitará o valor da sua conta bancária.') && mutationPay.mutate(compra.id)}
                             disabled={mutationPay.isPending}
+                            title="Registrar Pagamento / Liquidar"
                           >
-                            {mutationPay.isPending ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
-                            Pagar
-                          </Button>
+                            {mutationPay.isPending ? <Loader2 className="animate-spin" size={18} /> : <DollarSign size={18} />}
+                          </button>
                         </div>
                       )}
                       {compra.status === 'Confirmada' && compra.isPago && (
@@ -594,8 +591,8 @@ export function Compras() {
                       />
                     </div>
                     
-                    <div className="flex items-end gap-3">
-                      <div className="flex-1">
+                    <div className="grid grid-cols-2 sm:flex sm:items-end gap-3">
+                      <div>
                         <Input 
                           label="Quantidade" 
                           required 
@@ -604,22 +601,24 @@ export function Compras() {
                           {...register(`itens.${index}.quantidade`)} 
                         />
                       </div>
-                      <div className="flex-1">
-                        <Input 
-                          label="R$ Unitário" 
-                          required 
-                          type="number" 
-                          step="0.0001" 
-                          {...register(`itens.${index}.precoUnitario`)} 
-                        />
+                      <div className="flex items-end gap-2">
+                        <div className="flex-1">
+                          <Input 
+                            label="R$ Unitário" 
+                            required 
+                            type="number" 
+                            step="0.0001" 
+                            {...register(`itens.${index}.precoUnitario`)} 
+                          />
+                        </div>
+                        <button 
+                          type="button" 
+                          onClick={() => remove(index)} 
+                          className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors mb-0.5"
+                        >
+                          <Trash2 size={20} />
+                        </button>
                       </div>
-                      <button 
-                        type="button" 
-                        onClick={() => remove(index)} 
-                        className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors mb-0.5"
-                      >
-                        <Trash2 size={20} />
-                      </button>
                     </div>
 
                     <div className="flex justify-between items-center pt-2 border-t border-slate-50">

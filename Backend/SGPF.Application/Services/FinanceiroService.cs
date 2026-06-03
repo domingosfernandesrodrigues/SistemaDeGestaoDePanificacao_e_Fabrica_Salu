@@ -79,13 +79,27 @@ public class FinanceiroService : IFinanceiroService
         }
         dre.CustosTrocaAvaria = custoAvarias;
 
-        // 4. Despesas RH (Folhas Pagamento)
+        // 4. Despesas RH (Folhas Pagamento + Alimentação)
         var folhas = await _folhaRepo.FindAsync(f => f.MesReferencia == mes && f.AnoReferencia == ano, asNoTracking: true);
-        dre.DespesasFolhaPagamento = folhas.Sum(f => f.SalarioLiquido + f.TotalDescontos); // Custo total da empresa (líquido + impostos retidos)
+        var despesasAlimentacao = await _pagarRepo.FindAsync(p => p.Categoria == "Alimentação" && p.DataEmissao.Month == mes && p.DataEmissao.Year == ano, asNoTracking: true);
+        dre.DespesasFolhaPagamento = folhas.Sum(f => f.SalarioLiquido + f.TotalDescontos) + despesasAlimentacao.Sum(p => p.Valor);
 
-        // 5. Despesas Manutenção Frota
+        // 5. Despesas Manutenção Frota (Manutenções + Combustíveis)
         var manutencoes = await _manutencaoRepo.FindAsync(m => m.Data.Month == mes && m.Data.Year == ano, asNoTracking: true);
-        dre.DespesasManutencaoFrota = manutencoes.Sum(m => m.CustoTotal);
+        var despesasCombustivel = await _pagarRepo.FindAsync(p => p.Categoria == "Operacional (Frota)" && p.Descricao.StartsWith("Abastecimento") && p.DataEmissao.Month == mes && p.DataEmissao.Year == ano, asNoTracking: true);
+        dre.DespesasManutencaoFrota = manutencoes.Sum(m => m.CustoTotal) + despesasCombustivel.Sum(p => p.Valor);
+
+        // 6. Despesas Gerais (Utilidades, Administração, Outros)
+        var despesasGerais = await _pagarRepo.FindAsync(p => 
+            p.DataEmissao.Month == mes && p.DataEmissao.Year == ano &&
+            !p.Descricao.StartsWith("Compra #") &&
+            p.Categoria != "Insumos" &&
+            p.Categoria != "Mercadorias" &&
+            p.Categoria != "Alimentação" &&
+            p.Categoria != "Folha de Pagamento" &&
+            p.Categoria != "Operacional (Frota)",
+            asNoTracking: true);
+        dre.DespesasGerais = despesasGerais.Sum(p => p.Valor);
 
         return dre;
     }
@@ -116,8 +130,9 @@ public class FinanceiroService : IFinanceiroService
             conta.DataPagamento = DateTime.UtcNow;
             await _pagarRepo.UpdateAsync(conta);
 
-            // Conciliação automática: desconta da conta padrão
-            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+            // Conciliação automática: desconta da conta padrão (ou primeira ativa como fallback)
+            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
+                            ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
             if (contaPadrao != null)
             {
                 contaPadrao.SaldoAtual -= conta.Valor;
@@ -147,8 +162,9 @@ public class FinanceiroService : IFinanceiroService
             conta.DataRecebimento = DateTime.UtcNow;
             await _receberRepo.UpdateAsync(conta);
 
-            // Conciliação automática: credita na conta padrão
-            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+            // Conciliação automática: credita na conta padrão (ou primeira ativa como fallback)
+            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
+                            ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
             if (contaPadrao != null)
             {
                 contaPadrao.SaldoAtual += conta.Valor;

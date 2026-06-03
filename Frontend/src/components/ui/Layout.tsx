@@ -74,7 +74,6 @@ export function Layout() {
 
   const navItems = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['Admin', 'Gestor', 'Operador', 'Motorista'] },
-    { name: 'Portal do Cliente', path: '/portal-cliente', icon: ShoppingCart, roles: ['Cliente'] },
     { name: 'CRM & Reuniões', path: '/crm', icon: Users, roles: ['Admin', 'Gestor'] },
     { name: 'Vendas (B2B)', path: '/vendas', icon: ShoppingCart, roles: ['Admin', 'Gestor', 'Cliente', 'Motorista'] },
     { name: 'Compras e Entradas', path: '/compras', icon: Package, roles: ['Admin', 'Gestor'] },

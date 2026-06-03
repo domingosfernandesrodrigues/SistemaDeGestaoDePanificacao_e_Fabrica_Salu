@@ -173,31 +173,140 @@ public class DashboardService : IDashboardService
         data.Inventory.TotalPurchases = compras.Sum(c => c.ValorTotal);
 
         // --- FROTA ---
-        data.Fleet.TotalVehicles = (await _veiculoRepo.GetAllAsync(asNoTracking: true)).Count();
+        var veiculos = (await _veiculoRepo.GetAllAsync(asNoTracking: true)).ToList();
+        data.Fleet.TotalVehicles = veiculos.Count;
         data.Fleet.ActiveDeliveries = (await _vendaRepo.FindAsync(v => v.Status == StatusPedidoVenda.EmRota, asNoTracking: true)).Count();
         
-        var manutencoes = await _manutencaoRepo.FindAsync(m => 
+        var manutencoes = (await _manutencaoRepo.FindAsync(m => 
             m.Data.Year == year && 
             (month == 0 || m.Data.Month == month) && 
             (!day.HasValue || m.Data.Day == day.Value), 
-            asNoTracking: true);
+            asNoTracking: true)).ToList();
 
         data.Fleet.MaintenanceCost = manutencoes.Sum(m => m.CustoTotal);
         
-        var abastecimentos = await _abastecimentoRepo.FindAsync(a => 
+        var abastecimentos = (await _abastecimentoRepo.FindAsync(a => 
             a.Data.Year == year && 
             (month == 0 || a.Data.Month == month) && 
             (!day.HasValue || a.Data.Day == day.Value), 
-            asNoTracking: true);
+            asNoTracking: true)).ToList();
 
         data.Fleet.TotalFuelCost = abastecimentos.Sum(a => a.ValorTotal);
 
+        var todosAbastecimentos = (await _abastecimentoRepo.GetAllAsync(asNoTracking: true)).ToList();
+        var todasManutencoes = (await _manutencaoRepo.GetAllAsync(asNoTracking: true)).ToList();
+
+        foreach (var v in veiculos)
+        {
+            var vAbastecimentos = todosAbastecimentos.Where(a => a.VeiculoId == v.Id).OrderBy(a => a.QuilometragemRegistrada).ToList();
+            var vManutencoes = todasManutencoes.Where(m => m.VeiculoId == v.Id).OrderBy(m => m.QuilometragemRegistrada).ToList();
+
+            // 1. Média de KM/L no período
+            decimal totalKmPeriod = 0;
+            decimal totalLitersPeriod = 0;
+
+            for (int i = 1; i < vAbastecimentos.Count; i++)
+            {
+                var prev = vAbastecimentos[i - 1];
+                var curr = vAbastecimentos[i];
+
+                if (curr.Data.Year == year && (month == 0 || curr.Data.Month == month) && (!day.HasValue || curr.Data.Day == day.Value))
+                {
+                    var diff = curr.QuilometragemRegistrada - prev.QuilometragemRegistrada;
+                    if (diff > 0 && curr.Litros > 0)
+                    {
+                        totalKmPeriod += diff;
+                        totalLitersPeriod += curr.Litros;
+                    }
+                }
+            }
+
+            decimal mediaKmLitro = 0;
+            if (totalLitersPeriod > 0)
+            {
+                mediaKmLitro = totalKmPeriod / totalLitersPeriod;
+            }
+            else
+            {
+                // Fallback: Média de KM/L histórica (toda a vida do veículo)
+                decimal totalKmLifetime = 0;
+                decimal totalLitersLifetime = 0;
+
+                for (int i = 1; i < vAbastecimentos.Count; i++)
+                {
+                    var prev = vAbastecimentos[i - 1];
+                    var curr = vAbastecimentos[i];
+                    var diff = curr.QuilometragemRegistrada - prev.QuilometragemRegistrada;
+                    if (diff > 0 && curr.Litros > 0)
+                    {
+                        totalKmLifetime += diff;
+                        totalLitersLifetime += curr.Litros;
+                    }
+                }
+
+                if (totalLitersLifetime > 0)
+                {
+                    mediaKmLitro = totalKmLifetime / totalLitersLifetime;
+                }
+            }
+
+            // 2. Média de Manutenção por KM Rodado (Preventiva vs Corretiva)
+            // Filtros de manutenções no período
+            var prevManutencoesPeriod = vManutencoes.Where(m => m.Tipo == TipoManutencao.Preventiva && m.Data.Year == year && (month == 0 || m.Data.Month == month) && (!day.HasValue || m.Data.Day == day.Value)).ToList();
+            var corrManutencoesPeriod = vManutencoes.Where(m => m.Tipo == TipoManutencao.Corretiva && m.Data.Year == year && (month == 0 || m.Data.Month == month) && (!day.HasValue || m.Data.Day == day.Value)).ToList();
+
+            decimal custoPrevPeriod = prevManutencoesPeriod.Sum(m => m.CustoTotal);
+            decimal custoCorrPeriod = corrManutencoesPeriod.Sum(m => m.CustoTotal);
+
+            // Odômetros no período
+            var odometrosPeriod = vAbastecimentos.Where(a => a.Data.Year == year && (month == 0 || a.Data.Month == month) && (!day.HasValue || a.Data.Day == day.Value)).Select(a => a.QuilometragemRegistrada)
+                .Concat(vManutencoes.Where(m => m.Data.Year == year && (month == 0 || m.Data.Month == month) && (!day.HasValue || m.Data.Day == day.Value)).Select(m => m.QuilometragemRegistrada))
+                .OrderBy(x => x).ToList();
+
+            decimal kmRodadoPeriod = odometrosPeriod.Count >= 2 ? odometrosPeriod.Last() - odometrosPeriod.First() : 0;
+
+            decimal mediaCustoPreventivaKm = 0;
+            decimal mediaCustoCorretivaKm = 0;
+
+            if (kmRodadoPeriod > 0)
+            {
+                mediaCustoPreventivaKm = custoPrevPeriod / kmRodadoPeriod;
+                mediaCustoCorretivaKm = custoCorrPeriod / kmRodadoPeriod;
+            }
+            else
+            {
+                // Fallback: Histórico (toda a vida do veículo)
+                decimal custoPrevLifetime = vManutencoes.Where(m => m.Tipo == TipoManutencao.Preventiva).Sum(m => m.CustoTotal);
+                decimal custoCorrLifetime = vManutencoes.Where(m => m.Tipo == TipoManutencao.Corretiva).Sum(m => m.CustoTotal);
+
+                var odometrosLifetime = vAbastecimentos.Select(a => a.QuilometragemRegistrada)
+                    .Concat(vManutencoes.Select(m => m.QuilometragemRegistrada))
+                    .OrderBy(x => x).ToList();
+
+                decimal kmRodadoLifetime = odometrosLifetime.Count >= 2 ? odometrosLifetime.Last() - odometrosLifetime.First() : 0;
+
+                if (kmRodadoLifetime > 0)
+                {
+                    mediaCustoPreventivaKm = custoPrevLifetime / kmRodadoLifetime;
+                    mediaCustoCorretivaKm = custoCorrLifetime / kmRodadoLifetime;
+                }
+            }
+
+            data.Fleet.VehicleMetrics.Add(new VehicleFleetMetric
+            {
+                Placa = v.Placa,
+                Modelo = v.Modelo,
+                MediaKmLitro = mediaKmLitro,
+                MediaCustoPreventivaKm = mediaCustoPreventivaKm,
+                MediaCustoCorretivaKm = mediaCustoCorretivaKm
+            });
+        }
+
         // --- DESPESAS & RH ---
         var despesas = (await _contaPagarRepo.FindAsync(d => 
-            d.DataVencimento.HasValue && 
-            d.DataVencimento.Value.Year == year && 
-            (month == 0 || d.DataVencimento.Value.Month == month) && 
-            (!day.HasValue || d.DataVencimento.Value.Day == day.Value), 
+            (d.DataVencimento ?? d.DataEmissao).Year == year && 
+            (month == 0 || (d.DataVencimento ?? d.DataEmissao).Month == month) && 
+            (!day.HasValue || (d.DataVencimento ?? d.DataEmissao).Day == day.Value), 
             asNoTracking: true)).ToList();
 
         var queryFolhas = await _folhaRepo.FindAsync(f => 

@@ -62,6 +62,16 @@ public class FleetMetrics
     public int ActiveDeliveries { get; set; }
     public decimal MaintenanceCost { get; set; }
     public decimal TotalFuelCost { get; set; }
+    public List<VehicleFleetMetric> VehicleMetrics { get; set; } = new();
+}
+
+public class VehicleFleetMetric
+{
+    public string Placa { get; set; } = string.Empty;
+    public string Modelo { get; set; } = string.Empty;
+    public decimal MediaKmLitro { get; set; }
+    public decimal MediaCustoPreventivaKm { get; set; }
+    public decimal MediaCustoCorretivaKm { get; set; }
 }
 
 public class ExpenseMetrics

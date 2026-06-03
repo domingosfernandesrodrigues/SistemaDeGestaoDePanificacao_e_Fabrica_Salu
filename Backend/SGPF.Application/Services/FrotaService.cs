@@ -53,8 +53,9 @@ public class FrotaService
         };
         await _pagarRepo.AddAsync(contaPagar);
 
-        // Conciliação automática: Debita o valor do saldo da conta bancária padrão
-        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+        // Conciliação automática: Debita o valor do saldo da conta bancária padrão (ou primeira ativa como fallback)
+        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
+                        ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
         if (contaPadrao != null)
         {
             contaPadrao.SaldoAtual -= abastecimento.ValorTotal;
@@ -99,8 +100,9 @@ public class FrotaService
         };
         await _pagarRepo.AddAsync(contaPagar);
 
-        // Conciliação automática: Debita o valor do saldo da conta bancária padrão
-        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+        // Conciliação automática: Debita o valor do saldo da conta bancária padrão (ou primeira ativa como fallback)
+        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
+                        ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
         if (contaPadrao != null)
         {
             contaPadrao.SaldoAtual -= manutencao.CustoTotal;
