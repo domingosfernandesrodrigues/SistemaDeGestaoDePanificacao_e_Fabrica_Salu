@@ -1,7 +1,7 @@
 # Módulo: Financeiro e Fluxo de Caixa
 
 ## 1. Contas a Pagar e Receber
-- **Gestão Descentralizada:** O módulo de "Despesas Gerais" é exclusivo para custos fixos/operacionais (aluguel, água, luz). 
+- **Gestão Descentralizada:** O módulo de "Despesas Gerais" é exclusivo para custos fixos/operacionais (aluguel, água, luz).
 - Pagamentos atrelados a operações de terceiros possuem seu próprio checkout financeiro descentralizado:
   - **Compras e Insumos:** Pagos diretamente nas telas de Compras / Entrada de Insumos (botão "Pagar/Liquidar" gerado após confirmação do estoque).
   - **Folha de Pagamento:** Liquidada diretamente no módulo de RH.
@@ -23,7 +23,7 @@ Entidade central para gestão de saldos e configurações de recebimento.
 | `BancoNome` | string? | Nome do banco para Boleto |
 | `Agencia` | string? | Agência bancária |
 | `NumeroConta` | string? | Número da conta |
-| `GatewayToken` | string? | Token de API para integração com gateway de pagamento |
+| `GatewayToken` | string? | Token de API para integração com gateway de pagamento (suporta múltiplos provedores — veja seção Gateway Universal) |
 
 ### Regras de Negócio
 - Apenas uma conta pode ser marcada como `IsPadrao` por vez — o sistema desmarca automaticamente as demais.
@@ -35,7 +35,7 @@ Entidade central para gestão de saldos e configurações de recebimento.
   - **Movimentação Manual** → entrada ou saída avulsa via endpoint `/movimentar`
 
 ### Histórico de Movimentações Bancárias (`MovimentacaoBancaria`)
-Entidade que registra todo o fluxo histórico de entrada e saída financeira vinculada às contas, servindo de extrato cronológico e base para fluxos de caixa e DRE.
+Entidade que registra todo o fluxo histórico de entrada e saída financeira vinculada às contas.
 
 | Campo | Tipo | Descrição |
 |-------|------|-----------|
@@ -43,45 +43,91 @@ Entidade que registra todo o fluxo histórico de entrada e saída financeira vin
 | `ContaBancariaId` | Guid | Chave estrangeira ligada à conta bancária de origem/destino |
 | `Tipo` | string | Tipo do lançamento: "entrada" ou "saida" |
 | `Valor` | decimal | Valor financeiro com precisão decimal configurada (18,2) |
-| `Descricao` | string | Detalhes do lançamento (ex: "Baixa de Conta a Receber", "Sangria manual") |
+| `Descricao` | string | Detalhes do lançamento |
 | `DataMovimentacao` | DateTime | Data e hora em UTC em que a transação ocorreu |
-| `Origem` | int (Enum) | Mapeamento técnico da origem da transação: 0=Manual, 1=BaixaPagar, 2=BaixaReceber, 3=Venda, 4=FrotaAbastecimento, 5=FrotaManutencao, 6=AberturaConta |
+| `Origem` | int (Enum) | 0=Manual, 1=BaixaPagar, 2=BaixaReceber, 3=Venda, 4=FrotaAbastecimento, 5=FrotaManutencao, 6=AberturaConta |
 | `ReferenciaId` | Guid? | ID opcional para referência cruzada com tabelas de vendas, frotas ou despesas gerais |
 
 ### Lógica de Cálculo de Saldos Retroativos
-Para reconstruir o saldo histórico com exatidão no final de qualquer período passado selecionado, o sistema executa um **algoritmo de cálculo reverso**:
-- Partindo do `SaldoAtual` real consolidado hoje, o sistema subtrai/soma as receitas, despesas e lançamentos futuros posteriores à data limite selecionada:
-  $$\text{SaldoPeriodo} = \text{SaldoAtual} - \text{EntradasFuturas} + \text{SaidasFuturas}$$
-- Se a conta bancária foi aberta (`DataAbertura`) após a data limite do período selecionado, seu saldo é automaticamente retornado como zero, indicando que a conta ainda não existia naquela data.
+Para reconstruir o saldo histórico com exatidão no final de qualquer período passado:
+$$\text{SaldoPeriodo} = \text{SaldoAtual} - \text{EntradasFuturas} + \text{SaidasFuturas}$$
 
-## 3. Configurações de Pagamento (Pix / Boleto)
-- Os dados de Pix e Boleto (chave, banco, agência) são gerenciados exclusivamente pela entidade `ContaBancaria`.
-- A conta marcada como `IsPadrao` é utilizada automaticamente nos Documentos de Pagamento do módulo de Vendas.
+## 3. Gateway de Pagamento Universal
+
+O sistema adota uma arquitetura de **Strategy Pattern** para suporte a múltiplos provedores de pagamento. O provedor é selecionado automaticamente com base no formato do `GatewayToken` da conta bancária padrão.
+
+### Arquitetura (Strategy Pattern)
+
+```
+IPaymentGateway (interface)
+├── AsaasPaymentGateway       → Token padrão / sem prefixo / $$ / sandbox:
+├── MercadoPagoPaymentGateway → Prefixo: mp:, mercadopago:, APP_USR-, TEST-
+└── GenericPaymentGateway     → Prefixo: generic:, mock:  (simulador offline)
+```
+
+A classe `PaymentGatewayFactory` recebe o token e instancia o provedor correto automaticamente.
+
+### Roteamento por Prefixo de Token
+
+| Prefixo do Token | Provedor Ativado | Ambiente |
+|-----------------|------------------|----------|
+| *(sem prefixo)* | Asaas | Produção |
+| `sandbox:` / `test:` / `$$` | Asaas | Sandbox |
+| `mp:` / `mercadopago:` / `APP_USR-` | Mercado Pago | Produção |
+| `TEST-` | Mercado Pago | Sandbox |
+| `generic:` / `mock:` | Simulador Offline | N/A |
+| *(em branco ou falha)* | Fallback Offline | N/A |
+
+### Mercado Pago — Detalhes de Integração
+- **API:** `https://api.mercadopago.com/v1/payments`
+- **Autenticação:** Bearer Token no header `Authorization`.
+- **Idempotência:** Header `X-Idempotency-Key` com UUID único por requisição.
+- **E-mail do Pagador:** Lido dinamicamente do campo `Email` da entidade `Empresa` (Configurações da Empresa). Fallback: `vendas@sgpf-salu.com.br`.
+- **Webhook:** `POST /api/v1/pagamentos/webhook/mercadopago` escuta eventos `payment` e processa `approved`, `authorized` como confirmação de pagamento.
+
+### Asaas — Detalhes de Integração
+- **API Produção:** `https://api.asaas.com/api/v3`
+- **API Sandbox:** `https://sandbox.asaas.com/api/v3`
+- **Autenticação:** Header `access_token` com o token cadastrado.
+- **Fluxo:** Pesquisa/cadastro de cliente por CPF/CNPJ → Criação de cobrança → Retorno de linha digitável (Boleto) ou payload EMV (Pix).
+- **Webhook:** `POST /api/v1/pagamentos/webhook/asaas` (retrocompatível) ou `/webhook/gateway`.
+
+### Webhook Universal
+- **Rota:** `POST /api/v1/pagamentos/webhook/gateway`
+- **Retrocompatibilidade:** A rota `/webhook/asaas` continua funcional.
+- **Comportamento:** Identifica o pedido via `externalReference`, altera status para "Pago", deduz tarifa (`NetValue`) e credita o valor líquido na conta bancária correspondente.
+- **Resiliência:** Se a conta do pedido estiver inativa, o crédito é redirecionado para a primeira conta bancária ativa disponível.
+
+### DTO de Resultado (`GatewayBillingResult`)
+| Campo | Tipo | Descrição |
+|-------|------|-----------|
+| `Success` | bool | Indica se a cobrança foi criada com sucesso |
+| `BillingType` | string | "PIX", "BOLETO", "OFFLINE" |
+| `ChargeId` | string? | ID da cobrança no gateway |
+| `LinhaDigitavel` | string? | Linha digitável do boleto |
+| `PixCopiaECola` | string? | Payload EMV do Pix |
+| `QrCodeBase64` | string? | QR Code em base64 (quando disponível) |
+| `ErrorMessage` | string? | Mensagem de erro, se houver |
+| `ProviderName` | string | Nome do provedor utilizado |
+
+## 4. Configurações de Pagamento (Pix / Boleto)
+- Os dados de Pix e Boleto são gerenciados exclusivamente pela entidade `ContaBancaria`.
+- A conta marcada como `IsPadrao` é utilizada automaticamente nos documentos de pagamento do módulo de Vendas.
 - Os campos de pagamento foram **removidos** da entidade `Empresa` para evitar duplicidade.
 
-### Integração Asaas e Conciliação por Webhook
-- **Geração Dinâmica Real:** Ao registrar ou atualizar um Pedido de Venda com forma de pagamento `Boleto` ou `Pix`, se a conta padrão contiver um `GatewayToken` válido, o sistema se comunica diretamente com a API do Asaas para:
-  - **Pesquisa/Cadastro de Cliente:** Pesquisa se o cliente já existe por CPF/CNPJ no Asaas para evitar duplicidade; caso não exista, cadastra automaticamente.
-  - **Criação de Cobrança:** Envia o valor e os dados do pedido, recebendo do Asaas a Linha Digitável real (para Boletos) ou a string de payload EMV copia e cola real (para Pix).
-- **Suporte a Ambientes (Sandbox vs Produção):**
-  - **Sandbox:** Se o token começar com `sandbox:`, `test:` ou `$$`, a API aponta para o ambiente de testes do Asaas (`https://sandbox.asaas.com/api/v3`). O prefixo correspondente é tratado e removido na autenticação.
-  - **Produção:** Se o token for cadastrado normalmente, o sistema utiliza o ambiente real de produção (`https://api.asaas.com/api/v3`).
-- **Resiliência (Fallback):** Se o token estiver em branco, contiver credenciais de exemplo ou ocorrer qualquer falha técnica na API externa, o sistema ativa automaticamente o **simulador offline dinâmico**, garantindo que as vendas nunca parem.
-- **Webhook de Baixa Automática:** O endpoint público `POST api/v1/pagamentos/webhook/asaas` escuta notificações em tempo real. Quando um pagamento é recebido (`PAYMENT_RECEIVED` ou `PAYMENT_CONFIRMED`), o sistema identifica o número do pedido no campo `externalReference` e realiza a confirmação de recebimento automática, alterando o status do pedido para "Pago" e atualizando o saldo bancário correspondente de forma instantânea.
-
-## 4. Fluxo de Caixa
-- `SaldoEmCaixa` no Dashboard/Financeiro é calculado como a soma de `SaldoAtual` de todas as `ContasBancarias` ativas.
+## 5. Fluxo de Caixa
+- `SaldoEmCaixa` no Dashboard é calculado como a soma de `SaldoAtual` de todas as `ContasBancarias` ativas.
 - Visão diária e mensal de entradas (ContasReceber) e saídas (ContasPagar).
 
-## 5. Demonstrativo de Resultados (DRE)
+## 6. Demonstrativo de Resultados (DRE)
 - Cálculo: Receita Bruta - Custos de Produção/Revenda - Despesas Operacionais (RH/Logística/Avarias) = Lucro Líquido.
 
-## 6. Métricas Financeiras Chave
+## 7. Métricas Financeiras Chave
 - **Margem Bruta**: (Lucro Bruto / Receita Total) × 100
 - **Ponto de Equilíbrio**: Volume necessário para cobrir todos os custos fixos e variáveis.
 - **Ticket Médio**: Valor médio gasto por cliente por venda.
 
-## 7. Endpoints da API (`/api/v1/ContasBancarias`)
+## 8. Endpoints da API (`/api/v1/ContasBancarias`)
 | Método | Rota | Função |
 |--------|------|--------|
 | GET | `/` | Lista todas as contas |
@@ -90,7 +136,14 @@ Para reconstruir o saldo histórico com exatidão no final de qualquer período 
 | PUT | `/{id}` | Atualiza conta |
 | DELETE | `/{id}` | Exclui conta (sem soft-delete, usar `Ativa=false`) |
 | POST | `/{id}/movimentar` | Lança entrada ou saída manual no saldo |
-| GET | `/extrato` | Obtém extrato consolidado do período filtrado por data e origem com paginação (O(1) HashSet lookup) |
-| GET | `/saldos-periodo` | Calcula os saldos históricos retroativos por agrupamento SQL nativo via `SumAsync` e `GroupBy` |
+| GET | `/extrato` | Obtém extrato consolidado do período filtrado |
+| GET | `/saldos-periodo` | Calcula os saldos históricos retroativos |
 
-**Autorizações:** `Admin`, `Gestor`
+## 9. Endpoints de Gateway e Webhooks (`/api/v1/Pagamentos`)
+| Método | Rota | Função |
+|--------|------|--------|
+| POST | `/webhook/gateway` | Webhook universal para qualquer provedor |
+| POST | `/webhook/asaas` | Webhook Asaas (retrocompatível) |
+| POST | `/webhook/mercadopago` | Webhook exclusivo Mercado Pago |
+
+**Autorizações:** `Admin`, `Gestor` (exceto webhooks públicos, que validam assinatura/segredo do provedor).

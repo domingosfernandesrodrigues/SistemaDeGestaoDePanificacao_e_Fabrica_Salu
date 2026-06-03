@@ -47,7 +47,34 @@ O processamento da folha é segmentado por tipo para atender às regras legais e
 
 ## 7. Métricas de RH
 - **Custo por Funcionário**: Despesas totais (Salário + Encargos + Benefícios) / Número de funcionários.
-- **Produtividade por Turno**: (Volume de Produção ou Vendas) / (Horas Trabalhadas no Turno). 
+- **Produtividade por Turno**: (Volume de Produção ou Vendas) / (Horas Trabalhadas no Turno).
 - **Turnover Rate**: (Número de saídas / Média de funcionários) * 100.
 
-      
+## 8. Meus Contracheques (Acesso do Funcionário)
+
+### Regra de Exibição do Valor Líquido
+O campo `SalarioLiquido` e demais valores financeiros detalhados do holerite **só são visíveis** quando o status da folha for `Liberado`. Para qualquer outro status, o sistema exibe `"Aguardando Liberação"`.
+
+| Status da Folha | Valor Líquido Visível? |
+|----------------|------------------------|
+| `Pendente` | ❌ Oculto |
+| `EmProcessamento` | ❌ Oculto |
+| `Liberado` | ✅ Exibido |
+| `Cancelado` | ❌ Oculto |
+
+**Justificativa:** Evita que o funcionário visualize valores antes da validação e aprovação pelo RH/Gestor, prevenindo questionamentos antecipados sobre valores que ainda podem ser ajustados.
+
+**Endpoint:** `GET /api/v1/Contracheques/meus`
+- Retorna a lista de folhas do funcionário autenticado (via `FuncionarioId` do token JWT).
+- O campo `SalarioLiquido` é retornado como `null` ou omitido no DTO quando o status for diferente de `Liberado`.
+
+## 9. Lançamento de Alimentação — Acesso por Perfil
+
+Consulte a documentação detalhada em [lancamento-alimentacao.md](lancamento-alimentacao.md).
+
+**Resumo de Regras:**
+
+| Perfil | Pode Lançar | Visualiza | Pode Excluir |
+|--------|------------|-----------|--------------|
+| Admin / Gestor | Para qualquer funcionário | Todos os lançamentos | ✅ |
+| Operador / Motorista | Apenas o próprio | Apenas os próprios | ❌ |

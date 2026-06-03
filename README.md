@@ -27,7 +27,8 @@ O **SGP-F** é um ERP robusto e moderno desenvolvido para atender às necessidad
 *   **Logística Reversa:** Controle rigoroso de trocas e avarias direto no ponto de entrega.
 
 ### 💰 Financeiro e Comercial
-*   **Conciliação Bancária:** Gestão de múltiplas contas com saldo em tempo real.
+*   **Gateway de Pagamento Universal:** Suporte a múltiplos provedores (Asaas, Mercado Pago e qualquer banco) via Strategy Pattern — sem lock-in de fornecedor.
+*   **Conciliação Bancária:** Gestão de múltiplas contas com saldo em tempo real e webhooks automáticos.
 *   **Vendas B2B:** Painel Kanban para acompanhamento de pedidos e integração logística.
 *   **Landing Page:** Portal institucional profissional com autenticação integrada.
 
@@ -35,6 +36,8 @@ O **SGP-F** é um ERP robusto e moderno desenvolvido para atender às necessidad
 *   **Folha de Pagamento CLT v2:** Cálculo automático de proventos, descontos, HE 50/100% e Adicional Noturno.
 *   **Controle de Ponto:** Registro e auditoria de jornada de trabalho.
 *   **Afastamentos:** Gestão de férias, atestados e licenças com fluxo de aprovação.
+*   **Lançamento de Alimentação:** Registro de refeições por funcionário com controle de acesso por perfil e integração automática com Contas a Pagar.
+*   **Meus Contracheques:** Funcionários visualizam o valor líquido apenas quando o status da folha for `Liberado`.
 
 ---
 
@@ -43,8 +46,9 @@ O **SGP-F** é um ERP robusto e moderno desenvolvido para atender às necessidad
 ### Backend
 *   **.NET 10 (C#)**: Performance e escalabilidade.
 *   **Domain Driven Design (DDD)**: Arquitetura organizada e focada no negócio.
+*   **Strategy Pattern**: Gateway de pagamento multi-provedor sem acoplamento.
 *   **EF Core + SQL Server**: Persistência de dados robusta.
-*   **JWT Auth**: Segurança e controle de acesso baseado em Roles.
+*   **JWT Auth + BCrypt**: Segurança com controle de acesso baseado em Roles e senhas hasheadas.
 
 ### Frontend
 *   **React 19 + TypeScript**: Interface moderna e tipagem estrita.
@@ -61,6 +65,10 @@ O projeto segue uma estrutura desacoplada para facilitar a manutenção e o depl
 ```
 SistemaDeGestaoDePanificacao_e_Fabrica/
 ├── Backend/               # API em .NET 10 (Domain, Application, Infra, WebApi)
+│   ├── SGPF.Domain/       # Entidades, Interfaces, Enums
+│   ├── SGPF.Application/  # Casos de uso, Services, IPaymentGateway (Strategy)
+│   ├── SGPF.Infrastructure/  # EF Core, AppDbContext, SQL Server
+│   └── SGPF.WebApi/       # Controllers REST, Webhooks, Background Services
 ├── Frontend/              # SPA em React + Vite
 ├── docs/                  # Documentação completa do sistema (Negócio, Técnica, UX)
 └── docker-compose.yml     # Orquestração de containers (DB, API, Web)
@@ -103,10 +111,14 @@ Acesse o sistema em: `http://localhost:5173`
 O SGP-F possui uma documentação técnica e de negócio exaustiva na pasta `/docs`:
 
 1.  **[Negócio](docs/1-negocio/)**: Requisitos e regras de cada módulo.
-2.  **[Técnica](docs/2-tecnica/)**: Detalhes de arquitetura, banco de dados e segurança.
+2.  **[Técnica](docs/2-tecnica/)**: Detalhes de arquitetura, banco de dados, segurança e gateway de pagamento.
 3.  **[Interface](docs/3-interface/)**: Design system e guia de rotas.
 4.  **[Qualidade](docs/4-qualidade/)**: Padrões de código e fluxos de CI/CD.
 5.  **[Apoio](docs/5-apoio/)**: Manuais operacionais para usuários.
+6.  **[Observabilidade](docs/6-observabilidade/)**: Logs, auditoria e KPIs.
+7.  **[Gestão](docs/7-gestao/)**: Valuation e manual do administrador.
+
+> 🔑 **Gateway de Pagamento Universal:** Consulte [docs/2-tecnica/gateway-pagamento-universal.md](docs/2-tecnica/gateway-pagamento-universal.md) para adicionar novos provedores de pagamento.
 
 ---
 
