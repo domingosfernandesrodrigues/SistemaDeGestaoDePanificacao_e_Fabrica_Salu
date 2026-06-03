@@ -139,7 +139,11 @@ export function MeusContracheques() {
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-semibold text-slate-500 uppercase">Valor Líquido</span>
                   <span className="text-xl font-black text-indigo-600">
-                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c.salarioLiquido)}
+                    {c.status !== 0 ? (
+                      new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(c.salarioLiquido)
+                    ) : (
+                      <span className="text-sm font-semibold text-slate-400 italic">Indisponível</span>
+                    )}
                   </span>
                 </div>
               </div>
