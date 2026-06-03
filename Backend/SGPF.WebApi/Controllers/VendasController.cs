@@ -101,8 +101,8 @@ public class VendasController : ControllerBase
         catch (Exception ex) { return BadRequest(new { message = ex.Message }); }
     }
 
-    [AllowAnonymous]
     [HttpPost("webhook/confirmar-pagamento/{numeroPedido}")]
+    [Authorize(Roles = "Admin,Gestor")]
     public async Task<IActionResult> WebhookConfirmarPagamento(string numeroPedido)
     {
         var sucesso = await _vendaService.ConfirmarPagamentoAsync(numeroPedido);

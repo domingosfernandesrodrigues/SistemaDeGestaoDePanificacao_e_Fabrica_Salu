@@ -65,8 +65,6 @@ public class FolhaPagamentoService : IFolhaPagamentoService
             decimal liquido = 0;
             decimal valorAdiantamento13Deducao = 0;
 
-            decimal totalHE50 = 0;
-            decimal totalHE100 = 0;
             decimal valorHE50 = 0;
             decimal valorHE100 = 0;
             decimal valorAdicionalNoturno = 0;
@@ -129,23 +127,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
             }
             else
             {
-                // Lógica de Folha Mensal Padrão
-                var registros = await _pontoRepo.FindAsync(p => 
-                    p.FuncionarioId == func.Id && 
-                    p.DataHoraEntrada.Month == mes && 
-                    p.DataHoraEntrada.Year == ano &&
-                    p.DataHoraSaida != null);
 
-                decimal totalHorasNoturnas = 0;
-
-                foreach (var g in registros.GroupBy(r => r.DataHoraEntrada.Date))
-                {
-                    // Cálculo Adicional Noturno (22h às 05h)
-                    foreach (var reg in g)
-                    {
-                        totalHorasNoturnas += CalcularHorasNoturnas(reg.DataHoraEntrada, reg.DataHoraSaida ?? reg.DataHoraEntrada);
-                    }
-                }
                 
                 decimal valorHora = func.SalarioBase / 220m; 
                 
@@ -797,19 +779,5 @@ public class FolhaPagamentoService : IFolhaPagamentoService
         return feriados.Any(f => f.mes == data.Month && f.dia == data.Day);
     }
 
-    private decimal CalcularHorasNoturnas(DateTime entrada, DateTime saida)
-    {
-        // Faixa noturna: 22h às 05h do dia seguinte
-        var inicioNoturno = entrada.Date.AddHours(22);
-        var fimNoturno = entrada.Date.AddDays(1).AddHours(5);
 
-        if (saida <= inicioNoturno) return 0;
-        
-        var start = entrada > inicioNoturno ? entrada : inicioNoturno;
-        var end = saida < fimNoturno ? saida : fimNoturno;
-
-        if (end <= start) return 0;
-
-        return (decimal)(end - start).TotalHours;
-    }
 }
