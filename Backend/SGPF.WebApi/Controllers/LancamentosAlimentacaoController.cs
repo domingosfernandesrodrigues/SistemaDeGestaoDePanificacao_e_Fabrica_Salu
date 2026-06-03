@@ -100,17 +100,31 @@ public class LancamentosAlimentacaoController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin,Gestor")]
     public async Task<IActionResult> Create([FromBody] LancamentoAlimentacao lancamento)
     {
         try
         {
-            if (lancamento.FuncionarioId == Guid.Empty)
-                return BadRequest(new { message = "O funcionário deve ser informado." });
+            var isGestorOrAdmin = User.IsInRole("Admin") || User.IsInRole("Gestor");
+            Funcionario? funcionario = null;
 
-            var funcionario = await _context.Funcionarios.FindAsync(lancamento.FuncionarioId);
-            if (funcionario == null)
-                return BadRequest(new { message = "Funcionário não encontrado." });
+            if (!isGestorOrAdmin)
+            {
+                // Se não for gestor ou admin, o funcionário associado é obrigatoriamente o próprio usuário logado
+                funcionario = await GetFuncionarioDoUsuario();
+                if (funcionario == null)
+                    return BadRequest(new { message = "Seu usuário não está associado a um funcionário ativo no sistema." });
+                
+                lancamento.FuncionarioId = funcionario.Id;
+            }
+            else
+            {
+                if (lancamento.FuncionarioId == Guid.Empty)
+                    return BadRequest(new { message = "O funcionário deve ser informado." });
+
+                funcionario = await _context.Funcionarios.FindAsync(lancamento.FuncionarioId);
+                if (funcionario == null)
+                    return BadRequest(new { message = "Funcionário não encontrado." });
+            }
 
             if (lancamento.Valor <= 0)
                 return BadRequest(new { message = "O valor da refeição deve ser maior que zero." });

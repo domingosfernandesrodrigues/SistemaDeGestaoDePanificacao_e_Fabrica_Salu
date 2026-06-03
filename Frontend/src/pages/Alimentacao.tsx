@@ -78,9 +78,11 @@ export default function Alimentacao() {
     mutationFn: (data: AlimentacaoForm) => api.post('/LancamentosAlimentacao', data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['lancamentos-alimentacao-todos'] });
+      queryClient.invalidateQueries({ queryKey: ['lancamentos-alimentacao-meus'] });
       queryClient.invalidateQueries({ queryKey: ['despesas'] }); // Invalida despesas para refletir a nova conta a pagar
       setIsModalOpen(false);
       reset({
+        funcionarioId: isGestorOrAdmin ? '' : '00000000-0000-0000-0000-000000000000',
         data: new Date().toISOString().split('T')[0],
         tipoRefeicao: 'Almoço',
         observacao: ''
@@ -173,14 +175,17 @@ export default function Alimentacao() {
             }
           </p>
         </div>
-        {isGestorOrAdmin && (
-          <Button 
-            onClick={() => setIsModalOpen(true)} 
-            className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember h-11 px-6 shadow-md hover:scale-[1.02] active:scale-95 transition-all duration-200"
-          >
-            <Plus size={18} /> Lançar Alimentação
-          </Button>
-        )}
+        <Button 
+          onClick={() => {
+            if (!isGestorOrAdmin) {
+              setValue('funcionarioId', '00000000-0000-0000-0000-000000000000');
+            }
+            setIsModalOpen(true);
+          }} 
+          className="flex items-center gap-2 bg-gradient-to-r from-fire to-ember h-11 px-6 shadow-md hover:scale-[1.02] active:scale-95 transition-all duration-200"
+        >
+          <Plus size={18} /> Lançar Alimentação
+        </Button>
       </div>
 
       {/* Painel de Filtros Otimizado */}
@@ -422,25 +427,39 @@ export default function Alimentacao() {
       </div>
 
       {/* Modal de Lançamento */}
-      {isGestorOrAdmin && (
+      {isModalOpen && (
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Novo Lançamento de Alimentação">
           <form onSubmit={handleSubmit((data) => mutationCreate.mutate(data))} className="space-y-4">
             
-            <div className="space-y-1">
-              <label className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
-                <Users size={16} className="text-muted" /> Colaborador <span className="text-red-500">*</span>
-              </label>
-              <select 
-                {...register('funcionarioId')}
-                className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer"
-              >
-                <option value="">Selecione o colaborador...</option>
-                {funcionarios?.filter(f => f.ativo).map(f => (
-                  <option key={f.id} value={f.id}>{f.nome} ({f.cargo})</option>
-                ))}
-              </select>
-              {errors.funcionarioId && <p className="text-xs text-red-500 font-bold mt-0.5">{errors.funcionarioId.message}</p>}
-            </div>
+            {isGestorOrAdmin ? (
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Users size={16} className="text-muted" /> Colaborador <span className="text-red-500">*</span>
+                </label>
+                <select 
+                  {...register('funcionarioId')}
+                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer"
+                >
+                  <option value="">Selecione o colaborador...</option>
+                  {funcionarios?.filter(f => f.ativo).map(f => (
+                    <option key={f.id} value={f.id}>{f.nome} ({f.cargo})</option>
+                  ))}
+                </select>
+                {errors.funcionarioId && <p className="text-xs text-red-500 font-bold mt-0.5">{errors.funcionarioId.message}</p>}
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <label className="text-sm font-semibold text-slate-700 flex items-center gap-1.5">
+                  <Users size={16} className="text-muted" /> Colaborador
+                </label>
+                <input 
+                  type="text"
+                  disabled
+                  value={localStorage.getItem('sgpf_user_name') || ''}
+                  className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-slate-100 text-sm text-slate-500 outline-none"
+                />
+              </div>
+            )}
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1">
