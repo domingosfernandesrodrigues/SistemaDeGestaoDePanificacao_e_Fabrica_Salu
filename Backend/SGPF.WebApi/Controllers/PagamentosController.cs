@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using SGPF.Application.Interfaces;
 using SGPF.Domain.Interfaces;
 using SGPF.Domain.Entities;
+using System.Text.Json;
+using System.Net.Http;
 
 namespace SGPF.WebApi.Controllers;
 
@@ -120,6 +122,100 @@ public class PagamentosController : ControllerBase
 
         // Retorna 200 para eventos que não precisamos processar para evitar que o gateway fique reenviando
         return Ok(new { message = "Evento ignorado ou não processado para baixa", @event = request.Event });
+    }
+
+    [AllowAnonymous]
+    [HttpPost("webhook/mercadopago")]
+    public async Task<IActionResult> WebhookMercadoPago([FromBody] JsonElement request)
+    {
+        try
+        {
+            // 1. Verifica se a notificação é sobre um pagamento
+            if (request.TryGetProperty("type", out var typeProp) && typeProp.GetString() == "payment")
+            {
+                if (request.TryGetProperty("data", out var dataProp) && dataProp.TryGetProperty("id", out var idProp))
+                {
+                    string paymentId = idProp.ValueKind == JsonValueKind.Number 
+                        ? idProp.GetInt64().ToString() 
+                        : idProp.GetString() ?? string.Empty;
+
+                    if (string.IsNullOrEmpty(paymentId))
+                        return BadRequest(new { message = "ID de pagamento inválido." });
+
+                    // 2. Recupera o token do banco
+                    var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
+                                    ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
+                    var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
+                    var tokenDefinido = contaPadrao?.GatewayToken ?? empresa?.GatewayToken;
+
+                    if (string.IsNullOrWhiteSpace(tokenDefinido))
+                        return BadRequest(new { message = "Nenhum token configurado no sistema." });
+
+                    // Limpa o prefixo do token do Mercado Pago
+                    string cleanToken = tokenDefinido;
+                    if (tokenDefinido.StartsWith("mercadopago:", StringComparison.OrdinalIgnoreCase))
+                        cleanToken = tokenDefinido.Substring("mercadopago:".Length);
+                    else if (tokenDefinido.StartsWith("mp:", StringComparison.OrdinalIgnoreCase))
+                        cleanToken = tokenDefinido.Substring("mp:".Length);
+                    else if (tokenDefinido.StartsWith("sandbox:mp:", StringComparison.OrdinalIgnoreCase))
+                        cleanToken = tokenDefinido.Substring("sandbox:mp:".Length);
+                    else if (tokenDefinido.StartsWith("sandbox:mercadopago:", StringComparison.OrdinalIgnoreCase))
+                        cleanToken = tokenDefinido.Substring("sandbox:mercadopago:".Length);
+
+                    // 3. Consulta a API do Mercado Pago para obter detalhes seguros da transação
+                    using var client = new HttpClient();
+                    client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", cleanToken);
+                    client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+                    var response = await client.GetAsync($"https://api.mercadopago.com/v1/payments/{paymentId}");
+                    if (!response.IsSuccessStatusCode)
+                    {
+                        Console.WriteLine($"[MERCADO PAGO WEBHOOK ERROR] Falha ao consultar transação {paymentId}. HTTP Status: {response.StatusCode}");
+                        return BadRequest(new { message = $"Falha ao consultar transação no Mercado Pago." });
+                    }
+
+                    var responseStr = await response.Content.ReadAsStringAsync();
+                    using var doc = JsonDocument.Parse(responseStr);
+                    var root = doc.RootElement;
+
+                    string status = root.GetProperty("status").GetString() ?? string.Empty;
+                    string externalReference = root.TryGetProperty("external_reference", out var extProp) ? extProp.GetString() ?? string.Empty : string.Empty;
+
+                    if (status == "approved" && !string.IsNullOrEmpty(externalReference))
+                    {
+                        decimal? valorLiquido = null;
+                        if (root.TryGetProperty("transaction_details", out var detailsProp) && 
+                            detailsProp.TryGetProperty("net_received_amount", out var netProp) && 
+                            netProp.ValueKind == JsonValueKind.Number)
+                        {
+                            valorLiquido = netProp.GetDecimal();
+                        }
+
+                        DateTime? dataPagamento = null;
+                        if (root.TryGetProperty("date_approved", out var dateApprovedProp) && 
+                            DateTime.TryParse(dateApprovedProp.GetString(), out var dtApproved))
+                        {
+                            dataPagamento = dtApproved;
+                        }
+
+                        var sucesso = await _vendaService.ConfirmarPagamentoAsync(externalReference, valorLiquido, paymentId, dataPagamento);
+                        if (sucesso)
+                        {
+                            Console.WriteLine($"[MERCADO PAGO WEBHOOK] Pagamento do pedido {externalReference} confirmado automaticamente!");
+                            return Ok(new { message = "Sucesso", externalReference });
+                        }
+                    }
+                }
+            }
+
+            // Retorna 200 para evitar que o gateway fique reenviando
+            return Ok(new { message = "Evento processado ou ignorado" });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[MERCADO PAGO WEBHOOK EXCEPTION] {ex.Message}");
+            return StatusCode(500, new { message = ex.Message });
+        }
     }
 }
 

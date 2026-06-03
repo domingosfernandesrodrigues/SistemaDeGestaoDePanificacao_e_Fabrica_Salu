@@ -265,7 +265,8 @@ public class VendaService : IVendaService
 
         if (pedido.Pago)
         {
-            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
+                            ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
             if (contaPadrao != null)
             {
                 contaPadrao.SaldoAtual += pedido.ValorTotal;
@@ -393,7 +394,8 @@ public class VendaService : IVendaService
 
         if (valorEstorno > 0)
         {
-            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
+                            ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
             if (contaPadrao != null)
             {
                 contaPadrao.SaldoAtual -= valorEstorno;
@@ -609,8 +611,9 @@ public class VendaService : IVendaService
             await _contaReceberRepo.UpdateAsync(conta);
         }
 
-        // Conciliação automática: atualiza o saldo da conta padrão
-        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+        // Conciliação automática: atualiza o saldo da conta padrão (ou primeira ativa como fallback)
+        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
+                        ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
         if (contaPadrao != null)
         {
             var valorTotal = contas.Sum(c => c.Valor);
@@ -924,181 +927,39 @@ public class VendaService : IVendaService
 
     private async Task ProcessarFaturamentoAsaasOuFallbackAsync(PedidoVenda pedido)
     {
-        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
+        var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
+                        ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
         var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
         var token = contaPadrao?.GatewayToken ?? empresa?.GatewayToken;
 
-        if (!string.IsNullOrWhiteSpace(token) && token != "SUA-CHAVE-ASAAS" && token != "TOKEN-API-GATEWAY-EXEMPLO")
-        {
-            try
-            {
-                var cliente = await _clienteRepo.GetByIdAsync(pedido.ClienteId);
-                if (cliente != null)
-                {
-                    bool sucesso = await CriarCobrancaAsaasAsync(token, pedido, cliente);
-                    if (sucesso) return;
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ASAAS INTEGRATION ERROR] Falha ao criar cobrança no Asaas. Detalhes: {ex.Message}. Utilizando simulador Offline.");
-            }
-        }
+        var factory = new PaymentGatewayFactory(_contaBancariaRepo, _empresaRepo);
+        var gateway = factory.ObterGateway(token ?? "");
 
-        // Fallback offline (simulação) se o token não existir ou falhar
-        GerarDadosPagamentoFallback(pedido, contaPadrao, empresa);
-    }
-
-    private async Task<bool> CriarCobrancaAsaasAsync(string token, PedidoVenda pedido, Cliente cliente)
-    {
-        bool isSandbox = false;
-        string cleanToken = token;
-
-        if (token.StartsWith("sandbox:", StringComparison.OrdinalIgnoreCase))
-        {
-            isSandbox = true;
-            cleanToken = token.Substring("sandbox:".Length);
-        }
-        else if (token.StartsWith("test:", StringComparison.OrdinalIgnoreCase))
-        {
-            isSandbox = true;
-            cleanToken = token.Substring("test:".Length);
-        }
-        else if (token.StartsWith("$$"))
-        {
-            isSandbox = true;
-            cleanToken = token.Substring(1); // Remove o primeiro $, mantendo o segundo $ que faz parte da chave
-        }
-
-        string baseUrl = isSandbox ? "https://sandbox.asaas.com/api/v3" : "https://api.asaas.com/api/v3";
-
-        using var client = new HttpClient();
-        client.DefaultRequestHeaders.Add("access_token", cleanToken);
-        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
-
-        var cpfCnpjLimpo = new string(cliente.CNPJ_CPF.Where(char.IsDigit).ToArray());
-        
-        // 1. Verificar se o cliente já existe no Asaas
-        string? customerId = null;
-        var searchUrl = $"{baseUrl}/customers?cpfCnpj={cpfCnpjLimpo}";
-        
         try
         {
-            var searchResponse = await client.GetAsync(searchUrl);
-            if (searchResponse.IsSuccessStatusCode)
+            var cliente = await _clienteRepo.GetByIdAsync(pedido.ClienteId);
+            if (cliente != null)
             {
-                var searchResponseStr = await searchResponse.Content.ReadAsStringAsync();
-                using var doc = JsonDocument.Parse(searchResponseStr);
-                var dataProp = doc.RootElement.GetProperty("data");
-                if (dataProp.ValueKind == JsonValueKind.Array && dataProp.GetArrayLength() > 0)
+                var billingResult = await gateway.CriarCobrancaAsync(token ?? "", pedido, cliente);
+                if (billingResult.Sucesso)
                 {
-                    customerId = dataProp[0].GetProperty("id").GetString();
+                    pedido.BoletoCodigoBarras = billingResult.BoletoCodigoBarras;
+                    pedido.PixQrCode = billingResult.PixQrCode;
+                    return;
+                }
+                else
+                {
+                    Console.WriteLine($"[{gateway.ProviderName.ToUpper()} INTEGRATION ERROR] Falha ao criar cobrança no {gateway.ProviderName}. Detalhes: {billingResult.ErrorMessage}. Utilizando simulador Offline.");
                 }
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[ASAAS CUSTOMER SEARCH ERROR] {ex.Message}");
+            Console.WriteLine($"[GATEWAY INTEGRATION ERROR] Falha geral no faturamento. Detalhes: {ex.Message}. Utilizando simulador Offline.");
         }
 
-        // 2. Se não existir, cadastrar o cliente
-        if (string.IsNullOrEmpty(customerId))
-        {
-            var customerPayload = new
-            {
-                name = string.IsNullOrWhiteSpace(cliente.RazaoSocial) ? cliente.NomeFantasia : cliente.RazaoSocial,
-                cpfCnpj = cpfCnpjLimpo,
-                phone = new string((cliente.Telefone ?? "").Where(char.IsDigit).ToArray()),
-                notificationDisabled = true
-            };
-
-            var customerContent = new StringContent(JsonSerializer.Serialize(customerPayload), Encoding.UTF8, "application/json");
-            var createResponse = await client.PostAsync($"{baseUrl}/customers", customerContent);
-            if (!createResponse.IsSuccessStatusCode)
-            {
-                var errorStr = await createResponse.Content.ReadAsStringAsync();
-                throw new Exception($"Falha ao cadastrar cliente no Asaas. HTTP Status: {createResponse.StatusCode}. Detalhes: {errorStr}");
-            }
-
-            var createResponseStr = await createResponse.Content.ReadAsStringAsync();
-            using var doc = JsonDocument.Parse(createResponseStr);
-            customerId = doc.RootElement.GetProperty("id").GetString();
-        }
-
-        if (string.IsNullOrEmpty(customerId))
-        {
-            throw new Exception("Não foi possível resolver o ID do cliente no Asaas.");
-        }
-
-        // 3. Criar a cobrança (BOLETO ou PIX)
-        var billingTypeStr = pedido.FormaPagamento == FormaPagamento.Boleto ? "BOLETO" : "PIX";
-        var paymentPayload = new
-        {
-            customer = customerId,
-            billingType = billingTypeStr,
-            value = pedido.ValorTotal,
-            dueDate = DateTime.UtcNow.AddDays(15).ToString("yyyy-MM-dd"),
-            externalReference = pedido.NumeroPedido,
-            description = $"Pedido {pedido.NumeroPedido} - {cliente.NomeFantasia}"
-        };
-
-        var paymentContent = new StringContent(JsonSerializer.Serialize(paymentPayload), Encoding.UTF8, "application/json");
-        var paymentResponse = await client.PostAsync($"{baseUrl}/payments", paymentContent);
-        if (!paymentResponse.IsSuccessStatusCode)
-        {
-            var errorStr = await paymentResponse.Content.ReadAsStringAsync();
-            throw new Exception($"Falha ao criar pagamento no Asaas. HTTP Status: {paymentResponse.StatusCode}. Detalhes: {errorStr}");
-        }
-
-        var paymentResponseStr = await paymentResponse.Content.ReadAsStringAsync();
-        using (var doc = JsonDocument.Parse(paymentResponseStr))
-        {
-            var root = doc.RootElement;
-            if (pedido.FormaPagamento == FormaPagamento.Boleto)
-            {
-                if (root.TryGetProperty("identificationField", out var idFieldProp) && idFieldProp.ValueKind == JsonValueKind.String)
-                {
-                    pedido.BoletoCodigoBarras = idFieldProp.GetString();
-                }
-                else if (root.TryGetProperty("barCode", out var barCodeProp) && barCodeProp.ValueKind == JsonValueKind.String)
-                {
-                    pedido.BoletoCodigoBarras = barCodeProp.GetString();
-                }
-
-                if (string.IsNullOrWhiteSpace(pedido.BoletoCodigoBarras))
-                {
-                    throw new Exception("Não foi retornado código de barras ou linha digitável do Asaas.");
-                }
-            }
-            else if (pedido.FormaPagamento == FormaPagamento.Pix)
-            {
-                var paymentId = root.GetProperty("id").GetString();
-                if (string.IsNullOrEmpty(paymentId))
-                {
-                    throw new Exception("Não foi retornado o ID da transação Pix do Asaas.");
-                }
-
-                var pixResponse = await client.GetAsync($"{baseUrl}/payments/{paymentId}/pixQrCode");
-                if (!pixResponse.IsSuccessStatusCode)
-                {
-                    throw new Exception($"Falha ao recuperar Pix QR Code do Asaas. HTTP Status: {pixResponse.StatusCode}");
-                }
-
-                var pixResponseStr = await pixResponse.Content.ReadAsStringAsync();
-                using var pixDoc = JsonDocument.Parse(pixResponseStr);
-                var pixRoot = pixDoc.RootElement;
-                if (pixRoot.TryGetProperty("payload", out var payloadProp) && payloadProp.ValueKind == JsonValueKind.String)
-                {
-                    pedido.PixQrCode = payloadProp.GetString();
-                }
-                else
-                {
-                    throw new Exception("Resposta do Pix QR Code não contém o payload (copia e cola).");
-                }
-            }
-        }
-
-        return true;
+        // Fallback offline (simulação) se o token não existir ou falhar
+        GerarDadosPagamentoFallback(pedido, contaPadrao, empresa);
     }
 
     private void GerarDadosPagamentoFallback(PedidoVenda pedido, ContaBancaria? contaPadrao, Empresa? empresa)
