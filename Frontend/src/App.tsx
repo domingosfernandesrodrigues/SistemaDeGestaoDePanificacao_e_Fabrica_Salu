@@ -24,9 +24,11 @@ import { FichaTecnica } from './pages/FichaTecnica';
 import Fornecedores from './pages/Fornecedores';
 import Funcionarios from './pages/Funcionarios';
 import Usuarios from './pages/Usuarios';
+import { Auditoria } from './pages/Auditoria';
 import Despesas from './pages/Despesas';
 import { ConfiguracoesEmpresa } from './pages/ConfiguracoesEmpresa';
 import { ContasBancarias } from './pages/ContasBancarias';
+import { CandidaturasRH } from './pages/CandidaturasRH';
 
 const queryClient = new QueryClient();
 
@@ -71,10 +73,12 @@ function App() {
             <Route path="/rh/meus-contracheques" element={<MeusContracheques />} />
             <Route path="/rh/alimentacao" element={<Alimentacao />} />
             <Route path="/rh/funcionarios" element={<Funcionarios />} />
+            <Route path="/rh/candidaturas" element={<CandidaturasRH />} />
             <Route path="/financeiro/despesas" element={<Despesas />} />
             <Route path="/financeiro/contas" element={<ContasBancarias />} />
             <Route path="/fornecedores" element={<Fornecedores />} />
             <Route path="/usuarios" element={<Usuarios />} />
+            <Route path="/auditoria" element={<Auditoria />} />
             <Route path="/configuracoes/empresa" element={<ConfiguracoesEmpresa />} />
           </Route>
 
