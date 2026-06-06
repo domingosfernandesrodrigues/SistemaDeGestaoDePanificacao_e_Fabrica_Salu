@@ -281,10 +281,16 @@ public static class DbPatchesInitializer
                             [OldValues] [nvarchar](max) NULL,
                             [NewValues] [nvarchar](max) NULL,
                             [Timestamp] [datetime2](7) NOT NULL,
-                            [UserId] [uniqueidentifier] NULL
+                            [UserId] [uniqueidentifier] NULL,
+                            [UserName] [nvarchar](max) NULL
                         )
                     END
                 "); 
+            } catch {}
+
+            // Patch para garantir a coluna UserName em bancos de dados legados
+            try {
+                await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('AuditLogs') AND name = 'UserName') BEGIN ALTER TABLE AuditLogs ADD UserName NVARCHAR(MAX) NULL; END");
             } catch {}
 
             // Patch para criar tabela SystemLogs (Serilog) se não existir
@@ -305,6 +311,25 @@ public static class DbPatchesInitializer
                     END
                 ");
             } catch {}
+
+            // Patch para criar tabela Candidaturas se não existir
+            try { await context.Database.ExecuteSqlRawAsync(@"
+                IF NOT EXISTS (SELECT * FROM sys.objects WHERE object_id = OBJECT_ID(N'[dbo].[Candidaturas]') AND type in (N'U'))
+                BEGIN
+                    CREATE TABLE [dbo].[Candidaturas](
+                        [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
+                        [Nome] [nvarchar](max) NOT NULL,
+                        [Email] [nvarchar](max) NOT NULL,
+                        [Telefone] [nvarchar](max) NOT NULL,
+                        [CargoInteresse] [nvarchar](max) NOT NULL,
+                        [Mensagem] [nvarchar](max) NULL,
+                        [NomeOriginalArquivo] [nvarchar](max) NOT NULL,
+                        [NomeArquivoSalvo] [nvarchar](max) NOT NULL,
+                        [DataEnvio] [datetime2](7) NOT NULL,
+                        [Status] [nvarchar](max) NOT NULL DEFAULT 'Novo'
+                    )
+                END
+            "); } catch {}
 
             Console.WriteLine("[DB PATCHES] Aplicação de patches procedurais finalizada com sucesso.");
 
@@ -365,8 +390,8 @@ public static class DbPatchesInitializer
                 await context.SaveChangesAsync();
 
                 // Semeia os abastecimentos e manutenções
-                int currentYear = DateTime.UtcNow.Year;
-                int currentMonth = DateTime.UtcNow.Month;
+                int currentYear = DateTime.Now.Year;
+                int currentMonth = DateTime.Now.Month;
                 int prevMonth = currentMonth == 1 ? 12 : currentMonth - 1;
                 int prevYear = currentMonth == 1 ? currentYear - 1 : currentYear;
 

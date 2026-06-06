@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SGPF.Domain.Entities;
+// Context for SGPF - Recrutamento / Candidaturas registered
 
 namespace SGPF.Infrastructure.Data;
 
@@ -14,6 +15,7 @@ public class AppDbContext : DbContext
     public DbSet<Cliente> Clientes { get; set; }
     public DbSet<Fornecedor> Fornecedores { get; set; }
     public DbSet<Usuario> Usuarios { get; set; }
+    public DbSet<Candidatura> Candidaturas { get; set; }
 
     public DbSet<Produto> Produtos { get; set; }
     public DbSet<MovimentacaoEstoque> MovimentacoesEstoque { get; set; }
