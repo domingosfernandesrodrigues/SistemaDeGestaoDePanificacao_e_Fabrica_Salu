@@ -44,3 +44,7 @@
 - `Usuarios` (ASP.NET Identity): Id, Email, NomCompleto, Role (Admin/Gestor/Operador/Motorista/Cliente), PrecisaTrocarSenha (BIT), Ativo (BIT).
 - Rota pública `/` → Landing Page institucional com login integrado via modal.
 - Rota `/dashboard` → Sistema ERP (protegido por JWT).
+
+## Módulo: Recrutamento e Segurança (Novos)
+- `Candidaturas`: Id (Guid, PK), Nome (VARCHAR(150)), Email (VARCHAR(150)), Telefone (VARCHAR(20)), CargoInteresse (VARCHAR(100)), Mensagem (VARCHAR(MAX), Nullable), NomeOriginalArquivo (VARCHAR(255)), NomeSalvoArquivo (VARCHAR(255)), CaminhoArquivo (VARCHAR(500)), DataEnvio (DATETIME2), Status (VARCHAR(50) - "Novo"/"Em Análise"/"Entrevista"/"Contratado"/"Recusado").
+- `AuditLogs`: Id (Guid, PK), TableName (VARCHAR(200)), Action (VARCHAR(50) - "Added"/"Modified"/"Deleted"), KeyValues (VARCHAR(MAX)), OldValues (VARCHAR(MAX), Nullable), NewValues (VARCHAR(MAX), Nullable), Timestamp (DATETIME2), UserId (Guid, Nullable FK), UserName (VARCHAR(200), Nullable).

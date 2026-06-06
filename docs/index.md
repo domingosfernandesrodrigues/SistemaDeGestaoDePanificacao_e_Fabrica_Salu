@@ -44,38 +44,33 @@ Este documento é o mapa mestre do Sistema de Gestão de Panificação e Fábric
 - [Valor de Venda (Valuation)](7-gestao/valor-venda-sistema.md) - Precificação e Mercado.
 - [Manual do Administrador](7-gestao/manual-administrador.md) - Guia de implantação e operação.
 
----
-
-## 📌 Status Atual do Sistema (03/06/2026)
+## 📌 Status Atual do Sistema (05/06/2026)
 
 O sistema SGP-F encontra-se em estado de **Produção — Estabilidade Geral**.
 
 ### ✅ Funcionalidades Consolidadas
 
+#### Recrutamento & Seleção (Trabalhe Conosco) **[NOVO]**
+- **Formulário Público:** Integrado na Landing Page com validação Zod, envio `multipart/form-data` e máscara de telefone dinâmica adaptativa.
+- **Upload Seguro:** Limite de 5MB, tipos restritos (`.pdf`, `.doc`, `.docx`), GUID de segurança e pasta física isolada fora do diretório público `wwwroot` (mitigação de RCE).
+- **Painel Administrativo:** Listagem sob `/rh/candidaturas` restrita a `Admin` e `Gestor` em **tema claro** com filtros de cargo/status, visualização de apresentação e download seguro.
+
+#### Auditoria do Sistema e Logs **[NOVO]**
+- **Trilha de Dados:** Interceptor transacional do EF Core gerando logs estruturados de Inclusão, Alteração (comparativo old/new) e Exclusão.
+- **Painel de Auditoria:** Tela sob `/auditoria` restrita a `Admin` e `Gestor` em **tema claro** com filtros combinados e modal de comparação visual de dados (de-para) e JSON estruturado.
+
 #### Gateway de Pagamento Universal (Multi-Provedor)
-- **Strategy Pattern:** Implementação de `IPaymentGateway` com três provedores: `AsaasPaymentGateway`, `MercadoPagoPaymentGateway` e `GenericPaymentGateway` (simulador offline).
-- **Roteamento Automático:** `PaymentGatewayFactory` seleciona o provedor pelo prefixo do `GatewayToken` da conta bancária.
-- **Mercado Pago:** Integração completa com autenticação Bearer, idempotência por UUID, e busca dinâmica do e-mail corporativo em `Configurações da Empresa` (`Empresa.Email`).
-- **Asaas:** Pesquisa/cadastro de cliente por CPF/CNPJ, geração de Boleto e Pix, suporte a Sandbox e Produção.
-- **Webhooks:** Rota universal `POST /api/v1/pagamentos/webhook/gateway` com retrocompatibilidade para `/webhook/asaas` e rota dedicada `/webhook/mercadopago`. Dedução automática de tarifas (`NetValue`), gravação de data real de pagamento e fallback de conta bancária.
-- **Resiliência Total:** Em caso de falha ou token ausente, o `GenericPaymentGateway` assume automaticamente, mantendo o fluxo de vendas sem interrupção.
+- **Strategy Pattern:** Implementação de `IPaymentGateway` com provedores `AsaasPaymentGateway`, `MercadoPagoPaymentGateway` e `GenericPaymentGateway` (simulador offline).
+- **Roteamento Automático:** `PaymentGatewayFactory` seleciona o provedor pelo prefixo do `GatewayToken`.
+- **Mercado Pago & Asaas:** Integração completa com webhooks, tratamento de tarifas líquidas (`NetValue`) e conciliação direta.
 
 #### Controle de Acesso por Módulo
-- **Lançamento de Alimentação por Perfil:** Admin/Gestor gerenciam alimentação de todos os funcionários; Operador/Motorista lançam e visualizam apenas os próprios registros (isolamento via `FuncionarioId` do token JWT).
-- **Meus Contracheques com Status:** O valor líquido (`SalarioLiquido`) é exibido ao funcionário **somente quando** o status da folha for `Liberado`; demais status exibem `"Aguardando Liberação"`.
-- **Segurança Reforçada:** `WebhookConfirmarPagamento` em `VendasController.cs` protegido com `[Authorize(Roles = "Admin,Gestor")]`.
+- **Lançamento de Alimentação por Perfil:** Isolamento via token JWT (Operador/Motorista lançam/visualizam somente o próprio; Admin/Gestor controlam tudo).
+- **Meus Contracheques com Status:** O valor líquido (`SalarioLiquido`) é visível **somente** se a folha estiver `Liberado`.
 
 #### Segurança e Limpeza de Código
-- **BCrypt Obrigatório (12 salt rounds):** Autenticação sem texto plano. Auto-migrador de senhas no boot.
-- **Wipe de Backdoors:** `DbCompareController`, `DebugController`, `check_db` removidos fisicamente.
-- **Código Morto Removido:** Lógica de turno noturno inativa removida de `FolhaPagamentoService.cs`.
-- **Todos os controllers protegidos** com `[Authorize]` e respectivas roles.
-
-#### Funcionalidades Anteriores Consolidadas
-- **Precisão de GPS:** Calibração ativa (`watchPosition`) com precisão ≤ 20m e fallback no geocodificador.
-- **Férias e 13º Salário (CLT):** Abono pecuniário, adiantamento nas férias, segmentação de folha, anti-duplicidade e PDF detalhado.
-- **Conciliação Bancária:** Algoritmo retroativo para saldos históricos, multi-conta com fallback resiliente.
-- **Interface Cinética:** `<PhysicsCanvas />` na Landing Page, touch drag-and-drop B2B, impressão térmica otimizada.
+- **BCrypt Obrigatório (12 salt rounds):** Autenticação segura sem texto plano.
+- **Wipe de Backdoors:** Remoção de controladores e arquivos de depuração.
 
 ---
 

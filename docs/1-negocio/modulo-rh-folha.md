@@ -77,4 +77,27 @@ Consulte a documentação detalhada em [lancamento-alimentacao.md](lancamento-al
 | Perfil | Pode Lançar | Visualiza | Pode Excluir |
 |--------|------------|-----------|--------------|
 | Admin / Gestor | Para qualquer funcionário | Todos os lançamentos | ✅ |
-| Operador / Motorista | Apenas o próprio | Apenas os próprios | ❌ |
+| Operador / Motorista | Apenas o próprio | Apenas os próprios | ❌ |
+
+## 10. Módulo: Trabalhe Conosco (Recrutamento e Seleção)
+
+Este submódulo gerencia o processo de recrutamento de talentos da Salú, conectando o público externo ao setor de RH da empresa.
+
+### A. Fluxo de Candidatura (Público)
+* **Envio na Landing Page:** Candidatos informam Nome Completo, E-mail, Telefone, Cargo de Interesse e Mensagem Opcional, anexando o arquivo do currículo.
+* **Máscara e Validação de Inputs:** O campo de telefone possui máscara dinâmica para formatos brasileiros fixos ou móveis `(99) 9999-9999` ou `(99) 99999-9999` em tempo real. O formulário é validado via Zod e enviado de forma transacional.
+* **Segurança do Arquivo (Upload Seguro):**
+  * O tamanho máximo do currículo é de **5MB**.
+  * Extensões aceitas no backend e frontend: apenas `.pdf`, `.doc` e `.docx`.
+  * Os currículos são renomeados para GUIDs aleatórios para mitigar ataques de spoofing.
+  * O armazenamento é feito fora do diretório público `wwwroot` (na pasta física `/Uploads/Curriculos`), inviabilizando a execução de scripts executáveis remotos (RCE).
+
+### B. Painel do Recrutador (Restrito)
+* **Acesso Administrativo:** Somente usuários com as roles de `Admin` ou `Gestor` visualizam a aba "Currículos Recebidos" no ERP.
+* **Recursos do Painel:**
+  * Busca em tempo real de candidatos e filtros rápidos por cargo de interesse ou status.
+  * Download seguro do arquivo do currículo e modal para leitura de mensagem de apresentação.
+  * Atualização de status da candidatura (`Novo`, `Em Análise`, `Entrevista`, `Contratado`, `Recusado`).
+  * Exclusão definitiva de candidaturas obsoletas.
+* **Tema Visual:** O painel segue estritamente o padrão de **tema claro** unificado do ERP (com fundo `bg-white` e inputs claros) para máxima ergonomia e consistência com os demais cadastros.
+
