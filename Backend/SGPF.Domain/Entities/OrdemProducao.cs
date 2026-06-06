@@ -22,7 +22,7 @@ public class OrdemProducao
     
     public StatusOrdemProducao Status { get; set; } = StatusOrdemProducao.Planejada;
     
-    public DateTime DataAbertura { get; set; } = DateTime.UtcNow;
+    public DateTime DataAbertura { get; set; } = DateTime.Now;
     public DateTime? DataFinalizacao { get; set; }
     
     public decimal CustoTotalCalculado { get; set; }

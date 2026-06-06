@@ -105,7 +105,7 @@ public class OrdemProducaoService : IOrdemProducaoService
 
         op.CustoTotalCalculado = custoTotal;
         op.Status = StatusOrdemProducao.Finalizada;
-        op.DataFinalizacao = DateTime.UtcNow;
+        op.DataFinalizacao = DateTime.Now;
         op.QuantidadeRealizada = op.QuantidadePlanejada; // Pode ser ajustado pelo usuário
         op.UsuarioFinalizouId = usuarioId;
 

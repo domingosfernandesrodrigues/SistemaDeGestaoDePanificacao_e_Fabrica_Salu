@@ -114,7 +114,7 @@ public class AsaasPaymentGateway : IPaymentGateway
                 customer = customerId,
                 billingType = billingTypeStr,
                 value = pedido.ValorTotal,
-                dueDate = DateTime.UtcNow.AddDays(15).ToString("yyyy-MM-dd"),
+                dueDate = DateTime.Now.AddDays(15).ToString("yyyy-MM-dd"),
                 externalReference = pedido.NumeroPedido,
                 description = $"Pedido {pedido.NumeroPedido} - {cliente.NomeFantasia}"
             };

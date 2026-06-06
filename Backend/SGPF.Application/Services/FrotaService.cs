@@ -45,9 +45,9 @@ public class FrotaService
         {
             Descricao = $"Abastecimento Veículo: {veiculo?.Modelo ?? "Frota"} ({veiculo?.Placa ?? "N/A"}) - {abastecimento.Litros:N2}L",
             Valor = abastecimento.ValorTotal,
-            DataEmissao = DateTime.UtcNow,
-            DataVencimento = DateTime.UtcNow,
-            DataPagamento = DateTime.UtcNow,
+            DataEmissao = DateTime.Now,
+            DataVencimento = DateTime.Now,
+            DataPagamento = DateTime.Now,
             Status = StatusContaPagar.Paga,
             Categoria = "Operacional (Frota)"
         };
@@ -68,7 +68,7 @@ public class FrotaService
                 Tipo = "saida",
                 Valor = abastecimento.ValorTotal,
                 Descricao = $"Abastecimento Veículo - {veiculo?.Placa ?? "N/A"}",
-                DataMovimentacao = DateTime.UtcNow,
+                DataMovimentacao = DateTime.Now,
                 Origem = OrigemMovimentacao.FrotaAbastecimento,
                 ReferenciaId = abastecimento.Id
             });
@@ -92,9 +92,9 @@ public class FrotaService
         {
             Descricao = $"Manutenção {manutencao.Tipo} Veículo: {veiculo?.Modelo ?? "Frota"} ({veiculo?.Placa ?? "N/A"})",
             Valor = manutencao.CustoTotal,
-            DataEmissao = DateTime.UtcNow,
-            DataVencimento = DateTime.UtcNow,
-            DataPagamento = DateTime.UtcNow,
+            DataEmissao = DateTime.Now,
+            DataVencimento = DateTime.Now,
+            DataPagamento = DateTime.Now,
             Status = StatusContaPagar.Paga,
             Categoria = "Operacional (Frota)"
         };
@@ -115,7 +115,7 @@ public class FrotaService
                 Tipo = "saida",
                 Valor = manutencao.CustoTotal,
                 Descricao = $"Manutenção Veículo {manutencao.Tipo} - {veiculo?.Placa ?? "N/A"}",
-                DataMovimentacao = DateTime.UtcNow,
+                DataMovimentacao = DateTime.Now,
                 Origem = OrigemMovimentacao.FrotaManutencao,
                 ReferenciaId = manutencao.Id
             });

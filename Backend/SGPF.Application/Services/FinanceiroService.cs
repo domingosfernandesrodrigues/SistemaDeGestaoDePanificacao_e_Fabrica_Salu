@@ -127,7 +127,7 @@ public class FinanceiroService : IFinanceiroService
         if (conta != null)
         {
             conta.Status = StatusContaPagar.Paga;
-            conta.DataPagamento = DateTime.UtcNow;
+            conta.DataPagamento = DateTime.Now;
             await _pagarRepo.UpdateAsync(conta);
 
             // Conciliação automática: desconta da conta padrão (ou primeira ativa como fallback)
@@ -145,7 +145,7 @@ public class FinanceiroService : IFinanceiroService
                     Tipo = "saida",
                     Valor = conta.Valor,
                     Descricao = $"Baixa de Conta a Pagar: {conta.Descricao}",
-                    DataMovimentacao = DateTime.UtcNow,
+                    DataMovimentacao = DateTime.Now,
                     Origem = OrigemMovimentacao.BaixaPagar,
                     ReferenciaId = conta.Id
                 });
@@ -159,7 +159,7 @@ public class FinanceiroService : IFinanceiroService
         if (conta != null)
         {
             conta.Status = StatusContaReceber.Recebido;
-            conta.DataRecebimento = DateTime.UtcNow;
+            conta.DataRecebimento = DateTime.Now;
             await _receberRepo.UpdateAsync(conta);
 
             // Conciliação automática: credita na conta padrão (ou primeira ativa como fallback)
@@ -177,7 +177,7 @@ public class FinanceiroService : IFinanceiroService
                     Tipo = "entrada",
                     Valor = conta.Valor,
                     Descricao = $"Baixa de Conta a Receber: {conta.Descricao}",
-                    DataMovimentacao = DateTime.UtcNow,
+                    DataMovimentacao = DateTime.Now,
                     Origem = OrigemMovimentacao.BaixaReceber,
                     ReferenciaId = conta.Id
                 });

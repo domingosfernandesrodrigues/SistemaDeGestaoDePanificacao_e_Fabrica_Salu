@@ -45,7 +45,7 @@ public class CompraService : ICompraService
         {
             FornecedorId = dto.FornecedorId,
             Observacao = dto.Observacao,
-            DataCompra = DateTime.UtcNow,
+            DataCompra = DateTime.Now,
             Status = StatusCompra.Rascunho,
             Categoria = Enum.TryParse<CategoriaCompra>(dto.Categoria, true, out var cat) ? cat : CategoriaCompra.Mercadoria,
             ValorTotal = dto.Itens.Sum(i => i.Quantidade * i.PrecoUnitario)
@@ -118,8 +118,8 @@ public class CompraService : ICompraService
             FornecedorId = compra.FornecedorId,
             Descricao = $"Compra #{compra.Id.ToString().Substring(0,8)}",
             Valor = compra.ValorTotal,
-            DataEmissao = DateTime.UtcNow,
-            DataVencimento = DateTime.UtcNow.AddDays(30),
+            DataEmissao = DateTime.Now,
+            DataVencimento = DateTime.Now.AddDays(30),
             Status = StatusContaPagar.Pendente,
             Categoria = compra.Categoria == CategoriaCompra.Insumo ? "Insumos" : "Mercadorias"
         });
