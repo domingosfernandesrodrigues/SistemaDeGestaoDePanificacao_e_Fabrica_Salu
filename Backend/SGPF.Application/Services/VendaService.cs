@@ -138,7 +138,7 @@ public class VendaService : IVendaService
         pedido.Pago = true;
         await _pedidoRepo.UpdateAsync(pedido);
 
-        var dataRecebimentoEfetivo = dataPagamento ?? DateTime.UtcNow;
+        var dataRecebimentoEfetivo = dataPagamento ?? DateTime.Now;
 
         // Atualizar Financeiro (Conta a Receber)
         var contas = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedido.Id);
@@ -256,10 +256,10 @@ public class VendaService : IVendaService
             ClienteId = pedido.ClienteId,
             Descricao = $"Fatura Ref. Pedido {pedido.NumeroPedido}",
             Valor = pedido.ValorTotal,
-            DataVencimento = DateTime.UtcNow.AddDays(15), // Padrão 15 dias, pode ser ajustado
+            DataVencimento = DateTime.Now.AddDays(15), // Padrão 15 dias, pode ser ajustado
             PedidoVendaId = pedido.Id,
             Status = pedido.Pago ? StatusContaReceber.Recebido : StatusContaReceber.Pendente,
-            DataRecebimento = pedido.Pago ? DateTime.UtcNow : null
+            DataRecebimento = pedido.Pago ? DateTime.Now : null
         };
         await _contaReceberRepo.AddAsync(conta);
 
@@ -279,7 +279,7 @@ public class VendaService : IVendaService
                     Tipo = "entrada",
                     Valor = pedido.ValorTotal,
                     Descricao = $"Recebimento Pedido {pedido.NumeroPedido} (Criar Faturado)",
-                    DataMovimentacao = DateTime.UtcNow,
+                    DataMovimentacao = DateTime.Now,
                     Origem = OrigemMovimentacao.Venda,
                     ReferenciaId = pedido.Id
                 });
@@ -319,7 +319,7 @@ public class VendaService : IVendaService
 
 
         pedido.Status = StatusPedidoVenda.Entregue;
-        pedido.DataEntregaRealizada = DateTime.UtcNow;
+        pedido.DataEntregaRealizada = DateTime.Now;
         await _pedidoRepo.UpdateAsync(pedido);
 
         return pedido;
@@ -408,7 +408,7 @@ public class VendaService : IVendaService
                     Tipo = "saida",
                     Valor = valorEstorno,
                     Descricao = $"Estorno / Cancelamento Pedido {pedido.NumeroPedido}",
-                    DataMovimentacao = DateTime.UtcNow,
+                    DataMovimentacao = DateTime.Now,
                     Origem = OrigemMovimentacao.Venda,
                     ReferenciaId = pedido.Id
                 });
@@ -607,7 +607,7 @@ public class VendaService : IVendaService
         foreach (var conta in contas)
         {
             conta.Status = pedido.Pago ? StatusContaReceber.Recebido : StatusContaReceber.Pendente;
-            conta.DataRecebimento = pedido.Pago ? DateTime.UtcNow : null;
+            conta.DataRecebimento = pedido.Pago ? DateTime.Now : null;
             await _contaReceberRepo.UpdateAsync(conta);
         }
 
@@ -629,7 +629,7 @@ public class VendaService : IVendaService
                     Tipo = "entrada",
                     Valor = valorTotal,
                     Descricao = $"Recebimento Pedido {pedido.NumeroPedido} (Status Alterado)",
-                    DataMovimentacao = DateTime.UtcNow,
+                    DataMovimentacao = DateTime.Now,
                     Origem = OrigemMovimentacao.Venda,
                     ReferenciaId = pedido.Id
                 });
@@ -646,7 +646,7 @@ public class VendaService : IVendaService
                     Tipo = "saida",
                     Valor = valorTotal,
                     Descricao = $"Estorno Pedido {pedido.NumeroPedido} (Status Alterado)",
-                    DataMovimentacao = DateTime.UtcNow,
+                    DataMovimentacao = DateTime.Now,
                     Origem = OrigemMovimentacao.Venda,
                     ReferenciaId = pedido.Id
                 });

@@ -63,8 +63,8 @@ public class LogRetentionService : BackgroundService
         using var scope = _serviceProvider.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-        var dataLimiteOperacional = DateTime.UtcNow.AddDays(-_operationalRetentionDays);
-        var dataLimiteAuditoria = DateTime.UtcNow.AddDays(-_auditRetentionDays);
+        var dataLimiteOperacional = DateTime.Now.AddDays(-_operationalRetentionDays);
+        var dataLimiteAuditoria = DateTime.Now.AddDays(-_auditRetentionDays);
 
         _logger.LogInformation("Iniciando rotina de retenção: Operacional < {0}, Auditoria < {1}", dataLimiteOperacional, dataLimiteAuditoria);
 
@@ -107,7 +107,7 @@ public class LogRetentionService : BackgroundService
             if (logsToArchive.Any())
             {
                 // 2. Arquivar e comprimir
-                string filename = Path.Combine(_archivePath, $"SystemLogs_{DateTime.UtcNow:yyyyMMdd_HHmmss}.json.gz");
+                string filename = Path.Combine(_archivePath, $"SystemLogs_{DateTime.Now:yyyyMMdd_HHmmss}.json.gz");
                 await CompressAndSaveAsync(filename, logsToArchive);
                 
                 // 3. Deletar do banco
@@ -143,7 +143,7 @@ public class LogRetentionService : BackgroundService
         if (oldAudits.Any())
         {
             // Arquivar e comprimir
-            string filename = Path.Combine(_archivePath, $"AuditLogs_{DateTime.UtcNow:yyyyMMdd_HHmmss}.json.gz");
+            string filename = Path.Combine(_archivePath, $"AuditLogs_{DateTime.Now:yyyyMMdd_HHmmss}.json.gz");
             await CompressAndSaveAsync(filename, oldAudits);
 
             // Deletar

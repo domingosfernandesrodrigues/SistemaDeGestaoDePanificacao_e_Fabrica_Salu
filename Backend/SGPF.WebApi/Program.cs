@@ -46,6 +46,7 @@ builder.Services.AddCors(options =>
 builder.Services.AddOpenApi();
 
 // Configure Entity Framework Core com SQL Server
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<AuditInterceptor>();
 builder.Services.AddDbContext<AppDbContext>((sp, options) =>
 {
@@ -123,4 +124,5 @@ app.UseAuthorization();
 
 app.MapControllers();
 
+// Rebuild trigger: force dotnet watch to recompile - candidates feature
 app.Run();
