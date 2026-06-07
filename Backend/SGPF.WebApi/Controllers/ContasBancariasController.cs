@@ -62,7 +62,7 @@ public class ContasBancariasController : ControllerBase
                 Tipo = "entrada",
                 Valor = conta.SaldoInicial,
                 Descricao = "Saldo Inicial de Abertura de Conta",
-                DataMovimentacao = DateTime.UtcNow,
+                DataMovimentacao = DateTime.Now,
                 Origem = OrigemMovimentacao.AberturaConta
             });
         }
@@ -127,7 +127,7 @@ public class ContasBancariasController : ControllerBase
             Tipo = request.Tipo,
             Valor = request.Valor,
             Descricao = string.IsNullOrWhiteSpace(request.Descricao) ? "Movimentação Manual" : request.Descricao,
-            DataMovimentacao = DateTime.UtcNow,
+            DataMovimentacao = DateTime.Now,
             Origem = OrigemMovimentacao.Manual
         });
 
@@ -147,7 +147,7 @@ public class ContasBancariasController : ControllerBase
     [HttpGet("extrato")]
     public async Task<IActionResult> GetExtrato([FromQuery] int mes, [FromQuery] int ano, [FromQuery] Guid? contaId = null)
     {
-        var dataInicio = new DateTime(ano, mes, 1, 0, 0, 0, DateTimeKind.Utc);
+        var dataInicio = new DateTime(ano, mes, 1, 0, 0, 0, DateTimeKind.Local);
         var dataFim = dataInicio.AddMonths(1).AddTicks(-1);
 
         var contaPadrao = (await _repository.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
@@ -253,13 +253,13 @@ public class ContasBancariasController : ControllerBase
     public async Task<IActionResult> GetSaldosPeriodo([FromQuery] int mes, [FromQuery] int ano)
     {
         var contas = await _repository.GetAllAsync();
-        var dataLimite = new DateTime(ano, mes, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(1);
-        var dataHoje = DateTime.UtcNow;
+        var dataLimite = new DateTime(ano, mes, 1, 0, 0, 0, DateTimeKind.Local).AddMonths(1);
+        var dataHoje = DateTime.Now;
 
         var contaPadrao = contas.FirstOrDefault(c => c.IsPadrao && c.Ativa);
 
         // Se o período selecionado for anterior ao mês atual, aplicamos o cálculo retroativo
-        bool isHistorico = dataLimite <= new DateTime(dataHoje.Year, dataHoje.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+        bool isHistorico = dataLimite <= new DateTime(dataHoje.Year, dataHoje.Month, 1, 0, 0, 0, DateTimeKind.Local);
 
         decimal receitasFuturas = 0;
         decimal despesasFuturas = 0;

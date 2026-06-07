@@ -137,7 +137,7 @@ public class LancamentosAlimentacaoController : ControllerBase
             {
                 Descricao = $"Alimentação ({lancamento.TipoRefeicao}) - {funcionario.Nome}",
                 Valor = lancamento.Valor,
-                DataEmissao = DateTime.UtcNow,
+                DataEmissao = DateTime.Now,
                 DataVencimento = null, // Sem data de vencimento (conforme solicitação)
                 Status = StatusContaPagar.Pendente,
                 Categoria = "Alimentação"

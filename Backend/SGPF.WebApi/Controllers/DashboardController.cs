@@ -32,10 +32,10 @@ public class DashboardController : ControllerBase
             }
 
             // Se não vierem dados, pega o atual
-            if (year == 0) year = DateTime.UtcNow.Year;
+            if (year == 0) year = DateTime.Now.Year;
             // Se month for 0, o Service já trata como "todos os meses" do ano.
             // Só vamos setar o mês atual se o usuário não enviou nada (nem ano nem mês)
-            if (month == 0 && !Request.Query.ContainsKey("month")) month = DateTime.UtcNow.Month;
+            if (month == 0 && !Request.Query.ContainsKey("month")) month = DateTime.Now.Month;
 
             var data = await _dashboardService.GetDashboardDataAsync(year, month, day, clienteId, motoristaId);
             return Ok(data);
