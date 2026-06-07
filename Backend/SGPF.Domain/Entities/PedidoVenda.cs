@@ -32,7 +32,7 @@ public class PedidoVenda
     public Guid? MotoristaId { get; set; }
     public Funcionario? Motorista { get; set; }
     
-    public DateTime DataPedido { get; set; } = DateTime.UtcNow;
+    public DateTime DataPedido { get; set; } = DateTime.Now;
     public DateTime? DataEntregaPrevista { get; set; }
     public DateTime? DataEntregaRealizada { get; set; }
     

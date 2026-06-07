@@ -10,6 +10,7 @@ public class AuditLog
     public string KeyValues { get; set; } = string.Empty;
     public string? OldValues { get; set; }
     public string? NewValues { get; set; }
-    public DateTime Timestamp { get; set; } = DateTime.UtcNow;
+    public DateTime Timestamp { get; set; } = DateTime.Now;
     public Guid? UserId { get; set; } // Opcional, caso a alteração seja feita por rotina automática
+    public string? UserName { get; set; }
 }

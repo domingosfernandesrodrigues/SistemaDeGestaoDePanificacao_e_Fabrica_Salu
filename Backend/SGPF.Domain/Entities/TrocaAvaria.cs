@@ -11,7 +11,7 @@ public class TrocaAvaria
     public Produto? Produto { get; set; }
     
     public decimal Quantidade { get; set; }
-    public DateTime DataTroca { get; set; } = DateTime.UtcNow;
+    public DateTime DataTroca { get; set; } = DateTime.Now;
     
     public Guid? MotoristaId { get; set; }
     public Funcionario? Motorista { get; set; }

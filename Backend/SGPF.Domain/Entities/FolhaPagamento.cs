@@ -55,5 +55,5 @@ public class FolhaPagamento
     public TipoFolha Tipo { get; set; } = TipoFolha.Mensal;
     public decimal ValorAdiantamento13Deducao { get; set; } = 0;
     
-    public DateTime DataGeracao { get; set; } = DateTime.UtcNow;
+    public DateTime DataGeracao { get; set; } = DateTime.Now;
 }

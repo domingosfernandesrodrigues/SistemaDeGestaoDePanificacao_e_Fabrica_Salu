@@ -17,7 +17,7 @@ public class Abastecimento
     public Guid VeiculoId { get; set; }
     public Veiculo? Veiculo { get; set; }
     
-    public DateTime Data { get; set; } = DateTime.UtcNow;
+    public DateTime Data { get; set; } = DateTime.Now;
     public decimal QuilometragemRegistrada { get; set; }
     public decimal Litros { get; set; }
     public decimal ValorTotal { get; set; }
@@ -36,7 +36,7 @@ public class ManutencaoVeiculo
     public Guid VeiculoId { get; set; }
     public Veiculo? Veiculo { get; set; }
     
-    public DateTime Data { get; set; } = DateTime.UtcNow;
+    public DateTime Data { get; set; } = DateTime.Now;
     public TipoManutencao Tipo { get; set; }
     public string Descricao { get; set; } = string.Empty;
     public decimal CustoTotal { get; set; }

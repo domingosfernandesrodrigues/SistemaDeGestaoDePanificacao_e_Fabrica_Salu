@@ -18,7 +18,7 @@ public class HistoricoPrecoProduto
     public decimal PrecoAntigo { get; set; }
     public decimal PrecoNovo { get; set; }
     
-    public DateTime DataAlteracao { get; set; } = DateTime.UtcNow;
+    public DateTime DataAlteracao { get; set; } = DateTime.Now;
     
     public TipoPrecoHistorico Tipo { get; set; }
     

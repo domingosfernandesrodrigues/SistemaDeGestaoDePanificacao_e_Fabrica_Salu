@@ -19,7 +19,7 @@ public class Compra
     public Guid FornecedorId { get; set; }
     public Fornecedor Fornecedor { get; set; } = null!;
     
-    public DateTime DataCompra { get; set; } = DateTime.UtcNow;
+    public DateTime DataCompra { get; set; } = DateTime.Now;
     public decimal ValorTotal { get; set; }
     public StatusCompra Status { get; set; } = StatusCompra.Rascunho;
     public CategoriaCompra Categoria { get; set; } = CategoriaCompra.Mercadoria;

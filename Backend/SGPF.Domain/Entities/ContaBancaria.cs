@@ -15,7 +15,7 @@ public class ContaBancaria
     public TipoConta Tipo { get; set; }
     public decimal SaldoInicial { get; set; }
     public decimal SaldoAtual { get; set; }
-    public DateTime DataAbertura { get; set; } = DateTime.UtcNow;
+    public DateTime DataAbertura { get; set; } = DateTime.Now;
     public bool Ativa { get; set; } = true;
     public bool IsPadrao { get; set; } = false;
 

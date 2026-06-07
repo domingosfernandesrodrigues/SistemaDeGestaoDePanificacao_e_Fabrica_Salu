@@ -23,7 +23,7 @@ namespace SGPF.Domain.Entities
         public string Tipo { get; set; } = "entrada"; // "entrada" ou "saida"
         public decimal Valor { get; set; }
         public string Descricao { get; set; } = string.Empty;
-        public DateTime DataMovimentacao { get; set; } = DateTime.UtcNow;
+        public DateTime DataMovimentacao { get; set; } = DateTime.Now;
         public OrigemMovimentacao Origem { get; set; }
         public Guid? ReferenciaId { get; set; } // Id associado (Venda, Despesa, Abastecimento, etc.)
     }

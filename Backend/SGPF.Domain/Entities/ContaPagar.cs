@@ -18,7 +18,7 @@ public class ContaPagar
     public string Descricao { get; set; } = string.Empty;
     public decimal Valor { get; set; }
     
-    public DateTime DataEmissao { get; set; } = DateTime.UtcNow;
+    public DateTime DataEmissao { get; set; } = DateTime.Now;
     public DateTime? DataVencimento { get; set; }
     public DateTime? DataPagamento { get; set; }
     
