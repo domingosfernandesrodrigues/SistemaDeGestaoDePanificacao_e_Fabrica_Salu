@@ -254,7 +254,7 @@ export function Ponto() {
               <Button
                 size="lg"
                 className="w-full text-lg py-6 bg-green-600 hover:bg-green-700 flex items-center justify-center gap-2"
-                disabled={mutationPonto.isPending || isObtendoLocalizacao || !!registroAberto}
+                disabled={isLoading || mutationPonto.isPending || isObtendoLocalizacao || !!registroAberto}
                 onClick={handleRegistrarPonto}
               >
                 {isObtendoLocalizacao && !registroAberto ? (
@@ -275,7 +275,7 @@ export function Ponto() {
                 size="lg"
                 variant="secondary"
                 className="w-full text-lg py-6 bg-slate-800 text-white hover:bg-slate-700 flex items-center justify-center gap-2"
-                disabled={mutationPonto.isPending || isObtendoLocalizacao || !registroAberto}
+                disabled={isLoading || mutationPonto.isPending || isObtendoLocalizacao || !registroAberto}
                 onClick={handleRegistrarPonto}
               >
                 {isObtendoLocalizacao && registroAberto ? (
