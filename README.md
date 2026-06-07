@@ -4,6 +4,8 @@
 [![React 19](https://img.shields.io/badge/React-19-blue)](https://react.dev/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-CSS-38B2AC)](https://tailwindcss.com/)
 [![Docker](https://img.shields.io/badge/Docker-Ready-2496ED)](https://www.docker.com/)
+[![xUnit](https://img.shields.io/badge/Tests-xUnit%20%2B%20Vitest-brightgreen)](docs/4-qualidade/plano-testes.md)
+[![Playwright](https://img.shields.io/badge/E2E-Playwright%205%2F5-success)](docs/4-qualidade/plano-testes.md)
 
 O **SGP-F** é um ERP robusto e moderno desenvolvido para atender às necessidades específicas de empresas que operam na revenda de produtos de panificação e na fabricação própria de derivados (como polvilho). O sistema integra todos os processos críticos, desde o chão de fábrica até a inteligência executiva.
 
@@ -103,6 +105,30 @@ Acesse o sistema em: `http://localhost:5173`
     npm install
     npm run dev
     ```
+
+---
+
+## 🧪 Testes
+
+O SGP-F possui cobertura de testes em três camadas (pirâmide de testes completa):
+
+| Camada | Framework | Cobertura | Comando |
+|--------|-----------|-----------|---------|
+| **Integração Backend** | xUnit + EF InMemory | 22 controllers — todos os 23 módulos | `dotnet test Backend/SGPF.Tests` |
+| **Unitários Frontend** | Vitest + RTL | 23 módulos de interface | `cd Frontend && npm run test` |
+| **E2E** | Playwright + Chromium | Auth, Ponto + Geofencing, Ordens de Produção | `cd Frontend && npx playwright test` |
+
+### E2E — Resultado Atual
+```
+5 passed (41.4s)
+  ✅ Auth Flow › login, navegação e logout
+  ✅ Ponto › clock-in dentro do geofencing
+  ✅ Ponto › bloqueio fora do geofencing (geofencing)
+  ✅ Ponto › bloqueio sem permissão GPS
+  ✅ Produção › criar, iniciar e finalizar OP
+```
+
+> 📋 Para detalhes completos da estratégia de testes, consulte [docs/4-qualidade/plano-testes.md](docs/4-qualidade/plano-testes.md).
 
 ---
 

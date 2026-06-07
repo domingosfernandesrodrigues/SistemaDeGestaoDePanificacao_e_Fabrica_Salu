@@ -26,7 +26,7 @@ Este documento é o mapa mestre do Sistema de Gestão de Panificação e Fábric
 - [Protótipos e Fluxos](3-interface/prototipos-fluxos.md) - Comportamento das telas.
 
 ## 4. Processos e Qualidade (`/4-qualidade`)
-- [Plano de Testes](4-qualidade/plano-testes.md) - xUnit e Cobertura.
+- [Plano de Testes](4-qualidade/plano-testes.md) - xUnit, Vitest e Playwright E2E (5/5 ✅).
 - [Padrões de Código](4-qualidade/padroes-codigo-lint.md) - Clean Code e Nomenclatura.
 - [Fluxo de Deploy](4-qualidade/fluxo-ci-cd-deploy.md) - Docker e CI/CD.
 
@@ -44,9 +44,14 @@ Este documento é o mapa mestre do Sistema de Gestão de Panificação e Fábric
 - [Valor de Venda (Valuation)](7-gestao/valor-venda-sistema.md) - Precificação e Mercado.
 - [Manual do Administrador](7-gestao/manual-administrador.md) - Guia de implantação e operação.
 
-## 📌 Status Atual do Sistema (05/06/2026)
+## 📌 Status Atual do Sistema (07/06/2026)
 
-O sistema SGP-F encontra-se em estado de **Produção — Estabilidade Geral**.
+O sistema SGP-F encontra-se em estado de **Produção — Estabilidade Geral com Cobertura de Testes Completa**.
+
+### 🧪 Cobertura de Testes (07/06/2026) **[NOVO]**
+- **Backend (xUnit):** 22 specs de integração cobrindo todos os 23 módulos do sistema com EF Core InMemoryDatabase.
+- **Frontend (Vitest + RTL):** Testes unitários de componente para todos os 23 módulos de interface.
+- **E2E (Playwright):** 5/5 testes passando — Auth, Ponto Eletrônico + Geofencing (3 cenários), Ordens de Produção (ciclo completo).
 
 ### ✅ Funcionalidades Consolidadas
 
