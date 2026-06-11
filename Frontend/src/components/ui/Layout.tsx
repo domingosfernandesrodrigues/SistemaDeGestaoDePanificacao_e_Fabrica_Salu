@@ -80,7 +80,7 @@ export function Layout() {
     { name: 'Entrada de Insumos', path: '/entrada-insumos', icon: FlaskConical, roles: ['Admin', 'Gestor'] },
     { name: 'Gestão de Clientes', path: '/clientes', icon: Users, roles: ['Admin', 'Gestor'] },
     { name: 'Ordens de Produção', path: '/ordens-producao', icon: Factory, roles: ['Admin', 'Gestor', 'Operador'] },
-    { name: 'Produtos e Insumos', path: '/produtos', icon: Package, roles: ['Admin', 'Gestor', 'Operador'] },
+    { name: 'Produtos e Insumos', path: '/produtos', icon: Package, roles: ['Admin', 'Gestor'] },
     { name: 'Fichas Técnicas (BOM)', path: '/fichas-tecnicas', icon: ChefHat, roles: ['Admin', 'Gestor', 'Operador'] },
     { name: 'Fornecedores', path: '/fornecedores', icon: Truck, roles: ['Admin', 'Gestor'] },
     { name: 'Gestão de Frota', path: '/frota', icon: Truck, roles: ['Admin', 'Gestor', 'Operador', 'Motorista'] },

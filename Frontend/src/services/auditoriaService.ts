@@ -26,6 +26,7 @@ export interface AuditFilters {
   userName?: string;
   startDate?: string;
   endDate?: string;
+  numeroPedido?: string;
   page?: number;
   pageSize?: number;
 }

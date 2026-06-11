@@ -76,11 +76,10 @@ export function Dashboard() {
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterDay, setFilterDay] = useState<number | string>('');
   const [filterCliente, setFilterCliente] = useState('');
-  if (userRole === 'Cliente') return <Navigate to="/vendas" replace />;
-
   const { data: clientes } = useQuery<any[]>({
     queryKey: ['clientes'],
     queryFn: async () => (await api.get('/Clientes')).data,
+    enabled: userRole !== 'Cliente',
   });
 
   const { data, isLoading, refetch } = useQuery<DashboardData>({
@@ -91,7 +90,10 @@ export function Dashboard() {
       const response = await api.get(`/Dashboard?year=${filterYear}&month=${filterMonth}${dayParam}${clienteParam}`);
       return response.data;
     },
+    enabled: userRole !== 'Cliente',
   });
+
+  if (userRole === 'Cliente') return <Navigate to="/vendas" replace />;
 
   const formatCurrency = (value: number) => 
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value || 0);

@@ -201,7 +201,7 @@ export function ConfiguracoesEmpresa() {
   const handleIeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // IE formats vary by state, so we'll just allow numbers and apply a generic 
     // pattern if you want, but simply restricting to numbers is safest nationwide.
-    let value = e.target.value.replace(/\D/g, '');
+    const value = e.target.value.replace(/\D/g, '');
     setValue('inscricaoEstadual', value, { shouldValidate: true });
   };
 

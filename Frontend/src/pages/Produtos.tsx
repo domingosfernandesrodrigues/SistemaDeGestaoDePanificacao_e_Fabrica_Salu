@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
@@ -22,6 +23,15 @@ const produtoSchema = z.object({
 type ProdutoForm = z.infer<typeof produtoSchema>;
 
 export function Produtos() {
+  const navigate = useNavigate();
+  const userRole = localStorage.getItem('sgpf_role') || '';
+
+  useEffect(() => {
+    if (userRole === 'Operador') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [userRole, navigate]);
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   
@@ -123,6 +133,10 @@ export function Produtos() {
   const onSubmit = (data: ProdutoForm) => {
     mutationSave.mutate(data);
   };
+
+  if (userRole === 'Operador') {
+    return null;
+  }
 
   if (isLoading) {
     return (

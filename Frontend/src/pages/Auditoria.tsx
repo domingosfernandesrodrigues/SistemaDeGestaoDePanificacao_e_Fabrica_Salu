@@ -17,6 +17,7 @@ export function Auditoria() {
   const [filtroUsuario, setFiltroUsuario] = useState('');
   const [filtroDataInicio, setFiltroDataInicio] = useState('');
   const [filtroDataFim, setFiltroDataFim] = useState('');
+  const [filtroNumeroPedido, setFiltroNumeroPedido] = useState('');
   const [paginaAtual, setPaginaAtual] = useState(1);
   const itensPorPagina = 12;
 
@@ -52,6 +53,7 @@ export function Auditoria() {
       userName: filtroUsuario || undefined,
       startDate: filtroDataInicio || undefined,
       endDate: filtroDataFim || undefined,
+      numeroPedido: filtroNumeroPedido || undefined,
       page: 1,
       pageSize: itensPorPagina
     });
@@ -64,6 +66,7 @@ export function Auditoria() {
     setFiltroUsuario('');
     setFiltroDataInicio('');
     setFiltroDataFim('');
+    setFiltroNumeroPedido('');
     setPaginaAtual(1);
     setAppliedFilters({
       page: 1,
@@ -178,6 +181,121 @@ export function Auditoria() {
     return dict[name] || name;
   };
 
+  // Obter descrição de enums formatada dependendo da tabela e campo
+  const getFieldValueDescription = (tableName: string, key: string, value: any): string => {
+    if (value === undefined || value === null || value === '') return '';
+    
+    const valStr = String(value).trim();
+    const valNum = Number(valStr);
+    const isNum = !isNaN(valNum);
+
+    if (!isNum) return valStr;
+
+    const lowerKey = key.toLowerCase();
+
+    if (lowerKey === 'status') {
+      switch (tableName) {
+        case 'OrdensProducao':
+          switch (valNum) {
+            case 0: return 'Planejada';
+            case 1: return 'Em Execução';
+            case 2: return 'Finalizada';
+            default: return valStr;
+          }
+        case 'PedidosVenda':
+          switch (valNum) {
+            case 0: return 'Aprovação';
+            case 1: return 'Em Separação';
+            case 2: return 'Em Rota';
+            case 3: return 'Entregue';
+            case 4: return 'Cancelado';
+            default: return valStr;
+          }
+        case 'Reunioes':
+          switch (valNum) {
+            case 0: return 'Agendada';
+            case 1: return 'Realizada';
+            case 2: return 'Cancelada';
+            default: return valStr;
+          }
+        case 'FolhasPagamento':
+          switch (valNum) {
+            case 0: return 'Aberta';
+            case 1: return 'Fechada';
+            default: return valStr;
+          }
+        case 'PlanejamentosFerias':
+          switch (valNum) {
+            case 0: return 'Planejada';
+            case 1: return 'Aprovada';
+            case 2: return 'Iniciada';
+            case 3: return 'Concluída';
+            case 4: return 'Cancelada';
+            default: return valStr;
+          }
+        case 'ContasReceber':
+          switch (valNum) {
+            case 0: return 'Pendente';
+            case 1: return 'Recebido';
+            case 2: return 'Cancelado';
+            case 3: return 'Inadimplente';
+            default: return valStr;
+          }
+        case 'ContasPagar':
+          switch (valNum) {
+            case 0: return 'Pendente';
+            case 1: return 'Aprovada';
+            case 2: return 'Paga';
+            case 3: return 'Cancelada';
+            default: return valStr;
+          }
+        case 'Compras':
+          switch (valNum) {
+            case 0: return 'Rascunho';
+            case 1: return 'Confirmada';
+            case 2: return 'Cancelada';
+            default: return valStr;
+          }
+        default:
+          return valStr;
+      }
+    }
+
+    if (lowerKey === 'formapagamento' && tableName === 'PedidosVenda') {
+      switch (valNum) {
+        case 0: return 'Dinheiro';
+        case 1: return 'Pix';
+        case 2: return 'Cartão de Crédito';
+        case 3: return 'Cartão de Débito';
+        case 4: return 'Boleto Bancário';
+        default: return valStr;
+      }
+    }
+
+    if (lowerKey === 'tipo') {
+      if (tableName === 'Produtos') {
+        switch (valNum) {
+          case 0: return 'Insumo (Matéria-prima)';
+          case 1: return 'Fabricado (Produto Acabado)';
+          case 2: return 'Revenda (Produto Pronto)';
+          default: return valStr;
+        }
+      }
+    }
+
+    if (lowerKey === 'tipoparcelamento' && tableName === 'PlanejamentosFerias') {
+      switch (valNum) {
+        case 0: return '30 Dias (Integral)';
+        case 1: return '1ª Parcela';
+        case 2: return '2ª Parcela';
+        case 3: return '3ª Parcela';
+        default: return valStr;
+      }
+    }
+
+    return valStr;
+  };
+
   // Processar diferença entre oldValues e newValues
   const getDiff = (log: AuditLog) => {
     let oldObj: Record<string, any> = {};
@@ -185,11 +303,15 @@ export function Auditoria() {
 
     try {
       if (log.oldValues) oldObj = JSON.parse(log.oldValues);
-    } catch {}
+    } catch {
+      // Ignorar erro de parsing de JSON legado ou inválido
+    }
 
     try {
       if (log.newValues) newObj = JSON.parse(log.newValues);
-    } catch {}
+    } catch {
+      // Ignorar erro de parsing de JSON legado ou inválido
+    }
 
     const keys = Array.from(new Set([...Object.keys(oldObj), ...Object.keys(newObj)]));
 
@@ -198,15 +320,20 @@ export function Auditoria() {
       const valAntigo = oldObj[key];
       const valNovo = newObj[key];
 
-      const toStringVal = (v: any) => {
+      const toStringVal = (v: any, isTargetKey: boolean = false) => {
         if (v === undefined || v === null) return '';
         if (typeof v === 'boolean') return v ? 'Sim' : 'Não';
         if (typeof v === 'object') return JSON.stringify(v, null, 2);
+        if (isTargetKey) {
+          return getFieldValueDescription(log.tableName, key, v);
+        }
         return String(v);
       };
 
-      const oldStr = toStringVal(valAntigo);
-      const newStr = toStringVal(valNovo);
+      const lowerKey = key.toLowerCase();
+      const isTargetKey = lowerKey === 'status' || lowerKey === 'formapagamento' || lowerKey === 'tipo' || lowerKey === 'tipoparcelamento';
+      const oldStr = toStringVal(valAntigo, isTargetKey);
+      const newStr = toStringVal(valNovo, isTargetKey);
       const isChanged = oldStr !== newStr;
 
       return {
@@ -277,7 +404,7 @@ export function Auditoria() {
           <Filter size={16} className="text-ember" /> Filtros de Pesquisa
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* Usuário */}
           <div className="space-y-1">
             <label className="text-xs font-medium text-slate-600 flex items-center gap-1">
@@ -327,6 +454,20 @@ export function Auditoria() {
               <option value="Modified">Alteração (Modified)</option>
               <option value="Deleted">Exclusão (Deleted)</option>
             </select>
+          </div>
+
+          {/* Número do Pedido */}
+          <div className="space-y-1">
+            <label className="text-xs font-medium text-slate-600 flex items-center gap-1">
+              <Search size={12} /> Nº do Pedido
+            </label>
+            <input 
+              type="text"
+              placeholder="Ex: PV001..."
+              value={filtroNumeroPedido} 
+              onChange={e => setFiltroNumeroPedido(e.target.value)}
+              className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-bg-card text-text-main text-sm focus:outline-none focus:ring-2 focus:ring-ember transition-all"
+            />
           </div>
 
           {/* Período de Datas */}

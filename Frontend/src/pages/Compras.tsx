@@ -125,6 +125,16 @@ export function Compras() {
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao registrar pagamento')
   });
 
+  const mutationCancel = useMutation({
+    mutationFn: (id: string) => api.post(`/Compras/${id}/cancelar`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['compras'] });
+      queryClient.invalidateQueries({ queryKey: ['produtos'] });
+      alert('Compra cancelada com sucesso. Estoque e financeiro atualizados.');
+    },
+    onError: (err: any) => alert(err.response?.data?.message || 'Erro ao cancelar compra')
+  });
+
   const handleEdit = async (compra: Compra) => {
     try {
       const response = await api.get(`/Compras/${compra.id}`);
@@ -249,6 +259,7 @@ export function Compras() {
               <option value="">Todos</option>
               <option value="Rascunho">Rascunho</option>
               <option value="Confirmada">Confirmada</option>
+              <option value="Cancelada">Cancelada</option>
             </select>
           </div>
           {(filterFornecedor || filterProduto || filterData || filterStatus) && (
@@ -298,7 +309,11 @@ export function Compras() {
                     </td>
                     <td className="px-3 lg:px-4 py-3.5">
                       <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                        compra.status === 'Rascunho' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                        compra.status === 'Rascunho'
+                          ? 'bg-amber-100 text-amber-700'
+                          : compra.status === 'Cancelada'
+                          ? 'bg-red-100 text-red-700'
+                          : 'bg-green-100 text-green-700'
                       }`}>
                         {compra.status}
                       </span>
@@ -339,6 +354,14 @@ export function Compras() {
                             title="Registrar Pagamento / Liquidar"
                           >
                             {mutationPay.isPending ? <Loader2 className="animate-spin" size={18} /> : <DollarSign size={18} />}
+                          </button>
+                          <button 
+                            className="p-1.5 text-red-650 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors"
+                            onClick={() => confirm('Deseja realmente cancelar esta compra? O estoque será devolvido e a conta a pagar será cancelada.') && mutationCancel.mutate(compra.id)}
+                            disabled={mutationCancel.isPending}
+                            title="Cancelar Compra (Devolve Estoque)"
+                          >
+                            {mutationCancel.isPending ? <Loader2 className="animate-spin" size={18} /> : <XCircle size={18} />}
                           </button>
                         </div>
                       )}
@@ -407,7 +430,11 @@ export function Compras() {
                   <h3 className="font-bold text-slate-900">{compra.fornecedorNome}</h3>
                 </div>
                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                  compra.status === 'Rascunho' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                  compra.status === 'Rascunho'
+                    ? 'bg-amber-100 text-amber-700'
+                    : compra.status === 'Cancelada'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-green-100 text-green-700'
                 }`}>
                   {compra.status}
                 </span>
@@ -447,11 +474,22 @@ export function Compras() {
                   <Button 
                     size="sm" 
                     variant="secondary" 
-                    className="flex-1 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200" 
+                    className="flex-grow bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border-emerald-200" 
                     onClick={() => confirm('Confirmar pagamento?') && mutationPay.mutate(compra.id)}
+                    disabled={mutationPay.isPending}
                   >
-                    {mutationPay.isPending ? <Loader2 className="animate-spin mr-1" size={14} /> : <Save size={14} className="mr-1" />} 
+                    {mutationPay.isPending ? <Loader2 className="animate-spin mr-1" size={14} /> : <DollarSign size={14} className="mr-1" />} 
                     Pagar / Liquidar
+                  </Button>
+                  <Button 
+                    size="sm" 
+                    variant="secondary" 
+                    className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200" 
+                    onClick={() => confirm('Deseja realmente cancelar esta compra? O estoque será devolvido e a conta a pagar será cancelada.') && mutationCancel.mutate(compra.id)}
+                    disabled={mutationCancel.isPending}
+                  >
+                    {mutationCancel.isPending ? <Loader2 className="animate-spin mr-1" size={14} /> : <XCircle size={14} className="mr-1" />}
+                    Cancelar
                   </Button>
                 </div>
               )}
