@@ -83,6 +83,18 @@ public class ProdutosController : ControllerBase
         existing.PrecoCusto = produto.PrecoCusto;
         existing.PrecoVenda = produto.PrecoVenda;
         existing.Ativo = produto.Ativo;
+        if (existing.QuantidadeEstoque != produto.QuantidadeEstoque)
+        {
+            var delta = produto.QuantidadeEstoque - existing.QuantidadeEstoque;
+            _context.MovimentacoesEstoque.Add(new MovimentacaoEstoque
+            {
+                ProdutoId = existing.Id,
+                Tipo = delta > 0 ? TipoMovimentacao.Entrada : TipoMovimentacao.Saida,
+                Quantidade = Math.Abs(delta),
+                Origem = "Ajuste Manual",
+                Observacao = $"Ajuste de inventário por {User.Identity?.Name ?? "Usuário"}"
+            });
+        }
         existing.QuantidadeEstoque = produto.QuantidadeEstoque;
 
         await _context.SaveChangesAsync();

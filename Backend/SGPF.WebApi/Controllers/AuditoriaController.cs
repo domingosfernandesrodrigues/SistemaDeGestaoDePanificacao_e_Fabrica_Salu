@@ -28,6 +28,7 @@ public class AuditoriaController : ControllerBase
         [FromQuery] string? userName,
         [FromQuery] DateTime? startDate,
         [FromQuery] DateTime? endDate,
+        [FromQuery] string? numeroPedido = null,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 50)
     {
@@ -50,6 +51,14 @@ public class AuditoriaController : ControllerBase
         if (!string.IsNullOrEmpty(userName))
         {
             query = query.Where(l => l.UserName != null && l.UserName.Contains(userName));
+        }
+
+        if (!string.IsNullOrEmpty(numeroPedido))
+        {
+            query = query.Where(l => 
+                l.KeyValues.Contains(numeroPedido) || 
+                (l.OldValues != null && l.OldValues.Contains(numeroPedido)) || 
+                (l.NewValues != null && l.NewValues.Contains(numeroPedido)));
         }
 
         if (startDate.HasValue)

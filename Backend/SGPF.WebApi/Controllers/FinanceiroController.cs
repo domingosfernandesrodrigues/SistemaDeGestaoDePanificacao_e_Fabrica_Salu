@@ -33,8 +33,8 @@ public class FinanceiroController : ControllerBase
     [HttpPost("pagar/{id}/baixa")]
     public async Task<IActionResult> BaixarPagar(Guid id)
     {
-        await _finService.BaixarContaPagarAsync(id);
-        return Ok();
+        var warning = await _finService.BaixarContaPagarAsync(id);
+        return Ok(new { warning });
     }
 
     [HttpPost("receber/{id}/baixa")]

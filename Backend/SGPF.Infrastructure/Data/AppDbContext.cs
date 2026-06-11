@@ -156,8 +156,20 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Abastecimento>().Property(a => a.Litros).HasPrecision(18, 2);
         modelBuilder.Entity<Abastecimento>().Property(a => a.ValorTotal).HasPrecision(18, 2);
         
+        modelBuilder.Entity<Abastecimento>()
+            .HasOne(a => a.ContaPagar)
+            .WithMany()
+            .HasForeignKey(a => a.ContaPagarId)
+            .OnDelete(DeleteBehavior.SetNull);
+        
         modelBuilder.Entity<ManutencaoVeiculo>().Property(m => m.CustoTotal).HasPrecision(18, 2);
         modelBuilder.Entity<ManutencaoVeiculo>().Property(m => m.QuilometragemRegistrada).HasPrecision(18, 2);
+
+        modelBuilder.Entity<ManutencaoVeiculo>()
+            .HasOne(m => m.ContaPagar)
+            .WithMany()
+            .HasForeignKey(m => m.ContaPagarId)
+            .OnDelete(DeleteBehavior.SetNull);
         
         modelBuilder.Entity<TrocaAvaria>().Property(t => t.Quantidade).HasPrecision(18, 4);
 

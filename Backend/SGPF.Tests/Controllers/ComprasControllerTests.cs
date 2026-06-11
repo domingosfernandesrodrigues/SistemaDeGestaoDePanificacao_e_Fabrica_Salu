@@ -252,7 +252,7 @@ public class ComprasControllerTests : IDisposable
                 bill.DataPagamento = DateTime.Now;
                 _pagarRepo.UpdateAsync(bill).Wait();
             })
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync((string?)null);
 
         // Act
         var result = await _controller.Pagar(confirmed.Id, mockFinService.Object, _pagarRepo);

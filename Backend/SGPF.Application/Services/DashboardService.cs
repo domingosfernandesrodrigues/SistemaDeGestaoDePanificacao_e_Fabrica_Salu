@@ -174,7 +174,7 @@ public class DashboardService : IDashboardService
 
         // --- FROTA ---
         var veiculos = (await _veiculoRepo.GetAllAsync(asNoTracking: true)).ToList();
-        data.Fleet.TotalVehicles = veiculos.Count;
+        data.Fleet.TotalVehicles = veiculos.Count(v => v.Ativo);
         data.Fleet.ActiveDeliveries = (await _vendaRepo.FindAsync(v => v.Status == StatusPedidoVenda.EmRota, asNoTracking: true)).Count();
         
         var manutencoes = (await _manutencaoRepo.FindAsync(m => 

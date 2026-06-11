@@ -12,6 +12,7 @@ public interface ICompraService
     Task<Compra> ConfirmarCompraAsync(Guid compraId);
     Task<IEnumerable<Compra>> ListarTodasAsync();
     Task<Compra?> ObterPorIdAsync(Guid id);
+    Task CancelarCompraAsync(Guid compraId);
 }
 
 public class CompraService : ICompraService
@@ -187,5 +188,64 @@ public class CompraService : ICompraService
             compra.Itens = itens.ToList();
         }
         return compra;
+    }
+
+    public async Task CancelarCompraAsync(Guid compraId)
+    {
+        var compra = await _compraRepo.GetByIdAsync(compraId);
+        if (compra == null) throw new Exception("Compra não encontrada");
+        
+        if (compra.Status == StatusCompra.Cancelada) return;
+        if (compra.Status != StatusCompra.Confirmada) throw new Exception("Somente compras confirmadas podem ser canceladas.");
+
+        // 1. Localizar a ContaPagar associada (usando a tag da descrição)
+        var tag = $"Compra #{compra.Id.ToString().Substring(0, 8)}";
+        var faturas = await _pagarRepo.FindAsync(p => p.Descricao.Contains(tag));
+        var fatura = faturas.FirstOrDefault();
+        
+        if (fatura != null)
+        {
+            if (fatura.Status == StatusContaPagar.Paga)
+            {
+                throw new Exception("Não é possível cancelar uma compra cuja fatura já foi paga. Reabrar/estorne o pagamento primeiro.");
+            }
+            fatura.Status = StatusContaPagar.Cancelada;
+            await _pagarRepo.UpdateAsync(fatura);
+        }
+
+        // 2. Reverter estoque (deduzir quantidades compradas)
+        var itens = await _itemRepo.FindAsync(i => i.CompraId == compraId);
+        var produtosDeducao = new List<Produto>();
+        var movimentacoes = new List<MovimentacaoEstoque>();
+
+        foreach (var item in itens)
+        {
+            var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
+            if (produto != null)
+            {
+                if (produto.QuantidadeEstoque < item.Quantidade)
+                {
+                    throw new Exception($"Estoque insuficiente para cancelar esta compra. O produto '{produto.Nome}' possui apenas {produto.QuantidadeEstoque} em estoque, mas seriam deduzidos {item.Quantidade}.");
+                }
+                
+                produto.QuantidadeEstoque -= item.Quantidade;
+                produtosDeducao.Add(produto);
+
+                movimentacoes.Add(new MovimentacaoEstoque
+                {
+                    ProdutoId = produto.Id,
+                    Tipo = TipoMovimentacao.Saida,
+                    Quantidade = item.Quantidade,
+                    Origem = $"CANCEL-COMPRA-{compra.Id.ToString().Substring(0, 8)}",
+                    Observacao = "Estorno de cancelamento de compra"
+                });
+            }
+        }
+
+        if (produtosDeducao.Any()) await _produtoRepo.UpdateRangeAsync(produtosDeducao);
+        if (movimentacoes.Any()) await _movimentacaoRepo.AddRangeAsync(movimentacoes);
+
+        compra.Status = StatusCompra.Cancelada;
+        await _compraRepo.UpdateAsync(compra);
     }
 }

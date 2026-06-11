@@ -522,7 +522,7 @@ export function Vendas() {
                           <Edit3 size={14} />
                         </button>
                         <button 
-                          onClick={(e) => { e.stopPropagation(); confirm('Excluir permanentemente?') && mutationDeleteOrder.mutate(venda.id); }}
+                          onClick={(e) => { e.stopPropagation(); if (confirm('Excluir permanentemente?')) mutationDeleteOrder.mutate(venda.id); }}
                           className="p-1 text-red-400 hover:text-red-600 rounded bg-red-50/30 border border-red-100"
                         >
                           <Trash2 size={14} />
@@ -540,7 +540,7 @@ export function Vendas() {
                     )}
                    {!isCliente && statusValue !== 4 && (
                     <button 
-                      onClick={(e) => { e.stopPropagation(); confirm('Deseja realmente cancelar este pedido?') && mutationCancel.mutate(venda.id); }}
+                      onClick={(e) => { e.stopPropagation(); if (confirm('Deseja realmente cancelar este pedido?')) mutationCancel.mutate(venda.id); }}
                       className="p-1 text-amber-500 hover:text-amber-700 rounded bg-slate-50 border border-slate-100"
                       title="Cancelar Pedido"
                     >
@@ -549,7 +549,7 @@ export function Vendas() {
                    )}
                    {!isCliente && statusValue === 4 && (
                      <button 
-                        onClick={(e) => { e.stopPropagation(); confirm('Deseja excluir permanentemente este pedido cancelado?') && mutationDeleteOrder.mutate(venda.id); }}
+                        onClick={(e) => { e.stopPropagation(); if (confirm('Deseja excluir permanentemente este pedido cancelado?')) mutationDeleteOrder.mutate(venda.id); }}
                         className="p-1 text-red-500 hover:text-red-700 rounded bg-red-50 border border-red-100"
                         title="Excluir Permanentemente"
                       >

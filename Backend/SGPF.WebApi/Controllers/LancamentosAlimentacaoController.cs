@@ -198,17 +198,27 @@ public class LancamentosAlimentacaoController : ControllerBase
             var lancamento = await _context.LancamentosAlimentacao.FindAsync(id);
             if (lancamento == null) return NotFound();
 
-            // 1. Excluir o lançamento de alimentação
-            await _alimentacaoRepo.DeleteAsync(id);
-
-            // 2. Tentar encontrar a ContaPagar associada e removê-la para manter consistência financeira
+            // Verificar se a ContaPagar associada já foi paga
             if (lancamento.ContaPagarId.HasValue)
             {
                 var conta = await _contaPagarRepo.GetByIdAsync(lancamento.ContaPagarId.Value);
+                if (conta != null && conta.Status == StatusContaPagar.Paga)
+                {
+                    return BadRequest(new { message = "Não é possível excluir um lançamento de alimentação cuja fatura financeira já foi paga." });
+                }
+                
+                // 1. Excluir o lançamento de alimentação
+                await _alimentacaoRepo.DeleteAsync(id);
+
                 if (conta != null && conta.Status == StatusContaPagar.Pendente)
                 {
                     await _contaPagarRepo.DeleteAsync(conta.Id);
                 }
+            }
+            else
+            {
+                // 1. Excluir o lançamento de alimentação
+                await _alimentacaoRepo.DeleteAsync(id);
             }
 
             return NoContent();

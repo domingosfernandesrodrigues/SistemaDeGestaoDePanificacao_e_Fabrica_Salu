@@ -8,7 +8,7 @@ public interface IFinanceiroService
 {
     Task<RelatorioDreDto> GerarDreAsync(int mes, int ano);
     Task<ResumoFinanceiroDto> ObterResumoAsync();
-    Task BaixarContaPagarAsync(Guid id);
+    Task<string?> BaixarContaPagarAsync(Guid id);
     Task BaixarContaReceberAsync(Guid id);
 }
 
@@ -121,11 +121,14 @@ public class FinanceiroService : IFinanceiroService
         };
     }
 
-    public async Task BaixarContaPagarAsync(Guid id)
+    public async Task<string?> BaixarContaPagarAsync(Guid id)
     {
         var conta = await _pagarRepo.GetByIdAsync(id);
         if (conta != null)
         {
+            if (conta.Status == StatusContaPagar.Paga)
+                return null;
+
             conta.Status = StatusContaPagar.Paga;
             conta.DataPagamento = DateTime.Now;
             await _pagarRepo.UpdateAsync(conta);
@@ -135,6 +138,12 @@ public class FinanceiroService : IFinanceiroService
                             ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
             if (contaPadrao != null)
             {
+                string? warning = null;
+                if (contaPadrao.SaldoAtual < conta.Valor)
+                {
+                    warning = $"Alerta: O saldo da conta bancária '{contaPadrao.Nome}' ficou negativo após o pagamento (Saldo Atual: R$ {(contaPadrao.SaldoAtual - conta.Valor):N2}).";
+                }
+
                 contaPadrao.SaldoAtual -= conta.Valor;
                 await _contaBancariaRepo.UpdateAsync(contaPadrao);
 
@@ -149,8 +158,11 @@ public class FinanceiroService : IFinanceiroService
                     Origem = OrigemMovimentacao.BaixaPagar,
                     ReferenciaId = conta.Id
                 });
+
+                return warning;
             }
         }
+        return null;
     }
 
     public async Task BaixarContaReceberAsync(Guid id)

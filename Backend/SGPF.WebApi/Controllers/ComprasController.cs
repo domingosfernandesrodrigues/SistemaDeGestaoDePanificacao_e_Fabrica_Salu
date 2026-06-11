@@ -162,4 +162,18 @@ public class ComprasController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    [HttpPost("{id}/cancelar")]
+    public async Task<IActionResult> Cancelar(Guid id)
+    {
+        try
+        {
+            await _compraService.CancelarCompraAsync(id);
+            return Ok(new { message = "Compra cancelada com sucesso." });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

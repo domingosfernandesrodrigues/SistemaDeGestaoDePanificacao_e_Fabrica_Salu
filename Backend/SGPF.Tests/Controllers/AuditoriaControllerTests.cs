@@ -63,6 +63,18 @@ public class AuditoriaControllerTests : IDisposable
         var items3 = (body3.GetType().GetProperty("Items")?.GetValue(body3) as System.Collections.IEnumerable).Cast<AuditLog>().ToList();
         items3.Should().HaveCount(1);
         items3[0].UserName.Should().Be("admin");
+
+        // 4. Filtrar por NumeroPedido
+        var log3 = new AuditLog { TableName = "PedidosVenda", Action = "Insert", UserName = "admin", KeyValues = "{\"Id\": \"guid\"}", NewValues = "{\"NumeroPedido\": \"PV100\"}", Timestamp = DateTime.UtcNow };
+        _context.AuditLogs.Add(log3);
+        await _context.SaveChangesAsync();
+
+        var result4 = await _controller.Get(tableName: null, action: null, userName: null, startDate: null, endDate: null, numeroPedido: "PV100");
+        var ok4 = result4.Should().BeOfType<OkObjectResult>().Subject;
+        var body4 = ok4.Value.Should().BeAssignableTo<object>().Subject;
+        var items4 = (body4.GetType().GetProperty("Items")?.GetValue(body4) as System.Collections.IEnumerable).Cast<AuditLog>().ToList();
+        items4.Should().HaveCount(1);
+        items4[0].TableName.Should().Be("PedidosVenda");
     }
 
     [Fact]

@@ -113,7 +113,7 @@ public class VendaService : IVendaService
                 Observacao = "Reserva de Venda"
             });
 
-            produto.QuantidadeEstoque -= item.Quantidade; // Reduz o saldo disponível
+            produto.QuantidadeEstoque -= item.Quantidade;
             produtosAtualizados.Add(produto);
         }
 
@@ -193,15 +193,36 @@ public class VendaService : IVendaService
         pedido.Status = StatusPedidoVenda.Novo;
         pedido.ValorTotal = 0;
 
+        var movimentacoes = new List<MovimentacaoEstoque>();
+        var produtosAtualizados = new List<Produto>();
+
         foreach (var item in pedido.Itens)
         {
             var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
-            if (produto != null)
+            if (produto == null) throw new Exception($"Produto {item.ProdutoId} não encontrado.");
+
+            if (produto.QuantidadeEstoque < item.Quantidade)
+                throw new Exception($"Estoque insuficiente para o produto {produto.Nome}. Saldo: {produto.QuantidadeEstoque}");
+
+            item.PrecoUnitario = produto.PrecoVenda;
+            pedido.ValorTotal += item.Subtotal;
+
+            movimentacoes.Add(new MovimentacaoEstoque
             {
-                item.PrecoUnitario = produto.PrecoVenda;
-                pedido.ValorTotal += item.Subtotal;
-            }
+                ProdutoId = produto.Id,
+                Tipo = TipoMovimentacao.Reserva,
+                Quantidade = item.Quantidade,
+                Origem = pedido.NumeroPedido,
+                Observacao = "Reserva de Venda (Portal)"
+            });
+
+            produto.QuantidadeEstoque -= item.Quantidade;
+            produtosAtualizados.Add(produto);
         }
+
+        if (movimentacoes.Any()) await _estoqueRepo.AddRangeAsync(movimentacoes);
+        if (produtosAtualizados.Any()) await _produtoRepo.UpdateRangeAsync(produtosAtualizados);
+
         await _pedidoRepo.AddAsync(pedido);
         return pedido;
     }
@@ -217,34 +238,6 @@ public class VendaService : IVendaService
         {
             item.Produto = null!;
         }
-
-        var movimentacoes = new List<MovimentacaoEstoque>();
-        var produtosAtualizados = new List<Produto>();
-
-        foreach (var item in pedido.Itens)
-        {
-            var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
-            if (produto != null)
-            {
-                if (produto.QuantidadeEstoque < item.Quantidade)
-                    throw new Exception($"Estoque insuficiente para o produto {produto.Nome}. Disponível: {produto.QuantidadeEstoque}");
-
-                produto.QuantidadeEstoque -= item.Quantidade;
-                produtosAtualizados.Add(produto);
-
-                movimentacoes.Add(new MovimentacaoEstoque
-                {
-                    ProdutoId = produto.Id,
-                    Tipo = TipoMovimentacao.Reserva,
-                    Quantidade = item.Quantidade,
-                    Origem = pedido.NumeroPedido,
-                    Observacao = "Reserva (Aprovação de Venda)"
-                });
-            }
-        }
-
-        if (movimentacoes.Any()) await _estoqueRepo.AddRangeAsync(movimentacoes);
-        if (produtosAtualizados.Any()) await _produtoRepo.UpdateRangeAsync(produtosAtualizados);
 
 
         pedido.Status = StatusPedidoVenda.Separacao;
@@ -351,7 +344,7 @@ public class VendaService : IVendaService
         }
 
         // Reverter Logística
-        if (pedido.Status != StatusPedidoVenda.Novo && pedido.Status != StatusPedidoVenda.Cancelado)
+        if (pedido.Status != StatusPedidoVenda.Cancelado)
         {
             var movimentacoes = new List<MovimentacaoEstoque>();
             var produtosAtualizados = new List<Produto>();
@@ -434,8 +427,8 @@ public class VendaService : IVendaService
             item.Produto = null!;
         }
 
-        // 1. Reverter estoque atual (Reservas)
-        if (pedidoExistente.Status == StatusPedidoVenda.Separacao)
+        // 1. Reverter estoque físico antigo
+        if (pedidoExistente.Status == StatusPedidoVenda.Novo || pedidoExistente.Status == StatusPedidoVenda.Separacao)
         {
             var produtosEstorno = new List<Produto>();
             foreach (var item in pedidoExistente.Itens)
@@ -463,13 +456,14 @@ public class VendaService : IVendaService
 
         var itensNovos = new List<PedidoVendaItem>();
         var produtosNovosAtualizados = new List<Produto>();
+        var novasReservas = new List<MovimentacaoEstoque>();
 
         foreach (var item in pedidoAtualizado.Itens)
         {
             var produto = await _produtoRepo.GetByIdAsync(item.ProdutoId);
             if (produto == null) throw new Exception("Produto não encontrado.");
 
-            if (pedidoExistente.Status == StatusPedidoVenda.Separacao && produto.QuantidadeEstoque < item.Quantidade)
+            if ((pedidoExistente.Status == StatusPedidoVenda.Novo || pedidoExistente.Status == StatusPedidoVenda.Separacao) && produto.QuantidadeEstoque < item.Quantidade)
                 throw new Exception($"Estoque insuficiente para {produto.Nome}");
 
             item.PedidoVendaId = pedidoExistente.Id;
@@ -478,14 +472,24 @@ public class VendaService : IVendaService
             
             itensNovos.Add(item);
 
-            if (pedidoExistente.Status == StatusPedidoVenda.Separacao)
+            if (pedidoExistente.Status == StatusPedidoVenda.Novo || pedidoExistente.Status == StatusPedidoVenda.Separacao)
             {
                 produto.QuantidadeEstoque -= item.Quantidade;
                 produtosNovosAtualizados.Add(produto);
+
+                novasReservas.Add(new MovimentacaoEstoque
+                {
+                    ProdutoId = produto.Id,
+                    Tipo = TipoMovimentacao.Reserva,
+                    Quantidade = item.Quantidade,
+                    Origem = pedidoExistente.NumeroPedido,
+                    Observacao = "Reserva por Atualização"
+                });
             }
         }
 
         if (itensNovos.Any()) await _itemRepo.AddRangeAsync(itensNovos);
+        if (novasReservas.Any()) await _estoqueRepo.AddRangeAsync(novasReservas);
         if (produtosNovosAtualizados.Any()) await _produtoRepo.UpdateRangeAsync(produtosNovosAtualizados);
 
         // Atualizar Forma de Pagamento e Motorista que estavam esquecidos
@@ -515,15 +519,25 @@ public class VendaService : IVendaService
         var pedido = await GetByIdAsync(id);
         if (pedido == null) return;
 
+        if (pedido.Pago)
+        {
+            throw new Exception("Não é possível excluir um pedido que já está pago. Cancele o pedido para realizar o estorno financeiro.");
+        }
+
+        var contas = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedido.Id);
+        if (contas.Any(c => c.Status == StatusContaReceber.Recebido))
+        {
+            throw new Exception("Não é possível excluir um pedido com contas a receber liquidadas. Cancele o pedido para realizar o estorno financeiro.");
+        }
+
         // Evita colisão de rastreamento do EF Core limpando referências circulares
         foreach (var item in pedido.Itens)
         {
             item.Produto = null!;
         }
 
-        // Se o pedido não estiver em status Novo ou Cancelado (onde o estoque já foi estornado/não baixado),
-        // precisamos reverter os itens para o estoque antes de apagar.
-        if (pedido.Status != StatusPedidoVenda.Novo && pedido.Status != StatusPedidoVenda.Cancelado)
+        // Reverter Logística
+        if (pedido.Status != StatusPedidoVenda.Cancelado)
         {
             var movimentacoes = new List<MovimentacaoEstoque>();
             var produtosAtualizados = new List<Produto>();
@@ -542,7 +556,7 @@ public class VendaService : IVendaService
                         Tipo = TipoMovimentacao.Entrada,
                         Quantidade = item.Quantidade,
                         Origem = pedido.NumeroPedido,
-                        Observacao = $"Estorno de Exclusão Direta do Pedido ({pedido.Status})"
+                        Observacao = $"Estorno de Exclusão Direta ({pedido.Status})"
                     });
                 }
             }
@@ -552,7 +566,7 @@ public class VendaService : IVendaService
         }
 
         // Remover Contas a Receber associadas para evitar quebra de chave estrangeira/integridade
-        var contas = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedido.Id);
+        contas = await _contaReceberRepo.FindAsync(c => c.PedidoVendaId == pedido.Id);
         foreach (var conta in contas)
         {
             await _contaReceberRepo.DeleteAsync(conta.Id);

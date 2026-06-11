@@ -53,13 +53,56 @@ public class OrdensProducaoController : ControllerBase
             op.UsuarioPlanejouId = userId;
         }
 
+        // Buscar a ficha técnica do produto se existir
+        var ficha = await _context.FichasTecnicas
+            .Include(f => f.Insumos)
+            .FirstOrDefaultAsync(f => f.ProdutoId == op.ProdutoId);
+
+        var insumosNovos = new List<OrdemProducaoInsumo>();
+
+        if (ficha != null)
+        {
+            var multiplicador = op.QuantidadePlanejada / ficha.RendimentoPadrao;
+
+            foreach (var insumoFicha in ficha.Insumos)
+            {
+                var quantidadeNecessariaComPerda = insumoFicha.QuantidadeNecessaria * (1 + insumoFicha.PerdaPercentual / 100);
+                var quantidadePlanejada = quantidadeNecessariaComPerda * multiplicador;
+
+                var insumo = await _context.Produtos.FindAsync(insumoFicha.InsumoId);
+                if (insumo == null) return BadRequest(new { message = $"Insumo de ID {insumoFicha.InsumoId} não encontrado." });
+
+                // Calcular o consumo em outras OPs Planejadas
+                var consumidoEmOutrasPlanejadas = await _context.OrdemProducaoInsumos
+                    .Where(opi => opi.InsumoId == insumoFicha.InsumoId && opi.OrdemProducao!.Status == StatusOrdemProducao.Planejada)
+                    .SumAsync(opi => opi.QuantidadePlanejada);
+
+                var disponivelProjetado = insumo.QuantidadeEstoque - consumidoEmOutrasPlanejadas;
+
+                if (disponivelProjetado < quantidadePlanejada)
+                {
+                    return BadRequest(new { message = $"Estoque insuficiente de insumos para planejamento. O insumo '{insumo.Nome}' necessita de {quantidadePlanejada:N2}, mas possui apenas {disponivelProjetado:N2} disponível projetado (Estoque físico: {insumo.QuantidadeEstoque:N2}, comprometido em outras OPs Planejadas: {consumidoEmOutrasPlanejadas:N2})." });
+                }
+
+                insumosNovos.Add(new OrdemProducaoInsumo
+                {
+                    InsumoId = insumoFicha.InsumoId,
+                    QuantidadePlanejada = quantidadePlanejada,
+                    QuantidadeConsumida = 0
+                });
+            }
+        }
+
         op.Status = StatusOrdemProducao.Planejada;
+        op.Insumos = insumosNovos;
+
         await _repository.AddAsync(op);
         
         // Recarregar com Includes para o frontend
         var createdOp = await _context.OrdensProducao
             .Include(o => o.Produto)
             .Include(o => o.UsuarioPlanejou)
+            .Include(o => o.Insumos)
             .FirstOrDefaultAsync(o => o.Id == op.Id);
 
         return Ok(createdOp);
@@ -127,10 +170,66 @@ public class OrdensProducaoController : ControllerBase
             return BadRequest(new { message = "Não é possível editar uma ordem de produção que já foi iniciada ou finalizada." });
         }
 
+        // Buscar a ficha técnica do produto atualizado se existir
+        var ficha = await _context.FichasTecnicas
+            .Include(f => f.Insumos)
+            .FirstOrDefaultAsync(f => f.ProdutoId == opAtualizada.ProdutoId);
+
+        if (ficha != null)
+        {
+            var insumosNovos = new List<OrdemProducaoInsumo>();
+            var multiplicador = opAtualizada.QuantidadePlanejada / ficha.RendimentoPadrao;
+
+            foreach (var insumoFicha in ficha.Insumos)
+            {
+                var quantidadeNecessariaComPerda = insumoFicha.QuantidadeNecessaria * (1 + insumoFicha.PerdaPercentual / 100);
+                var quantidadePlanejada = quantidadeNecessariaComPerda * multiplicador;
+
+                var insumo = await _context.Produtos.FindAsync(insumoFicha.InsumoId);
+                if (insumo == null) return BadRequest(new { message = $"Insumo de ID {insumoFicha.InsumoId} não encontrado." });
+
+                // Calcular o consumo em outras OPs Planejadas (excluindo a OP atual)
+                var consumidoEmOutrasPlanejadas = await _context.OrdemProducaoInsumos
+                    .Where(opi => opi.InsumoId == insumoFicha.InsumoId && opi.OrdemProducao!.Status == StatusOrdemProducao.Planejada && opi.OrdemProducaoId != op.Id)
+                    .SumAsync(opi => opi.QuantidadePlanejada);
+
+                var disponivelProjetado = insumo.QuantidadeEstoque - consumidoEmOutrasPlanejadas;
+
+                if (disponivelProjetado < quantidadePlanejada)
+                {
+                    return BadRequest(new { message = $"Estoque insuficiente de insumos para planejamento. O insumo '{insumo.Nome}' necessita de {quantidadePlanejada:N2}, mas possui apenas {disponivelProjetado:N2} disponível projetado (Estoque físico: {insumo.QuantidadeEstoque:N2}, comprometido em outras OPs Planejadas: {consumidoEmOutrasPlanejadas:N2})." });
+                }
+
+                insumosNovos.Add(new OrdemProducaoInsumo
+                {
+                    OrdemProducaoId = op.Id,
+                    InsumoId = insumoFicha.InsumoId,
+                    QuantidadePlanejada = quantidadePlanejada,
+                    QuantidadeConsumida = 0
+                });
+            }
+
+            // Deletar os insumos antigos da OP
+            var insumosAntigos = await _context.OrdemProducaoInsumos
+                .Where(i => i.OrdemProducaoId == op.Id)
+                .ToListAsync();
+
+            if (insumosAntigos.Any())
+            {
+                _context.OrdemProducaoInsumos.RemoveRange(insumosAntigos);
+            }
+
+            // Adicionar novos insumos
+            if (insumosNovos.Any())
+            {
+                _context.OrdemProducaoInsumos.AddRange(insumosNovos);
+            }
+        }
+
         op.ProdutoId = opAtualizada.ProdutoId;
         op.QuantidadePlanejada = opAtualizada.QuantidadePlanejada;
 
-        await _repository.UpdateAsync(op);
+        await _context.SaveChangesAsync();
         return Ok(op);
     }
 

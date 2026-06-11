@@ -229,7 +229,7 @@ public class LancamentosAlimentacaoControllerTests : IDisposable
         await _context.SaveChangesAsync();
 
         _financeiroServiceMock.Setup(f => f.BaixarContaPagarAsync(conta.Id))
-            .Returns(Task.CompletedTask);
+            .ReturnsAsync((string?)null);
 
         // Act
         var result = await _controller.PagarRefeicao(l.Id);
