@@ -198,8 +198,11 @@ public class LogisticaControllerTests : IDisposable
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
-        var returned = okResult.Value.Should().BeOfType<Abastecimento>().Subject;
-        returned.Litros.Should().Be(40m);
+        var returnedVal = okResult.Value;
+        returnedVal.Should().NotBeNull();
+        var returned = returnedVal.GetType().GetProperty("data")?.GetValue(returnedVal) as Abastecimento;
+        returned.Should().NotBeNull();
+        returned!.Litros.Should().Be(40m);
 
         // Verify updated vehicle mileage
         var dbV = await _veiculoRepo.GetByIdAsync(v.Id);

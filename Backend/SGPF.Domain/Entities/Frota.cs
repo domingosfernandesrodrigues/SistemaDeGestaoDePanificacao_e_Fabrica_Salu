@@ -21,6 +21,9 @@ public class Abastecimento
     public decimal QuilometragemRegistrada { get; set; }
     public decimal Litros { get; set; }
     public decimal ValorTotal { get; set; }
+
+    public Guid? ContaPagarId { get; set; }
+    public ContaPagar? ContaPagar { get; set; }
 }
 
 public enum TipoManutencao
@@ -41,4 +44,7 @@ public class ManutencaoVeiculo
     public string Descricao { get; set; } = string.Empty;
     public decimal CustoTotal { get; set; }
     public decimal QuilometragemRegistrada { get; set; }
+
+    public Guid? ContaPagarId { get; set; }
+    public ContaPagar? ContaPagar { get; set; }
 }

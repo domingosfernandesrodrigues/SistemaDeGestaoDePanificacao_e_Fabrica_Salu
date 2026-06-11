@@ -39,6 +39,19 @@ public class LogisticaController : ControllerBase
         return Ok(veiculo);
     }
 
+    [HttpPut("veiculos/{id}")]
+    public async Task<IActionResult> UpdateVeiculo(Guid id, [FromBody] Veiculo dto)
+    {
+        var veiculo = await _veiculoRepo.GetByIdAsync(id);
+        if (veiculo == null) return NotFound();
+
+        veiculo.Modelo = dto.Modelo;
+        veiculo.Placa = dto.Placa;
+        veiculo.QuilometragemAtual = dto.QuilometragemAtual;
+        await _veiculoRepo.UpdateAsync(veiculo);
+        return Ok(veiculo);
+    }
+
     [HttpPatch("veiculos/{id}/toggle-status")]
     public async Task<IActionResult> ToggleStatus(Guid id)
     {
@@ -68,7 +81,37 @@ public class LogisticaController : ControllerBase
     [HttpPost("abastecer")]
     public async Task<IActionResult> Abastecer([FromBody] Abastecimento abast)
     {
-        return Ok(await _frotaService.RegistrarAbastecimentoAsync(abast));
+        var (result, warning) = await _frotaService.RegistrarAbastecimentoAsync(abast);
+        return Ok(new { data = result, warning });
+    }
+
+    [HttpPut("abastecer/{id}")]
+    public async Task<IActionResult> UpdateAbastecer(Guid id, [FromBody] Abastecimento abast)
+    {
+        if (id != abast.Id) return BadRequest();
+        try
+        {
+            var warning = await _frotaService.AtualizarAbastecimentoAsync(abast);
+            return Ok(new { warning });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("abastecer/{id}")]
+    public async Task<IActionResult> DeleteAbastecer(Guid id)
+    {
+        try
+        {
+            await _frotaService.ExcluirAbastecimentoAsync(id);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("abastecimentos")]
@@ -77,11 +120,68 @@ public class LogisticaController : ControllerBase
     [HttpPost("manutencao")]
     public async Task<IActionResult> Manutencao([FromBody] ManutencaoVeiculo manu)
     {
-        return Ok(await _frotaService.RegistrarManutencaoAsync(manu));
+        var (result, warning) = await _frotaService.RegistrarManutencaoAsync(manu);
+        return Ok(new { data = result, warning });
+    }
+
+    [HttpPut("manutencao/{id}")]
+    public async Task<IActionResult> UpdateManutencao(Guid id, [FromBody] ManutencaoVeiculo manu)
+    {
+        if (id != manu.Id) return BadRequest();
+        try
+        {
+            var warning = await _frotaService.AtualizarManutencaoAsync(manu);
+            return Ok(new { warning });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("manutencao/{id}")]
+    public async Task<IActionResult> DeleteManutencao(Guid id)
+    {
+        try
+        {
+            await _frotaService.ExcluirManutencaoAsync(id);
+            return NoContent();
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpGet("manutencoes")]
     public async Task<IActionResult> GetManutencoes([FromServices] IRepository<ManutencaoVeiculo> repo) => Ok(await repo.GetAllAsync());
+
+    [HttpGet("financeiro-frota")]
+    public async Task<IActionResult> GetFinanceiroFrota(
+        [FromServices] IRepository<ContaPagar> pagarRepo,
+        [FromQuery] int? mes = null,
+        [FromQuery] int? ano = null)
+    {
+        var todos = await pagarRepo.FindAsync(c => c.Categoria == "Operacional (Frota)");
+        var lista = todos.ToList();
+
+        // Apply optional period filter
+        if (mes.HasValue && ano.HasValue)
+            lista = lista.Where(c => (c.DataVencimento ?? c.DataEmissao).Month == mes.Value && (c.DataVencimento ?? c.DataEmissao).Year == ano.Value).ToList();
+        else if (ano.HasValue)
+            lista = lista.Where(c => (c.DataVencimento ?? c.DataEmissao).Year == ano.Value).ToList();
+
+        var totalAbastecimento = lista.Where(c => c.Descricao.StartsWith("Abastecimento")).Sum(c => c.Valor);
+        var totalManutencao = lista.Where(c => c.Descricao.StartsWith("Manutenção")).Sum(c => c.Valor);
+
+        return Ok(new
+        {
+            lancamentos = lista.OrderByDescending(c => c.DataEmissao),
+            totalAbastecimento,
+            totalManutencao,
+            totalGeral = totalAbastecimento + totalManutencao
+        });
+    }
 
     // Trocas
     [HttpGet("trocas")]
