@@ -25,7 +25,13 @@ builder.Host.UseSerilog((context, configuration) =>
                  ));
 
 // Add services to the container.
-builder.Services.AddControllers()
+builder.Services.AddControllers(options =>
+    {
+        // Prevent ASP.NET Core from treating non-nullable reference type properties as [Required].
+        // Without this, nullable navigation properties like ContaPagar? and Veiculo? in domain entities
+        // trigger a 400 Bad Request when only the FK (e.g., VeiculoId) is sent from the frontend.
+        options.SuppressImplicitRequiredAttributeForNonNullableReferenceTypes = true;
+    })
     .AddJsonOptions(options => {
         options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
     });
@@ -35,9 +41,29 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowAll", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        if (builder.Environment.IsDevelopment())
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        }
+        else
+        {
+            var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+            if (allowedOrigins.Length > 0)
+            {
+                policy.WithOrigins(allowedOrigins)
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
+            }
+            else
+            {
+                // Fallback seguro se não houver origens especificadas em produção
+                policy.WithOrigins("http://localhost:5173")
+                      .AllowAnyMethod()
+                      .AllowAnyHeader();
+            }
+        }
     });
 });
 
@@ -75,7 +101,15 @@ builder.Services.AddScoped<SGPF.Application.Services.ReuniaoService>();
 builder.Services.AddHostedService<SGPF.WebApi.Services.LogRetentionService>();
 
 // Configure JWT Authentication
-var jwtSecret = builder.Configuration["JwtSettings:Secret"] ?? "MySuperSecretKey_SGPF_2026_Minimum32Chars!!";
+var jwtSecret = builder.Configuration["JwtSettings:Secret"];
+if (string.IsNullOrEmpty(jwtSecret) || jwtSecret == "MySuperSecretKey_SGPF_2026_Minimum32Chars!!" || jwtSecret == "SGPF_Super_Secret_Key_Minimum_32_Chars_For_HMAC_SHA256_!")
+{
+    if (!builder.Environment.IsDevelopment())
+    {
+        throw new InvalidOperationException("Erro de Segurança: A chave secreta JWT de produção não está configurada ou utiliza o valor de desenvolvimento padrão.");
+    }
+    jwtSecret = jwtSecret ?? "MySuperSecretKey_SGPF_2026_Minimum32Chars!!";
+}
 var key = Encoding.ASCII.GetBytes(jwtSecret);
 
 builder.Services.AddAuthentication(options =>
@@ -85,7 +119,7 @@ builder.Services.AddAuthentication(options =>
 })
 .AddJwtBearer(options =>
 {
-    options.RequireHttpsMetadata = false; // Dev only
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
@@ -101,6 +135,39 @@ builder.Services.AddAuthentication(options =>
 builder.Services.AddAuthorization();
 
 var app = builder.Build();
+
+// Global Exception Handling Middleware (OWASP A10:2025)
+app.UseExceptionHandler(exceptionHandlerApp =>
+{
+    exceptionHandlerApp.Run(async context =>
+    {
+        context.Response.ContentType = "application/json";
+        
+        var exceptionHandlerPathFeature = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerPathFeature>();
+        var exception = exceptionHandlerPathFeature?.Error;
+
+        // Registrar o log do erro com Serilog
+        Log.Error(exception, "Erro não tratado em {Path}", exceptionHandlerPathFeature?.Path);
+
+        context.Response.StatusCode = Microsoft.AspNetCore.Http.StatusCodes.Status500InternalServerError;
+
+        if (app.Environment.IsDevelopment())
+        {
+            await context.Response.WriteAsJsonAsync(new
+            {
+                message = exception?.Message,
+                detail = exception?.StackTrace
+            });
+        }
+        else
+        {
+            await context.Response.WriteAsJsonAsync(new
+            {
+                message = "Ocorreu um erro interno no servidor. Por favor, contate o suporte ou tente novamente mais tarde."
+            });
+        }
+    });
+});
 
 // Aplicação de patches procedurais de banco e migrações de segurança (Clean Code & SRP)
 await SGPF.WebApi.Services.DbPatchesInitializer.ApplyPatchesAsync(app.Services);
