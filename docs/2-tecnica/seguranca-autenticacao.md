@@ -29,8 +29,19 @@ No boot do backend, `DbPatchesInitializer.cs` executa um processo de auditoria t
 - Detecta senhas armazenadas em texto simples (legado).
 - Computa o hash seguro via BCrypt e atualiza o registro de forma invisível ao usuário.
 
+### CORS Restrito por Origens Confiáveis
+- A política de CORS é restrita e baseada em uma lista de origens confiáveis configurada nas configurações da aplicação (`appsettings.json` ou variáveis de ambiente).
+- Bloqueia qualquer tentativa de conexão de origens externas não explícitas na lista, mitigando vetores de ataque Cross-Origin.
+
+### Bloqueio de Chave JWT Padrão (Hardening)
+- O backend rejeita a inicialização em ambientes que não sejam de desenvolvimento caso a chave secreta JWT configurada seja a chave padrão/desenvolvimento (`DefaultSuperSecretKeyForDevelopmentOnlyDoNotUseInProduction`).
+- Nesses cenários, uma exceção crítica é lançada impedindo o startup, garantindo que o sistema use apenas chaves criptograficamente fortes em produção.
+
+### HTTPS Obrigatório (RequireHttpsMetadata)
+- A validação de tokens JWT Bearer está configurada com `RequireHttpsMetadata = true` em produção, obrigando que toda autenticação trafegue exclusivamente por conexões HTTPS seguras.
+
 ### Wipe Definitivo de Backdoors de Desenvolvimento
-- **Removidos fisicamente:** `DbCompareController.cs`, `DebugController.cs`, `check_db.cs`.
+- **Removidos fisicamente:** `DbCompareController.cs`, `DebugController.cs`, `check_db.cs` e a pasta temporária de testes `Backend/tmp_test/`.
 - Todos os controllers protegidos com `[Authorize]` e respectivas roles.
 - O endpoint `WebhookConfirmarPagamento` em `VendasController.cs` é protegido com `[Authorize(Roles = "Admin,Gestor")]`.
 

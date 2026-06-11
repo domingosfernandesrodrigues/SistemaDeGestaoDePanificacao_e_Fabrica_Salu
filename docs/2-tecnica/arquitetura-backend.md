@@ -23,6 +23,7 @@ Hospeda controladores REST, middlewares de autenticação, inicializadores de pa
 | `LancamentosAlimentacaoController.cs` | CRUD de refeições com isolamento por perfil: Admin/Gestor vêem tudo; Operador/Motorista vêem apenas os próprios lançamentos via `FuncionarioId` do token JWT |
 | `DbPatchesInitializer.cs` | Desacopla a inicialização do banco de dados do `Program.cs`; gerencia migrações SQL e auto-migração de senhas para BCrypt na inicialização |
 | `LogRetentionService.cs` | `BackgroundService` para rotação, limpeza e arquivamento diário de logs de auditoria |
+| `Program.cs (Tratamento de Exceção)` | Middleware Global de Exceções configurado com `UseExceptionHandler`; intercepta erros inesperados, registra logs detalhados via Serilog e blinda respostas em produção de vazamento de stack traces (OWASP A10:2025) |
 
 ### `SGPF.Application` — Camada de Aplicação
 Contém casos de uso, interfaces e serviços de negócio.
@@ -68,10 +69,13 @@ PaymentGatewayFactory.Create(token, empresaRepo)
 
 ## Segurança
 
-- **JWT + BCrypt (12 salt rounds):** Autenticação e senhas.
-- **Auto-migrador de senhas:** Detecta e converte senhas em texto plano no boot.
-- **Wipe de backdoors:** `DbCompareController`, `DebugController` e `check_db` removidos fisicamente.
-- **`[Authorize]` em todos os controllers:** Todos os endpoints protegidos por role. Exceções documentadas (webhooks públicos validam segredos de provedor).
+- **JWT + BCrypt (12 salt rounds):** Autenticação robusta e criptografia de senhas com salting.
+- **Auto-migrador de senhas:** Detecta e converte dinamicamente senhas antigas em texto plano no boot da aplicação.
+- **Wipe de backdoors:** `DbCompareController`, `DebugController`, `check_db` e a pasta `Backend/tmp_test/` foram removidos fisicamente do repositório.
+- **`[Authorize]` em todos os controllers:** Endpoints 100% protegidos por perfis de acesso. Exceções mapeadas (webhooks públicos) validam a assinatura digital do gateway.
+- **CORS Restrito:** Lista de origens permitidas controlada por arquivo de configuração no boot da API.
+- **Hardening de Chave JWT:** O backend impede a execução em ambientes produtivos se a chave padrão fraca for detectada.
+- **Middleware Global de Exceções:** Centraliza o tratamento de falhas brutas do servidor, registrando logs estruturados via Serilog e blindando a resposta JSON de vazamentos de StackTrace em produção (OWASP A10:2025).
 
 ---
 

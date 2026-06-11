@@ -8,12 +8,13 @@
 
 ## 2. Painel de Vendas B2B (Kanban)
 - **Interface Visual:** Dashboard dividido em colunas de status: `Aprovação (Portal)`, `Em Separação`, `Em Rota de Entrega` e `Entregues`.
-- **Fluxo Drag-and-Drop:** 
-  - Ao mover para `Em Separação`: O sistema aprova o pedido e realiza a **Reserva de Estoque** automática.
-  - Ao mover para `Entregues`: O sistema efetiva a saída real do estoque e gera o título no **Financeiro (Contas a Receber)**.
+- **Fluxo de Estoque de Fase Única (Baixa Imediata):** 
+  - Ao criar um pedido (seja pelo cliente no Portal B2B ou pelo operador/gestor no administrativo), o sistema realiza a **baixa física imediata** dos produtos do estoque.
+  - Se um pedido for cancelado, excluído, ou caso o gestor rejeite o pedido (não o aprove na fila de aprovação do Portal B2B), o sistema realiza o **estorno imediato e incondicional** das quantidades debitadas de volta ao estoque físico.
+  - Ao mover o pedido para `Entregues` no fluxo Kanban, a baixa física (já realizada) é validada e o título correspondente no **Financeiro (Contas a Receber)** é confirmado.
 - **Gestão Ágil e Edição Completa:**
-  - **Edição:** Permitida enquanto o pedido está em Aprovação ou Separação. Realiza o estorno da reserva antiga, reaplica a nova, mapeia a Forma de Pagamento e o Motorista encarregados, e regenera as credenciais de cobrança (Boleto/Pix).
-  - **Cancelamento:** Reverte todas as movimentações de estoque e deleta contas a receber pendentes.
+  - **Edição:** Permitida enquanto o pedido não estiver finalizado. Ao alterar itens ou quantidades de um pedido em edição, o sistema recalcula e ajusta de forma transparente o estoque (devolvendo a quantidade antiga e debitando a nova), além de atualizar o motorista encarregado e regenerar as cobranças de faturamento (Pix/Boleto).
+  - **Cancelamento e Exclusão:** Reverte integralmente o débito físico de estoque dos produtos associados e remove qualquer lançamento pendente no Contas a Receber.
 - **Prevenção Automatizada de Inadimplência:**
   - O sistema realiza um bloqueio comercial automático na tela de Novo Pedido. Se o cliente selecionado possuir **3 ou mais comandas/pedidos pendentes** (não pagos e não cancelados), o formulário é bloqueado contra gravações ou novas compras até a devida quitação do débito.
 - **Faturamento Dinâmico (Boleto & Pix EMV):**

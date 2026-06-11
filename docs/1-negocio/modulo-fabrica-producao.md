@@ -14,13 +14,15 @@ A Ficha Técnica é o "DNA" do produto. Ela define a composição exata de cada 
 ## 2. Ordem de Produção (OP)
 Gerencia o fluxo de trabalho na linha de produção.
 
-- **Status Planejada:** A OP foi aberta, mas não iniciada. Permite edição de produto e quantidade.
+- **Status Planejada (Criação/Edição):**
+    - Permite edição do produto e da quantidade.
+    - **Validação de Estoque Projetado:** Só é possível criar ou alterar uma OP para o status `Planejada` se houver insumos físicos disponíveis suficientes em estoque. O cálculo deduz as necessidades de insumos exigidas por *outras* OPs que também estejam no status `Planejada` ou `Em Execução` (evitando que o mesmo estoque de insumos seja comprometido para múltiplos planejamentos simultâneos). Se o estoque projetado for insuficiente para cobrir a ficha técnica da OP, a gravação é impedida e um erro de validação é exibido.
 - **Status Em Execução (Abertura):** 
-    - Bloqueia edições.
-    - Realiza a **Reserva de Estoque** baseada na Ficha Técnica (Quantidade OP * Proporção da Receita).
+    - Bloqueia edições na OP.
+    - Realiza a **Reserva de Estoque** física baseada na Ficha Técnica (Quantidade OP * Proporção da Receita).
 - **Status Finalizada:**
-    - Efetiva a baixa dos insumos reservados.
-    - Registra a entrada do produto acabado no estoque.
+    - Efetiva a baixa física definitiva dos insumos que estavam reservados.
+    - Registra a entrada física do produto acabado no estoque.
     - Consolida o custo real da produção.
 
 ## 3. Gestão de Insumos e Produtos
