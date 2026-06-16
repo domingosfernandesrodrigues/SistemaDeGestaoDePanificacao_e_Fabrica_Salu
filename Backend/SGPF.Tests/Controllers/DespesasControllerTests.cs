@@ -9,6 +9,7 @@ using SGPF.Domain.Entities;
 using SGPF.Infrastructure.Data;
 using SGPF.Infrastructure.Repositories;
 using SGPF.WebApi.Controllers;
+using SGPF.Application.Services;
 using Xunit;
 
 namespace SGPF.Tests.Controllers;
@@ -17,6 +18,9 @@ public class DespesasControllerTests : IDisposable
 {
     private readonly AppDbContext _context;
     private readonly Repository<ContaPagar> _repository;
+    private readonly Repository<ContaBancaria> _contaBancariaRepo;
+    private readonly Repository<MovimentacaoBancaria> _movimentacaoRepo;
+    private readonly FinanceiroService _financeiroService;
     private readonly DespesasController _controller;
 
     public DespesasControllerTests()
@@ -26,8 +30,36 @@ public class DespesasControllerTests : IDisposable
             .Options;
 
         _context = new AppDbContext(options);
+        
         _repository = new Repository<ContaPagar>(_context);
-        _controller = new DespesasController(_repository);
+        _contaBancariaRepo = new Repository<ContaBancaria>(_context);
+        _movimentacaoRepo = new Repository<MovimentacaoBancaria>(_context);
+
+        var receberRepo = new Repository<ContaReceber>(_context);
+        var opRepo = new Repository<OrdemProducao>(_context);
+        var folhaRepo = new Repository<FolhaPagamento>(_context);
+        var manuRepo = new Repository<ManutencaoVeiculo>(_context);
+        var trocaRepo = new Repository<TrocaAvaria>(_context);
+        var produtoRepo = new Repository<Produto>(_context);
+
+        _financeiroService = new FinanceiroService(
+            receberRepo,
+            _repository,
+            opRepo,
+            folhaRepo,
+            manuRepo,
+            trocaRepo,
+            produtoRepo,
+            _contaBancariaRepo,
+            _movimentacaoRepo
+        );
+
+        _controller = new DespesasController(
+            _repository,
+            _financeiroService,
+            _contaBancariaRepo,
+            _movimentacaoRepo
+        );
     }
 
     public void Dispose()
@@ -127,5 +159,171 @@ public class DespesasControllerTests : IDisposable
 
         var dbExpense = await _repository.GetByIdAsync(expense.Id);
         dbExpense.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Create_ShouldDebitBankAccount_WhenExpenseIsCreatedAsPaid()
+    {
+        // Arrange
+        var bankAcc = new ContaBancaria { Nome = "Caixa Principal", SaldoInicial = 1000m, SaldoAtual = 1000m, Ativa = true, IsPadrao = true };
+        await _contaBancariaRepo.AddAsync(bankAcc);
+
+        var expense = new ContaPagar 
+        { 
+            Descricao = "Energia", 
+            Valor = 150m, 
+            Categoria = "Infraestrutura",
+            Status = StatusContaPagar.Paga 
+        };
+
+        // Act
+        var result = await _controller.Create(expense);
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        var returned = okResult.Value.Should().BeOfType<ContaPagar>().Subject;
+        returned.Status.Should().Be(StatusContaPagar.Paga);
+
+        // Clear tracker to get fresh data from database
+        _context.ChangeTracker.Clear();
+
+        // Verify database state of expense
+        var dbExpense = await _repository.GetByIdAsync(returned.Id);
+        dbExpense.Should().NotBeNull();
+        dbExpense!.Status.Should().Be(StatusContaPagar.Paga);
+
+        // Verify bank balance is decremented
+        var dbBank = await _contaBancariaRepo.GetByIdAsync(bankAcc.Id);
+        dbBank!.SaldoAtual.Should().Be(850m); // 1000 - 150
+
+        // Verify bank transaction is recorded
+        var dbMovs = await _movimentacaoRepo.FindAsync(m => m.ContaBancariaId == bankAcc.Id);
+        dbMovs.Should().ContainSingle();
+        dbMovs.First().Tipo.Should().Be("saida");
+        dbMovs.First().Valor.Should().Be(150m);
+    }
+
+    [Fact]
+    public async Task Update_ShouldAdjustBankAccountBalanceAndTransaction_WhenPaidExpenseAmountChanges()
+    {
+        // Arrange
+        var bankAcc = new ContaBancaria { Nome = "Caixa Principal", SaldoInicial = 1000m, SaldoAtual = 850m, Ativa = true, IsPadrao = true };
+        await _contaBancariaRepo.AddAsync(bankAcc);
+
+        var expense = new ContaPagar 
+        { 
+            Descricao = "Energia", 
+            Valor = 150m, 
+            Categoria = "Infraestrutura",
+            Status = StatusContaPagar.Paga 
+        };
+        await _repository.AddAsync(expense);
+
+        var transaction = new MovimentacaoBancaria
+        {
+            ContaBancariaId = bankAcc.Id,
+            Tipo = "saida",
+            Valor = 150m,
+            Descricao = "Baixa de Conta a Pagar: Energia",
+            DataMovimentacao = DateTime.Now,
+            Origem = OrigemMovimentacao.BaixaPagar,
+            ReferenciaId = expense.Id
+        };
+        await _movimentacaoRepo.AddAsync(transaction);
+
+        _context.ChangeTracker.Clear();
+
+        // Act - Update value to 200m (should debit extra 50m) and change description
+        var updatedExpense = new ContaPagar 
+        { 
+            Id = expense.Id,
+            Descricao = "Energia Reajustada", 
+            Valor = 200m, 
+            Categoria = "Infraestrutura",
+            Status = StatusContaPagar.Paga 
+        };
+        var result = await _controller.Update(expense.Id, updatedExpense);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+
+        _context.ChangeTracker.Clear();
+
+        // Verify database state of expense
+        var dbExpense = await _repository.GetByIdAsync(expense.Id);
+        dbExpense!.Valor.Should().Be(200m);
+        dbExpense.Descricao.Should().Be("Energia Reajustada");
+
+        // Verify bank balance is decremented by 50m extra
+        var dbBank = await _contaBancariaRepo.GetByIdAsync(bankAcc.Id);
+        dbBank!.SaldoAtual.Should().Be(800m); // 850 - 50
+
+        // Verify bank transaction is updated
+        var dbMovs = await _movimentacaoRepo.FindAsync(m => m.ReferenciaId == expense.Id && m.Tipo == "saida");
+        dbMovs.Should().ContainSingle();
+        dbMovs.First().Valor.Should().Be(200m);
+        dbMovs.First().Descricao.Should().Be("Baixa de Conta a Pagar: Energia Reajustada");
+    }
+
+    [Fact]
+    public async Task Update_ShouldEstornOldValue_WhenPaidExpenseTransitionsToPending()
+    {
+        // Arrange
+        var bankAcc = new ContaBancaria { Nome = "Caixa Principal", SaldoInicial = 1000m, SaldoAtual = 850m, Ativa = true, IsPadrao = true };
+        await _contaBancariaRepo.AddAsync(bankAcc);
+
+        var expense = new ContaPagar 
+        { 
+            Descricao = "Energia", 
+            Valor = 150m, 
+            Categoria = "Infraestrutura",
+            Status = StatusContaPagar.Paga 
+        };
+        await _repository.AddAsync(expense);
+
+        var transaction = new MovimentacaoBancaria
+        {
+            ContaBancariaId = bankAcc.Id,
+            Tipo = "saida",
+            Valor = 150m,
+            Descricao = "Baixa de Conta a Pagar: Energia",
+            DataMovimentacao = DateTime.Now,
+            Origem = OrigemMovimentacao.BaixaPagar,
+            ReferenciaId = expense.Id
+        };
+        await _movimentacaoRepo.AddAsync(transaction);
+
+        _context.ChangeTracker.Clear();
+
+        // Act - Edit value to 200m but also change status to Pendente
+        var updatedExpense = new ContaPagar 
+        { 
+            Id = expense.Id,
+            Descricao = "Energia Reajustada", 
+            Valor = 200m, 
+            Categoria = "Infraestrutura",
+            Status = StatusContaPagar.Pendente
+        };
+        var result = await _controller.Update(expense.Id, updatedExpense);
+
+        // Assert
+        result.Should().BeOfType<OkObjectResult>();
+
+        _context.ChangeTracker.Clear();
+
+        // Verify database state of expense
+        var dbExpense = await _repository.GetByIdAsync(expense.Id);
+        dbExpense!.Valor.Should().Be(200m);
+        dbExpense.Status.Should().Be(StatusContaPagar.Pendente);
+
+        // Verify bank balance is incremented by old value (150m) instead of new value (200m)
+        var dbBank = await _contaBancariaRepo.GetByIdAsync(bankAcc.Id);
+        dbBank!.SaldoAtual.Should().Be(1000m); // 850 + 150
+
+        // Verify estorno transaction is registered with the old value (150m)
+        var estornoMov = (await _movimentacaoRepo.FindAsync(m => m.ReferenciaId == expense.Id && m.Tipo == "entrada")).FirstOrDefault();
+        estornoMov.Should().NotBeNull();
+        estornoMov!.Valor.Should().Be(150m);
+        estornoMov.Descricao.Should().Contain("Estorno");
     }
 }
