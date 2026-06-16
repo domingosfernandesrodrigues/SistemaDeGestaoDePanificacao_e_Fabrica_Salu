@@ -191,8 +191,11 @@ public class ContasBancariasController : ControllerBase
             );
             foreach (var r in receitas)
             {
-                // Evita duplicados caso já tenha sido gravado na tabela nova
-                if (!movsReferenciaIds.Contains(r.Id))
+                // Evita duplicados caso já tenha sido gravado na tabela de movimentações (por ID de conta a receber ou ID do pedido)
+                bool jaGravado = movsReferenciaIds.Contains(r.Id) || 
+                                 (r.PedidoVendaId.HasValue && movsReferenciaIds.Contains(r.PedidoVendaId.Value));
+
+                if (!jaGravado)
                 {
                     extratoList.Add(new
                     {
@@ -213,9 +216,40 @@ public class ContasBancariasController : ControllerBase
                 p => p.Status == StatusContaPagar.Paga && p.DataPagamento >= dataInicio && p.DataPagamento <= dataFim,
                 asNoTracking: true
             );
+
+            var despesaIds = despesas.Select(d => d.Id).ToList();
+
+            var abastRefs = await _context.Abastecimentos
+                .AsNoTracking()
+                .Where(a => a.ContaPagarId.HasValue && despesaIds.Contains(a.ContaPagarId.Value))
+                .Select(a => new { a.Id, a.ContaPagarId })
+                .ToListAsync();
+
+            var manuRefs = await _context.ManutencoesVeiculo
+                .AsNoTracking()
+                .Where(m => m.ContaPagarId.HasValue && despesaIds.Contains(m.ContaPagarId.Value))
+                .Select(m => new { m.Id, m.ContaPagarId })
+                .ToListAsync();
+
+            var alimRefs = await _context.LancamentosAlimentacao
+                .AsNoTracking()
+                .Where(a => a.ContaPagarId.HasValue && despesaIds.Contains(a.ContaPagarId.Value))
+                .Select(a => new { a.Id, a.ContaPagarId })
+                .ToListAsync();
+
+            // Mapeamento de ContaPagarId para o ID da entidade relacionada (Abastecimento, Manutencao, Alimentacao)
+            var pgToEntityMap = new Dictionary<Guid, Guid>();
+            foreach (var a in abastRefs) pgToEntityMap[a.ContaPagarId!.Value] = a.Id;
+            foreach (var m in manuRefs) pgToEntityMap[m.ContaPagarId!.Value] = m.Id;
+            foreach (var al in alimRefs) pgToEntityMap[al.ContaPagarId!.Value] = al.Id;
+
             foreach (var p in despesas)
             {
-                if (!movsReferenciaIds.Contains(p.Id))
+                // Evita duplicados caso já tenha sido gravado na tabela de movimentações (por ID da conta ou ID do registro de frota/alimentação)
+                bool jaGravado = movsReferenciaIds.Contains(p.Id) || 
+                                 (pgToEntityMap.TryGetValue(p.Id, out var entityId) && movsReferenciaIds.Contains(entityId));
+
+                if (!jaGravado)
                 {
                     int origem = 1; // Despesa/BaixaPagar
                     if (p.Categoria.Contains("Frota"))

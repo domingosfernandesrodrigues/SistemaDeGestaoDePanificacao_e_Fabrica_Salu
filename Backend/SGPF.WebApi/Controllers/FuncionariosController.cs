@@ -36,7 +36,16 @@ public class FuncionariosController : ControllerBase
     public async Task<IActionResult> Create([FromBody] Funcionario funcionario)
     {
         if (funcionario.Id == Guid.Empty) funcionario.Id = Guid.NewGuid();
-        funcionario.EmpresaId = null;
+        
+        if (!funcionario.EmpresaId.HasValue || funcionario.EmpresaId == Guid.Empty)
+        {
+            var primeiraEmpresa = await _context.Empresas.Select(e => e.Id).FirstOrDefaultAsync();
+            if (primeiraEmpresa != Guid.Empty)
+            {
+                funcionario.EmpresaId = primeiraEmpresa;
+            }
+        }
+
         await _repository.AddAsync(funcionario);
         return Ok(funcionario);
     }
@@ -45,7 +54,16 @@ public class FuncionariosController : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] Funcionario funcionario)
     {
         if (id != funcionario.Id) return BadRequest();
-        funcionario.EmpresaId = null;
+        
+        if (!funcionario.EmpresaId.HasValue || funcionario.EmpresaId == Guid.Empty)
+        {
+            var primeiraEmpresa = await _context.Empresas.Select(e => e.Id).FirstOrDefaultAsync();
+            if (primeiraEmpresa != Guid.Empty)
+            {
+                funcionario.EmpresaId = primeiraEmpresa;
+            }
+        }
+
         await _repository.UpdateAsync(funcionario);
         return Ok(funcionario);
     }

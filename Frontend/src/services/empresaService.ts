@@ -10,11 +10,6 @@ export interface EmpresaConfig {
   email: string;
   endereco: string;
   logoUrl?: string;
-  pixChave?: string;
-  bancoNome?: string;
-  bancoAgencia?: string;
-  bancoConta?: string;
-  gatewayToken?: string;
   latitude?: number;
   longitude?: number;
 }

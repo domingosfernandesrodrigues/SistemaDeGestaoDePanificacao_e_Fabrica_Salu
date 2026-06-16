@@ -87,18 +87,18 @@ public class AppDbContext : DbContext
 
         // Precision configurations
         modelBuilder.Entity<Funcionario>().Property(f => f.SalarioBase).HasPrecision(18, 2);
-        modelBuilder.Entity<Produto>().Property(p => p.PrecoCusto).HasPrecision(18, 4);
+        modelBuilder.Entity<Produto>().Property(p => p.PrecoCusto).HasPrecision(18, 2);
         modelBuilder.Entity<Produto>().Property(p => p.PrecoVenda).HasPrecision(18, 2);
-        modelBuilder.Entity<Produto>().Property(p => p.QuantidadeEstoque).HasPrecision(18, 4);
-        modelBuilder.Entity<MovimentacaoEstoque>().Property(m => m.Quantidade).HasPrecision(18, 4);
-        modelBuilder.Entity<FichaTecnica>().Property(f => f.RendimentoPadrao).HasPrecision(18, 4);
-        modelBuilder.Entity<FichaTecnicaInsumo>().Property(f => f.QuantidadeNecessaria).HasPrecision(18, 4);
-        modelBuilder.Entity<FichaTecnicaInsumo>().Property(f => f.PerdaPercentual).HasPrecision(18, 4);
-        modelBuilder.Entity<OrdemProducao>().Property(o => o.QuantidadePlanejada).HasPrecision(18, 4);
-        modelBuilder.Entity<OrdemProducao>().Property(o => o.QuantidadeRealizada).HasPrecision(18, 4);
+        modelBuilder.Entity<Produto>().Property(p => p.QuantidadeEstoque).HasPrecision(18, 2);
+        modelBuilder.Entity<MovimentacaoEstoque>().Property(m => m.Quantidade).HasPrecision(18, 2);
+        modelBuilder.Entity<FichaTecnica>().Property(f => f.RendimentoPadrao).HasPrecision(18, 2);
+        modelBuilder.Entity<FichaTecnicaInsumo>().Property(f => f.QuantidadeNecessaria).HasPrecision(18, 2);
+        modelBuilder.Entity<FichaTecnicaInsumo>().Property(f => f.PerdaPercentual).HasPrecision(18, 2);
+        modelBuilder.Entity<OrdemProducao>().Property(o => o.QuantidadePlanejada).HasPrecision(18, 2);
+        modelBuilder.Entity<OrdemProducao>().Property(o => o.QuantidadeRealizada).HasPrecision(18, 2);
         modelBuilder.Entity<OrdemProducao>().Property(o => o.CustoTotalCalculado).HasPrecision(18, 2);
-        modelBuilder.Entity<OrdemProducaoInsumo>().Property(o => o.QuantidadePlanejada).HasPrecision(18, 4);
-        modelBuilder.Entity<OrdemProducaoInsumo>().Property(o => o.QuantidadeConsumida).HasPrecision(18, 4);
+        modelBuilder.Entity<OrdemProducaoInsumo>().Property(o => o.QuantidadePlanejada).HasPrecision(18, 2);
+        modelBuilder.Entity<OrdemProducaoInsumo>().Property(o => o.QuantidadeConsumida).HasPrecision(18, 2);
 
         // Precision configurations - Fase 3
         modelBuilder.Entity<RegistroPonto>().Property(r => r.TotalHorasTrabalhadas).HasPrecision(18, 2);
@@ -145,7 +145,7 @@ public class AppDbContext : DbContext
 
         modelBuilder.Entity<ContaReceber>().Property(c => c.Valor).HasPrecision(18, 2);
         modelBuilder.Entity<PedidoVenda>().Property(p => p.ValorTotal).HasPrecision(18, 2);
-        modelBuilder.Entity<PedidoVendaItem>().Property(p => p.Quantidade).HasPrecision(18, 4);
+        modelBuilder.Entity<PedidoVendaItem>().Property(p => p.Quantidade).HasPrecision(18, 2);
         modelBuilder.Entity<PedidoVendaItem>().Property(p => p.PrecoUnitario).HasPrecision(18, 2);
         modelBuilder.Entity<PedidoVendaItem>().Property(p => p.Desconto).HasPrecision(18, 2);
         
@@ -171,7 +171,7 @@ public class AppDbContext : DbContext
             .HasForeignKey(m => m.ContaPagarId)
             .OnDelete(DeleteBehavior.SetNull);
         
-        modelBuilder.Entity<TrocaAvaria>().Property(t => t.Quantidade).HasPrecision(18, 4);
+        modelBuilder.Entity<TrocaAvaria>().Property(t => t.Quantidade).HasPrecision(18, 2);
 
         // Relacionamentos OrdemProducao -> Usuarios
         modelBuilder.Entity<OrdemProducao>()
@@ -194,8 +194,8 @@ public class AppDbContext : DbContext
 
         // Configurações Compras
         modelBuilder.Entity<Compra>().Property(c => c.ValorTotal).HasPrecision(18, 2);
-        modelBuilder.Entity<CompraItem>().Property(c => c.Quantidade).HasPrecision(18, 4);
-        modelBuilder.Entity<CompraItem>().Property(c => c.PrecoUnitario).HasPrecision(18, 4);
+        modelBuilder.Entity<CompraItem>().Property(c => c.Quantidade).HasPrecision(18, 2);
+        modelBuilder.Entity<CompraItem>().Property(c => c.PrecoUnitario).HasPrecision(18, 2);
         
         modelBuilder.Entity<CompraItem>()
             .HasOne(ci => ci.Produto)
@@ -203,8 +203,8 @@ public class AppDbContext : DbContext
             .HasForeignKey(ci => ci.ProdutoId)
             .OnDelete(DeleteBehavior.Restrict);
 
-        modelBuilder.Entity<HistoricoPrecoProduto>().Property(h => h.PrecoAntigo).HasPrecision(18, 4);
-        modelBuilder.Entity<HistoricoPrecoProduto>().Property(h => h.PrecoNovo).HasPrecision(18, 4);
+        modelBuilder.Entity<HistoricoPrecoProduto>().Property(h => h.PrecoAntigo).HasPrecision(18, 2);
+        modelBuilder.Entity<HistoricoPrecoProduto>().Property(h => h.PrecoNovo).HasPrecision(18, 2);
 
         modelBuilder.Entity<ContaBancaria>().Property(c => c.SaldoInicial).HasPrecision(18, 2);
         modelBuilder.Entity<ContaBancaria>().Property(c => c.SaldoAtual).HasPrecision(18, 2);

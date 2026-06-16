@@ -37,8 +37,7 @@ public class PagamentosController : ControllerBase
     {
         // 1. Recupera o token configurado no banco de dados (Conta Bancária Padrão ou Empresa)
         var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault();
-        var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
-        var tokenDefinido = contaPadrao?.GatewayToken ?? empresa?.GatewayToken;
+        var tokenDefinido = contaPadrao?.GatewayToken;
 
         // Limpa os prefixos comuns para comparação uniforme
         string? cleanTokenDefinido = null;
@@ -145,8 +144,7 @@ public class PagamentosController : ControllerBase
                     // 2. Recupera o token do banco
                     var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
                                     ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
-                    var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
-                    var tokenDefinido = contaPadrao?.GatewayToken ?? empresa?.GatewayToken;
+                    var tokenDefinido = contaPadrao?.GatewayToken;
 
                     if (string.IsNullOrWhiteSpace(tokenDefinido))
                         return BadRequest(new { message = "Nenhum token configurado no sistema." });

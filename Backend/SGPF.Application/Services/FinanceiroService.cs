@@ -127,7 +127,9 @@ public class FinanceiroService : IFinanceiroService
         if (conta != null)
         {
             if (conta.Status == StatusContaPagar.Paga)
+            {
                 return null;
+            }
 
             conta.Status = StatusContaPagar.Paga;
             conta.DataPagamento = DateTime.Now;

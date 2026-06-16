@@ -45,12 +45,30 @@ public static class DbPatchesInitializer
             try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Abastecimentos') AND name = 'ContaPagarId') BEGIN ALTER TABLE Abastecimentos ADD ContaPagarId UNIQUEIDENTIFIER NULL; END"); } catch {}
             try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('ManutencoesVeiculo') AND name = 'ContaPagarId') BEGIN ALTER TABLE ManutencoesVeiculo ADD ContaPagarId UNIQUEIDENTIFIER NULL; END"); } catch {}
             
-            // Patches para Empresa (Pagamentos)
-            try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'PixChave') BEGIN ALTER TABLE Empresas ADD PixChave NVARCHAR(MAX) NULL; END"); } catch {}
-            try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'BancoNome') BEGIN ALTER TABLE Empresas ADD BancoNome NVARCHAR(MAX) NULL; END"); } catch {}
-            try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'BancoAgencia') BEGIN ALTER TABLE Empresas ADD BancoAgencia NVARCHAR(MAX) NULL; END"); } catch {}
-            try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'BancoConta') BEGIN ALTER TABLE Empresas ADD BancoConta NVARCHAR(MAX) NULL; END"); } catch {}
-            try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'GatewayToken') BEGIN ALTER TABLE Empresas ADD GatewayToken NVARCHAR(MAX) NULL; END"); } catch {}
+            // Patches para Empresa (Remoção de campos que migraram para ContasBancarias)
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Empresas') AND name = 'PixChave') BEGIN ALTER TABLE Empresas DROP COLUMN PixChave; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Empresas') AND name = 'BancoNome') BEGIN ALTER TABLE Empresas DROP COLUMN BancoNome; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Empresas') AND name = 'BancoAgencia') BEGIN ALTER TABLE Empresas DROP COLUMN BancoAgencia; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Empresas') AND name = 'BancoConta') BEGIN ALTER TABLE Empresas DROP COLUMN BancoConta; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Empresas') AND name = 'GatewayToken') BEGIN ALTER TABLE Empresas DROP COLUMN GatewayToken; END"); } catch {}
+
+            // Ajuste de Precisão das Colunas para decimal(18,2) nas Tabelas Existentes
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('CompraItems') AND name = 'Quantidade') BEGIN ALTER TABLE CompraItems ALTER COLUMN Quantidade DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('CompraItems') AND name = 'PrecoUnitario') BEGIN ALTER TABLE CompraItems ALTER COLUMN PrecoUnitario DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FichasTecnicas') AND name = 'RendimentoPadrao') BEGIN ALTER TABLE FichasTecnicas ALTER COLUMN RendimentoPadrao DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FichaTecnicaInsumos') AND name = 'QuantidadeNecessaria') BEGIN ALTER TABLE FichaTecnicaInsumos ALTER COLUMN QuantidadeNecessaria DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FichaTecnicaInsumos') AND name = 'PerdaPercentual') BEGIN ALTER TABLE FichaTecnicaInsumos ALTER COLUMN PerdaPercentual DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('HistoricoPrecos') AND name = 'PrecoAntigo') BEGIN ALTER TABLE HistoricoPrecos ALTER COLUMN PrecoAntigo DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('HistoricoPrecos') AND name = 'PrecoNovo') BEGIN ALTER TABLE HistoricoPrecos ALTER COLUMN PrecoNovo DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('MovimentacoesEstoque') AND name = 'Quantidade') BEGIN ALTER TABLE MovimentacoesEstoque ALTER COLUMN Quantidade DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('OrdemProducaoInsumos') AND name = 'QuantidadePlanejada') BEGIN ALTER TABLE OrdemProducaoInsumos ALTER COLUMN QuantidadePlanejada DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('OrdemProducaoInsumos') AND name = 'QuantidadeConsumida') BEGIN ALTER TABLE OrdemProducaoInsumos ALTER COLUMN QuantidadeConsumida DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('OrdensProducao') AND name = 'QuantidadePlanejada') BEGIN ALTER TABLE OrdensProducao ALTER COLUMN QuantidadePlanejada DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('OrdensProducao') AND name = 'QuantidadeRealizada') BEGIN ALTER TABLE OrdensProducao ALTER COLUMN QuantidadeRealizada DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('PedidoVendaItens') AND name = 'Quantidade') BEGIN ALTER TABLE PedidoVendaItens ALTER COLUMN Quantidade DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Produtos') AND name = 'PrecoCusto') BEGIN ALTER TABLE Produtos ALTER COLUMN PrecoCusto DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Produtos') AND name = 'QuantidadeEstoque') BEGIN ALTER TABLE Produtos ALTER COLUMN QuantidadeEstoque DECIMAL(18,2) NOT NULL; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('TrocasAvaria') AND name = 'Quantidade') BEGIN ALTER TABLE TrocasAvaria ALTER COLUMN Quantidade DECIMAL(18,2) NOT NULL; END"); } catch {}
             try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'Latitude') BEGIN ALTER TABLE Empresas ADD Latitude FLOAT NULL; END"); } catch {}
             try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'Empresas' AND COLUMN_NAME = 'Longitude') BEGIN ALTER TABLE Empresas ADD Longitude FLOAT NULL; END"); } catch {}
             
@@ -234,8 +252,8 @@ public static class DbPatchesInitializer
                         [Id] [uniqueidentifier] NOT NULL PRIMARY KEY,
                         [CompraId] [uniqueidentifier] NOT NULL,
                         [ProdutoId] [uniqueidentifier] NOT NULL,
-                        [Quantidade] [decimal](18,4) NOT NULL,
-                        [PrecoUnitario] [decimal](18,4) NOT NULL,
+                        [Quantidade] [decimal](18,2) NOT NULL,
+                        [PrecoUnitario] [decimal](18,2) NOT NULL,
                         CONSTRAINT [FK_CompraItems_Compras] FOREIGN KEY([CompraId]) REFERENCES [dbo].[Compras] ([Id]) ON DELETE CASCADE,
                         CONSTRAINT [FK_CompraItems_Produtos] FOREIGN KEY([ProdutoId]) REFERENCES [dbo].[Produtos] ([Id])
                     )
@@ -391,111 +409,159 @@ public static class DbPatchesInitializer
                 
                 await context.SaveChangesAsync();
 
-                // Semeia os abastecimentos e manutenções
+                // Semeia os abastecimentos e manutenções com suas respectivas Contas a Pagar
                 int currentYear = DateTime.Now.Year;
                 int currentMonth = DateTime.Now.Month;
                 int prevMonth = currentMonth == 1 ? 12 : currentMonth - 1;
                 int prevYear = currentMonth == 1 ? currentYear - 1 : currentYear;
 
+                async Task<Abastecimento> criarAbastecimentoComConta(Guid veiculoId, DateTime data, decimal km, decimal litros, decimal valor, string modeloPlaca)
+                {
+                    var conta = new ContaPagar
+                    {
+                        Descricao = $"Abastecimento Veículo: {modeloPlaca} - {litros:N2}L",
+                        Valor = valor,
+                        DataEmissao = data,
+                        DataVencimento = data,
+                        DataPagamento = data,
+                        Status = StatusContaPagar.Paga,
+                        Categoria = "Operacional (Frota)"
+                    };
+                    await context.ContasPagar.AddAsync(conta);
+                    await context.SaveChangesAsync();
+                    return new Abastecimento
+                    {
+                        Id = Guid.NewGuid(),
+                        VeiculoId = veiculoId,
+                        Data = data,
+                        QuilometragemRegistrada = km,
+                        Litros = litros,
+                        ValorTotal = valor,
+                        ContaPagarId = conta.Id
+                    };
+                }
+
+                async Task<ManutencaoVeiculo> criarManutencaoComConta(Guid veiculoId, DateTime data, TipoManutencao tipo, string desc, decimal custo, decimal km, string modeloPlaca)
+                {
+                    var conta = new ContaPagar
+                    {
+                        Descricao = $"Manutenção {(tipo == TipoManutencao.Preventiva ? "Preventiva" : "Corretiva")} Veículo: {modeloPlaca}",
+                        Valor = custo,
+                        DataEmissao = data,
+                        DataVencimento = data,
+                        DataPagamento = data,
+                        Status = StatusContaPagar.Paga,
+                        Categoria = "Operacional (Frota)"
+                    };
+                    await context.ContasPagar.AddAsync(conta);
+                    await context.SaveChangesAsync();
+                    return new ManutencaoVeiculo
+                    {
+                        Id = Guid.NewGuid(),
+                        VeiculoId = veiculoId,
+                        Data = data,
+                        Tipo = tipo,
+                        Descricao = desc,
+                        CustoTotal = custo,
+                        QuilometragemRegistrada = km,
+                        ContaPagarId = conta.Id
+                    };
+                }
+
                 var abasts = new List<Abastecimento>
                 {
-                    new Abastecimento
-                    {
-                        Id = Guid.NewGuid(),
-                        VeiculoId = v1.Id,
-                        Data = new DateTime(prevYear, prevMonth, 5, 8, 30, 0, DateTimeKind.Utc),
-                        QuilometragemRegistrada = 11000,
-                        Litros = 65,
-                        ValorTotal = 390
-                    },
-                    new Abastecimento
-                    {
-                        Id = Guid.NewGuid(),
-                        VeiculoId = v1.Id,
-                        Data = new DateTime(prevYear, prevMonth, 20, 17, 0, 0, DateTimeKind.Utc),
-                        QuilometragemRegistrada = 11700, // 700 km
-                        Litros = 70, // 10 km/l
-                        ValorTotal = 420
-                    },
-                    new Abastecimento
-                    {
-                        Id = Guid.NewGuid(),
-                        VeiculoId = v1.Id,
-                        Data = new DateTime(currentYear, currentMonth, 1, 9, 0, 0, DateTimeKind.Utc),
-                        QuilometragemRegistrada = 12450, // 750 km
-                        Litros = 75, // 10 km/l
-                        ValorTotal = 450
-                    },
-
-                    new Abastecimento
-                    {
-                        Id = Guid.NewGuid(),
-                        VeiculoId = v2.Id,
-                        Data = new DateTime(prevYear, prevMonth, 10, 10, 0, 0, DateTimeKind.Utc),
-                        QuilometragemRegistrada = 8000,
-                        Litros = 40,
-                        ValorTotal = 240
-                    },
-                    new Abastecimento
-                    {
-                        Id = Guid.NewGuid(),
-                        VeiculoId = v2.Id,
-                        Data = new DateTime(prevYear, prevMonth, 25, 16, 30, 0, DateTimeKind.Utc),
-                        QuilometragemRegistrada = 8500, // 500 km
-                        Litros = 41.5m, // ~12 km/l
-                        ValorTotal = 249
-                    },
-                    new Abastecimento
-                    {
-                        Id = Guid.NewGuid(),
-                        VeiculoId = v2.Id,
-                        Data = new DateTime(currentYear, currentMonth, 2, 11, 0, 0, DateTimeKind.Utc),
-                        QuilometragemRegistrada = 8900, // 400 km
-                        Litros = 33.3m, // ~12 km/l
-                        ValorTotal = 200
-                    }
+                    await criarAbastecimentoComConta(v1.Id, new DateTime(prevYear, prevMonth, 5, 8, 30, 0, DateTimeKind.Utc), 11000, 65, 390, $"{v1.Modelo} ({v1.Placa})"),
+                    await criarAbastecimentoComConta(v1.Id, new DateTime(prevYear, prevMonth, 20, 17, 0, 0, DateTimeKind.Utc), 11700, 70, 420, $"{v1.Modelo} ({v1.Placa})"),
+                    await criarAbastecimentoComConta(v1.Id, new DateTime(currentYear, currentMonth, 1, 9, 0, 0, DateTimeKind.Utc), 12450, 75, 450, $"{v1.Modelo} ({v1.Placa})"),
+                    await criarAbastecimentoComConta(v2.Id, new DateTime(prevYear, prevMonth, 10, 10, 0, 0, DateTimeKind.Utc), 8000, 40, 240, $"{v2.Modelo} ({v2.Placa})"),
+                    await criarAbastecimentoComConta(v2.Id, new DateTime(prevYear, prevMonth, 25, 16, 30, 0, DateTimeKind.Utc), 8500, 41.5m, 249, $"{v2.Modelo} ({v2.Placa})"),
+                    await criarAbastecimentoComConta(v2.Id, new DateTime(currentYear, currentMonth, 2, 11, 0, 0, DateTimeKind.Utc), 8900, 33.3m, 200, $"{v2.Modelo} ({v2.Placa})")
                 };
 
                 await context.Abastecimentos.AddRangeAsync(abasts);
 
                 var manus = new List<ManutencaoVeiculo>
                 {
-                    new ManutencaoVeiculo
-                    {
-                        Id = Guid.NewGuid(),
-                        VeiculoId = v1.Id,
-                        Data = new DateTime(prevYear, prevMonth, 15, 14, 0, 0, DateTimeKind.Utc),
-                        Tipo = TipoManutencao.Preventiva,
-                        Descricao = "Troca de óleo e filtro de ar",
-                        CustoTotal = 350,
-                        QuilometragemRegistrada = 11500
-                    },
-                    new ManutencaoVeiculo
-                    {
-                        Id = Guid.NewGuid(),
-                        VeiculoId = v1.Id,
-                        Data = new DateTime(currentYear, currentMonth, 2, 10, 0, 0, DateTimeKind.Utc),
-                        Tipo = TipoManutencao.Corretiva,
-                        Descricao = "Troca de pastilhas de freio dianteiras",
-                        CustoTotal = 480,
-                        QuilometragemRegistrada = 12450
-                    },
-
-                    new ManutencaoVeiculo
-                    {
-                        Id = Guid.NewGuid(),
-                        VeiculoId = v2.Id,
-                        Data = new DateTime(prevYear, prevMonth, 18, 9, 30, 0, DateTimeKind.Utc),
-                        Tipo = TipoManutencao.Preventiva,
-                        Descricao = "Revisão de 10.000 km (antecipada)",
-                        CustoTotal = 600,
-                        QuilometragemRegistrada = 8300
-                    }
+                    await criarManutencaoComConta(v1.Id, new DateTime(prevYear, prevMonth, 15, 14, 0, 0, DateTimeKind.Utc), TipoManutencao.Preventiva, "Troca de óleo e filtro de ar", 350, 11500, $"{v1.Modelo} ({v1.Placa})"),
+                    await criarManutencaoComConta(v1.Id, new DateTime(currentYear, currentMonth, 2, 10, 0, 0, DateTimeKind.Utc), TipoManutencao.Corretiva, "Troca de pastilhas de freio dianteiras", 480, 12450, $"{v1.Modelo} ({v1.Placa})"),
+                    await criarManutencaoComConta(v2.Id, new DateTime(prevYear, prevMonth, 18, 9, 30, 0, DateTimeKind.Utc), TipoManutencao.Preventiva, "Revisão de 10.000 km (antecipada)", 600, 8300, $"{v2.Modelo} ({v2.Placa})")
                 };
 
                 await context.ManutencoesVeiculo.AddRangeAsync(manus);
                 await context.SaveChangesAsync();
                 Console.WriteLine("[SEED] Dados de teste para Frota semeados com sucesso.");
+            }
+
+            // 4. BACKFILL: Garantir ContaPagarId para Abastecimentos e Manutenções legados/existentes
+            var abastsSemConta = await context.Abastecimentos.Where(a => a.ContaPagarId == null).ToListAsync();
+            if (abastsSemConta.Any())
+            {
+                var vlist = await context.Veiculos.ToListAsync();
+                var vMap = vlist.ToDictionary(v => v.Id);
+                foreach (var abast in abastsSemConta)
+                {
+                    vMap.TryGetValue(abast.VeiculoId, out var veiculo);
+                    var contaPagar = new ContaPagar
+                    {
+                        Descricao = $"Abastecimento Veículo: {veiculo?.Modelo ?? "Frota"} ({veiculo?.Placa ?? "N/A"}) - {abast.Litros:N2}L",
+                        Valor = abast.ValorTotal,
+                        DataEmissao = abast.Data,
+                        DataVencimento = abast.Data,
+                        DataPagamento = abast.Data,
+                        Status = StatusContaPagar.Paga,
+                        Categoria = "Operacional (Frota)"
+                    };
+                    await context.ContasPagar.AddAsync(contaPagar);
+                    await context.SaveChangesAsync();
+                    abast.ContaPagarId = contaPagar.Id;
+                    context.Abastecimentos.Update(abast);
+                }
+                await context.SaveChangesAsync();
+                Console.WriteLine($"[BACKFILL] Criadas {abastsSemConta.Count} contas a pagar retroativas para Abastecimentos.");
+            }
+
+            var manusSemConta = await context.ManutencoesVeiculo.Where(m => m.ContaPagarId == null).ToListAsync();
+            if (manusSemConta.Any())
+            {
+                var vlist = await context.Veiculos.ToListAsync();
+                var vMap = vlist.ToDictionary(v => v.Id);
+                foreach (var manu in manusSemConta)
+                {
+                    vMap.TryGetValue(manu.VeiculoId, out var veiculo);
+                    var contaPagar = new ContaPagar
+                    {
+                        Descricao = $"Manutenção {(manu.Tipo == TipoManutencao.Preventiva ? "Preventiva" : "Corretiva")} Veículo: {veiculo?.Modelo ?? "Frota"} ({veiculo?.Placa ?? "N/A"})",
+                        Valor = manu.CustoTotal,
+                        DataEmissao = manu.Data,
+                        DataVencimento = manu.Data,
+                        DataPagamento = manu.Data,
+                        Status = StatusContaPagar.Paga,
+                        Categoria = "Operacional (Frota)"
+                    };
+                    await context.ContasPagar.AddAsync(contaPagar);
+                    await context.SaveChangesAsync();
+                    manu.ContaPagarId = contaPagar.Id;
+                    context.ManutencoesVeiculo.Update(manu);
+                }
+                await context.SaveChangesAsync();
+                Console.WriteLine($"[BACKFILL] Criadas {manusSemConta.Count} contas a pagar retroativas para Manutenções.");
+            }
+
+            // 5. BACKFILL: Associar funcionários sem EmpresaId à primeira empresa cadastrada
+            var funcsSemEmpresa = await context.Funcionarios.Where(f => f.EmpresaId == null).ToListAsync();
+            if (funcsSemEmpresa.Any())
+            {
+                var primeiraEmpresa = await context.Empresas.FirstOrDefaultAsync();
+                if (primeiraEmpresa != null)
+                {
+                    foreach (var f in funcsSemEmpresa)
+                    {
+                        f.EmpresaId = primeiraEmpresa.Id;
+                    }
+                    context.Funcionarios.UpdateRange(funcsSemEmpresa);
+                    await context.SaveChangesAsync();
+                    Console.WriteLine($"[BACKFILL] Associados {funcsSemEmpresa.Count} funcionários sem empresa à empresa '{primeiraEmpresa.NomeFantasia}'.");
+                }
             }
         }
         catch (Exception ex)

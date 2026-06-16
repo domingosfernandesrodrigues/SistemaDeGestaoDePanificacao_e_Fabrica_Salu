@@ -14,12 +14,6 @@ public class Empresa
     public double? Latitude { get; set; }
     public double? Longitude { get; set; }
     
-    // Configurações de Pagamento
-    public string? PixChave { get; set; }
-    public string? BancoNome { get; set; }
-    public string? BancoAgencia { get; set; }
-    public string? BancoConta { get; set; }
-    public string? GatewayToken { get; set; } // Token para Mercado Pago, etc.
-    
+
     public ICollection<Funcionario> Funcionarios { get; set; } = new List<Funcionario>();
 }

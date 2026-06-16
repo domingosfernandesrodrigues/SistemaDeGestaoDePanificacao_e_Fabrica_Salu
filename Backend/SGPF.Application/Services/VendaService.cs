@@ -126,6 +126,42 @@ public class VendaService : IVendaService
 
         await _pedidoRepo.AddAsync(pedido);
 
+        // CRIAR FINANCEIRO (Pendente/Recebido): Melhor forma para visibilidade de Fluxo de Caixa
+        var conta = new ContaReceber
+        {
+            ClienteId = pedido.ClienteId,
+            Descricao = $"Fatura Ref. Pedido {pedido.NumeroPedido}",
+            Valor = pedido.ValorTotal,
+            DataVencimento = DateTime.Now.AddDays(15), // Padrão 15 dias
+            PedidoVendaId = pedido.Id,
+            Status = pedido.Pago ? StatusContaReceber.Recebido : StatusContaReceber.Pendente,
+            DataRecebimento = pedido.Pago ? DateTime.Now : null
+        };
+        await _contaReceberRepo.AddAsync(conta);
+
+        if (pedido.Pago)
+        {
+            var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
+                            ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
+            if (contaPadrao != null)
+            {
+                contaPadrao.SaldoAtual += pedido.ValorTotal;
+                await _contaBancariaRepo.UpdateAsync(contaPadrao);
+
+                // Gravar movimentação
+                await _movimentacaoRepo.AddAsync(new MovimentacaoBancaria
+                {
+                    ContaBancariaId = contaPadrao.Id,
+                    Tipo = "entrada",
+                    Valor = pedido.ValorTotal,
+                    Descricao = $"Recebimento Pedido {pedido.NumeroPedido} (Faturamento Imediato)",
+                    DataMovimentacao = DateTime.Now,
+                    Origem = OrigemMovimentacao.Venda,
+                    ReferenciaId = pedido.Id
+                });
+            }
+        }
+
         return pedido;
     }
 
@@ -943,8 +979,7 @@ public class VendaService : IVendaService
     {
         var contaPadrao = (await _contaBancariaRepo.FindAsync(c => c.IsPadrao && c.Ativa)).FirstOrDefault()
                         ?? (await _contaBancariaRepo.FindAsync(c => c.Ativa)).FirstOrDefault();
-        var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
-        var token = contaPadrao?.GatewayToken ?? empresa?.GatewayToken;
+        var token = contaPadrao?.GatewayToken;
 
         var factory = new PaymentGatewayFactory(_contaBancariaRepo, _empresaRepo);
         var gateway = factory.ObterGateway(token ?? "");
@@ -972,6 +1007,9 @@ public class VendaService : IVendaService
             Console.WriteLine($"[GATEWAY INTEGRATION ERROR] Falha geral no faturamento. Detalhes: {ex.Message}. Utilizando simulador Offline.");
         }
 
+        // Recupera a empresa para o fallback
+        var empresa = (await _empresaRepo.GetAllAsync()).FirstOrDefault();
+
         // Fallback offline (simulação) se o token não existir ou falhar
         GerarDadosPagamentoFallback(pedido, contaPadrao, empresa);
     }
@@ -988,7 +1026,7 @@ public class VendaService : IVendaService
         }
         else if (pedido.FormaPagamento == FormaPagamento.Pix)
         {
-            var chave = contaPadrao?.PixChave ?? empresa?.PixChave ?? "sgpf-fabrica-pix-key-12345";
+            var chave = contaPadrao?.PixChave ?? "sgpf-fabrica-pix-key-12345";
             var nomeRecebedor = (empresa?.NomeFantasia ?? "SGPF FABRICA").ToUpper();
             pedido.PixQrCode = GerarBrCodePix(chave, pedido.ValorTotal, nomeRecebedor);
         }

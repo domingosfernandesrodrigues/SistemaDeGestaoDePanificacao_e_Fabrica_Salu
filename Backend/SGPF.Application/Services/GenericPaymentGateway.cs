@@ -41,7 +41,7 @@ public class GenericPaymentGateway : IPaymentGateway
             }
             else if (pedido.FormaPagamento == FormaPagamento.Pix)
             {
-                var chave = contaPadrao?.PixChave ?? empresa?.PixChave ?? "sgpf-generico-pix-key-12345";
+                var chave = contaPadrao?.PixChave ?? "sgpf-generico-pix-key-12345";
                 var nomeRecebedor = (empresa?.NomeFantasia ?? "SGPF FABRICA").ToUpper();
                 result.PixQrCode = GerarBrCodePix(chave, pedido.ValorTotal, nomeRecebedor);
             }
