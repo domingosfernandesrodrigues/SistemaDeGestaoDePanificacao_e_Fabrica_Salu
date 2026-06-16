@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Modal } from '../components/ui/Modal';
-import { FileText, Plus, Edit2, Trash2, Loader2, Save, DollarSign, Calendar, Tag, AlertCircle, ChevronLeft, ChevronRight, Filter } from 'lucide-react';
+import { FileText, Plus, Edit2, Trash2, Loader2, Save, DollarSign, Calendar, Tag, AlertCircle, ChevronLeft, ChevronRight, Filter, Check } from 'lucide-react';
 import api from '../services/api';
 
 const despesaSchema = z.object({
@@ -16,6 +16,7 @@ const despesaSchema = z.object({
   mes: z.string().optional().or(z.literal('')),
   ano: z.string().optional().or(z.literal('')),
   categoria: z.string().min(1, 'Selecione a categoria'),
+  status: z.coerce.number().default(0),
 });
 
 type DespesaForm = z.infer<typeof despesaSchema>;
@@ -69,6 +70,18 @@ export default function Despesas() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['despesas'] }),
   });
 
+  const mutationPagar = useMutation({
+    mutationFn: (id: string) => api.post(`/Financeiro/pagar/${id}/baixa`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['despesas'] });
+      queryClient.invalidateQueries({ queryKey: ['resumo-financeiro'] });
+      queryClient.invalidateQueries({ queryKey: ['financeiro-dre'] });
+      queryClient.invalidateQueries({ queryKey: ['contas-bancarias'] });
+      alert('Pagamento registrado e integrado ao caixa bancário com sucesso!');
+    },
+    onError: (err: any) => alert(err.response?.data?.message || 'Erro ao registrar pagamento')
+  });
+
   const handleEdit = (d: any) => {
     setEditId(d.id);
     setValue('descricao', d.descricao);
@@ -78,6 +91,7 @@ export default function Despesas() {
     setValue('mes', mes || '');
     setValue('ano', ano || '');
     setValue('categoria', d.categoria || 'Geral');
+    setValue('status', d.status ?? 0);
     setIsModalOpen(true);
   };
 
@@ -202,13 +216,14 @@ export default function Despesas() {
                 <th className="px-6 py-4 font-medium text-center">Mês/Ano</th>
                 <th className="px-6 py-4 font-medium">Categoria</th>
                 <th className="px-6 py-4 font-medium">Vencimento</th>
+                <th className="px-6 py-4 font-medium text-center">Status</th>
                 <th className="px-6 py-4 font-medium text-right">Valor</th>
                 <th className="px-6 py-4 font-medium text-center">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {despesasPaginadas.map((d) => (
-                <tr key={d.id} className="hover:bg-slate-50 transition-colors">
+                <tr key={d.id} className="hover:bg-slate-50/50 transition-colors">
                   <td className="px-6 py-4 font-medium text-slate-900">{d.descricao}</td>
                   <td className="px-6 py-4 text-center">
                     <span className="text-xs font-bold text-slate-500 uppercase">{d.mesReferencia || '-'}</span>
@@ -221,11 +236,31 @@ export default function Despesas() {
                   <td className="px-6 py-4 text-slate-500 whitespace-nowrap">
                     {d.dataVencimento ? new Date(d.dataVencimento).toLocaleDateString() : 'Não inf.'}
                   </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-center">
+                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                      d.status === 2 ? 'bg-green-100 text-green-800' :
+                      d.status === 3 ? 'bg-red-100 text-red-800' :
+                      'bg-amber-100 text-amber-800'
+                    }`}>
+                      {d.status === 2 ? 'Pago' :
+                       d.status === 3 ? 'Cancelado' :
+                       'Pendente'}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 text-right font-bold text-slate-900 whitespace-nowrap">
                     {Number(d.valor).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex justify-center gap-2">
+                      {d.status === 0 && (
+                        <button 
+                          onClick={() => confirm('Deseja realmente confirmar o pagamento desta despesa e deduzir o valor no caixa bancário?') && mutationPagar.mutate(d.id)} 
+                          className="p-1.5 text-slate-400 hover:text-green-600 hover:bg-green-50 rounded-md transition-all duration-150"
+                          title="Confirmar pagamento (Baixar)"
+                        >
+                          <Check size={16} />
+                        </button>
+                      )}
                       <button onClick={() => handleEdit(d)} className="p-1.5 text-slate-400 hover:text-ember hover:bg-ember/5 rounded-md transition-colors">
                         <Edit2 size={16} />
                       </button>
@@ -256,11 +291,21 @@ export default function Despesas() {
                   <div className="flex gap-2 mt-1">
                     <span className="px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 text-[10px] font-black uppercase">{d.categoria}</span>
                     <span className="text-[10px] font-bold text-slate-400 uppercase">{d.mesReferencia}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                      d.status === 2 ? 'bg-green-100 text-green-800' :
+                      d.status === 3 ? 'bg-red-100 text-red-800' :
+                      'bg-amber-100 text-amber-800'
+                    }`}>
+                      {d.status === 2 ? 'Pago' : d.status === 3 ? 'Cancelado' : 'Pendente'}
+                    </span>
                   </div>
                 </div>
                 <div className="flex gap-1">
+                  {d.status === 0 && (
+                    <button onClick={() => confirm('Confirmar pagamento desta despesa?') && mutationPagar.mutate(d.id)} className="p-2 text-green-600 bg-green-50 hover:bg-green-100 rounded-lg" title="Confirmar pagamento (Baixar)"><Check size={18} /></button>
+                  )}
                   <button onClick={() => handleEdit(d)} className="p-2 text-slate-500 hover:text-ember bg-slate-50 hover:bg-ember/5 rounded-lg"><Edit2 size={18} /></button>
-                  <button onClick={() => confirm('Excluir despesa?') && mutationDelete.mutate(d.id)} className="p-2 text-red-600 bg-red-50 rounded-lg"><Trash2 size={18} /></button>
+                  <button onClick={() => confirm('Excluir despesa?')} className="p-2 text-red-600 bg-red-50 rounded-lg"><Trash2 size={18} /></button>
                 </div>
               </div>
               <div className="flex justify-between items-center bg-slate-50 p-3 rounded-lg">
@@ -353,6 +398,20 @@ export default function Despesas() {
           <div className="grid grid-cols-2 gap-4">
              <Input label="Valor (R$)" required type="number" step="0.01" placeholder="0,00" {...register('valor')} error={errors.valor?.message} />
              <Input label="Data de Vencimento" type="date" {...register('dataVencimento')} error={errors.dataVencimento?.message} />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <label className="text-sm font-semibold text-slate-700">Status <span className="text-red-500">*</span></label>
+              <select 
+                {...register('status')}
+                className="w-full h-10 px-3 rounded-lg border border-slate-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all cursor-pointer"
+              >
+                <option value="0">Pendente</option>
+                <option value="2">Paga</option>
+              </select>
+              {errors.status && <p className="text-xs text-red-500 font-bold mt-0.5">{errors.status.message}</p>}
+            </div>
           </div>
           
           <div className="pt-4 flex gap-3">
