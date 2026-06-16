@@ -54,9 +54,24 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 ---
 
 ## 📊 Status de Progresso Geral
-- **Fase Atual:** Cobertura de Testes Completa ✅
+- **Fase Atual:** Manutenção Evolutiva e Refinamentos de Fluxo Financeiro ✅
 - **Progresso Total:** 100% — Todos os módulos implementados + suíte de testes completa (Backend, Frontend e E2E)
-- **Última Atualização:** 07/06/2026
+- **Última Atualização:** 16/06/2026
+
+### 🛠️ Refinamentos Financeiros — Sincronização de Despesas (16/Jun/2026):
+- **Fluxo de Confirmação de Pagamento no Controle de Despesas:** O formulário de Despesas passou a adotar o mesmo fluxo de pagamento do módulo de Alimentação:
+  - Campo de **Status** (Pendente / Paga) disponível no formulário de criação e edição.
+  - **Baixa rápida** na listagem: botão `✓` aparece ao lado de despesas pendentes, executa `POST /api/v1/Financeiro/pagar/{id}/baixa` e invalida o cache de contas bancárias em tempo real.
+  - **Badges de Status** coloridos na tabela desktop e nos cards mobile (Amarelo = Pendente, Verde = Pago).
+  - **Criação como "Paga":** Ao criar uma despesa com status Paga, a baixa é executada automaticamente (`BaixarContaPagarAsync`), debitando na conta bancária padrão e registrando no extrato histórico.
+- **Correção de Sincronização Bancária ao Editar Despesas Pagas:**
+  - **Edição de Valor/Descrição (despesa paga):** O controlador agora calcula a diferença (`novoValor - valorAntigo`) e aplica o ajuste incremental no saldo bancário. O registro existente no extrato histórico é atualizado com o novo valor e descrição, em vez de criar uma entrada duplicada.
+  - **Estorno Correto (Pago → Pendente):** O estorno agora credita o valor **original** que havia sido debitado, mesmo que o usuário tenha alterado o valor da despesa no mesmo formulário antes de mudar o status.
+  - **Cobertura de Testes Atualizada:** Adicionados 2 novos testes de integração em `DespesasControllerTests.cs`:
+    - `Update_ShouldAdjustBankAccountBalanceAndTransaction_WhenPaidExpenseAmountChanges`
+    - `Update_ShouldEstornOldValue_WhenPaidExpenseTransitionsToPending`
+  - **Resultado Total de Testes Backend:** **157 aprovados / 0 falhas**.
+
 
 ### 🧪 Fase de Testes (07/Jun/2026 — **CONCLUÍDA**):
 - **Testes de Integração Backend (xUnit):** 22 specs cobrindo todos os 23 módulos: CRM, Vendas B2B, Compras, Insumos, Clientes, Fornecedores, OPs, Fichas Técnicas, Frota, Trocas/Avarias, Ponto, Afastamentos, Férias, Funcionários, Folha de Pagamento, Candidaturas, Alimentação, Despesas, Contas Bancárias, Usuários, Auditoria e Configurações da Empresa.

@@ -20,7 +20,7 @@ A suíte de testes do SGPF é organizada em três camadas, seguindo a pirâmide 
 **Projeto:** `Backend/SGPF.Tests/`  
 **Padrão:** Cada teste cria e destrói seus próprios dados (isolamento total)
 
-### Módulos cobertos (22 specs)
+### Módulos cobertos (22 specs) — 157 testes passando
 
 | Arquivo de Teste | Módulo |
 |---|---|
@@ -41,16 +41,23 @@ A suíte de testes do SGPF é organizada em três camadas, seguindo a pirâmide 
 | `FolhaPagamentoControllerTests.cs` | Folha de Pagamento |
 | `CandidaturasControllerTests.cs` | Currículos Recebidos (Recrutamento) |
 | `LancamentosAlimentacaoControllerTests.cs` | Lançamentos de Alimentação |
-| `DespesasControllerTests.cs` | Controle de Despesas |
+| `DespesasControllerTests.cs` | Controle de Despesas (CRUD, criação como Paga, edição de valor/descrição de despesa paga, estorno de valor original) |
 | `ContasBancariasControllerTests.cs` | Contas Bancárias & Saldos |
 | `UsuariosControllerTests.cs` | Controle de Usuários |
 | `AuditoriaControllerTests.cs` | Auditoria do Sistema |
 | `EmpresasControllerTests.cs` | Configurações da Empresa & GPS |
 
+### Resultado atual
+```
+157 passed, 0 failed
+```
+
 ### Executar
 ```bash
 cd Backend
 dotnet test SGPF.Tests/SGPF.Tests.csproj --verbosity normal
+# Ou em Release (para evitar bloqueio de PDB pelo dotnet watch):
+dotnet test SGPF.Tests/SGPF.Tests.csproj -c Release
 ```
 
 ---

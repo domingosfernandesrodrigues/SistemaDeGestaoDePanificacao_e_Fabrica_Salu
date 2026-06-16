@@ -1,11 +1,24 @@
 # Módulo: Financeiro e Fluxo de Caixa
 
 ## 1. Contas a Pagar e Receber
-- **Gestão Descentralizada:** O módulo de "Despesas Gerais" é exclusivo para custos fixos/operacionais (aluguel, água, luz).
+- **Gestão Descentralizada:** O módulo de "Despesas Gerais" é exclusivo para custos fixos/operacionais (aluguel, água, luz, energia, manutenção, etc.).
 - Pagamentos atrelados a operações de terceiros possuem seu próprio checkout financeiro descentralizado:
   - **Compras e Insumos:** Pagos diretamente nas telas de Compras / Entrada de Insumos (botão "Pagar/Liquidar" gerado após confirmação do estoque).
   - **Folha de Pagamento:** Liquidada diretamente no módulo de RH.
 - **Conciliação Automática:** Ao baixar uma conta (descentralizada ou via despesa geral), o sistema localiza a fatura oculta e debita/credita automaticamente o `SaldoAtual` da `ContaBancaria` padrão.
+
+### Fluxo de Pagamento do Controle de Despesas
+O formulário **Controle de Despesas** suporta um fluxo completo de ciclo de vida do pagamento:
+
+| Ação | Comportamento |
+|------|---------------|
+| **Criar como Pendente** | Despesa salva com `Status = Pendente`. Sem débito no banco. |
+| **Criar como Paga** | Despesa criada, `BaixarContaPagarAsync` é chamado automaticamente: debita o valor da conta bancária padrão e registra movimentação no extrato. |
+| **Botão "✓" (Baixa rápida)** | Rota `POST /api/v1/Financeiro/pagar/{id}/baixa`. Transição `Pendente → Pago`: debita no banco e registra no extrato. |
+| **Editar valor/descrição (já Pago)** | Calcula a diferença (`novoValor - valorAntigo`) e aplica o ajuste incremental no saldo bancário. O registro do extrato existente é **atualizado** com o novo valor e a nova descrição. |
+| **Editar status: Pago → Pendente** | Estorno: credita o **valor original pago** (não o novo valor editado) de volta na conta bancária e insere nova entrada de "Estorno" no extrato. |
+| **Excluir despesa Paga** | Estorna automaticamente o valor na conta bancária e registra movimentação de entrada de estorno. |
+
 
 ## 2. Contas Bancárias e Saldos (`ContaBancaria`)
 Entidade central para gestão de saldos e configurações de recebimento.
