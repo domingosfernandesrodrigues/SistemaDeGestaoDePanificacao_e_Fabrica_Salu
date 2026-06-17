@@ -19,6 +19,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
     private readonly IRepository<AgendaEvento> _agendaRepo;
     private readonly IRepository<Empresa> _empresaRepo;
     private readonly IRepository<PlanejamentoFerias> _feriasRepo;
+    private readonly IFinanceiroService _financeiroService;
     private static readonly HttpClient _httpClient = new HttpClient();
     private static readonly ConcurrentDictionary<string, byte[]> _logoCache = new();
 
@@ -30,7 +31,8 @@ public class FolhaPagamentoService : IFolhaPagamentoService
         IRepository<Afastamento> afastamentoRepo,
         IRepository<AgendaEvento> agendaRepo,
         IRepository<Empresa> empresaRepo,
-        IRepository<PlanejamentoFerias> feriasRepo)
+        IRepository<PlanejamentoFerias> feriasRepo,
+        IFinanceiroService financeiroService)
     {
         _folhaRepo = folhaRepo;
         _funcRepo = funcRepo;
@@ -40,6 +42,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
         _agendaRepo = agendaRepo;
         _empresaRepo = empresaRepo;
         _feriasRepo = feriasRepo;
+        _financeiroService = financeiroService;
     }
 
     public async Task<List<FolhaPagamento>> ProcessarFolhaAsync(int mes, int ano, TipoFolha tipo = TipoFolha.Mensal)
@@ -49,7 +52,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
 
         foreach (var func in funcionarios)
         {
-            // Verificar se já existe folha processada e FECHADA para este mês/tipo. Se fechada, não reprocessamos.
+            // Verificar se já existe folha processada e PAGA para este mês/tipo. Se paga, não reprocessamos.
             var folhasExistentes = await _folhaRepo.FindAsync(f => 
                 f.FuncionarioId == func.Id && 
                 f.MesReferencia == mes && 
@@ -57,7 +60,7 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                 f.Tipo == tipo);
             
             var folhaExistente = folhasExistentes.FirstOrDefault();
-            if (folhaExistente != null && folhaExistente.Status == StatusFolha.Fechada)
+            if (folhaExistente != null && folhaExistente.Status == StatusFolha.Paga)
                 continue;
 
             decimal proventos = 0;
@@ -76,7 +79,9 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                 var feriasComAdiantamento = await _feriasRepo.FindAsync(fv =>
                     fv.FuncionarioId == func.Id &&
                     fv.DataInicio.Year == ano &&
-                    fv.Status != StatusPlanejamentoFerias.Cancelada &&
+                    (fv.Status == StatusPlanejamentoFerias.Aprovada ||
+                     fv.Status == StatusPlanejamentoFerias.Iniciada ||
+                     fv.Status == StatusPlanejamentoFerias.Concluida) &&
                     fv.SolicitaAdiantamentoDecimoTerceiro);
 
                 if (feriasComAdiantamento.Any())
@@ -110,7 +115,9 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                     var feriasComAdiantamento = await _feriasRepo.FindAsync(fv =>
                         fv.FuncionarioId == func.Id &&
                         fv.DataInicio.Year == ano &&
-                        fv.Status != StatusPlanejamentoFerias.Cancelada &&
+                        (fv.Status == StatusPlanejamentoFerias.Aprovada ||
+                         fv.Status == StatusPlanejamentoFerias.Iniciada ||
+                         fv.Status == StatusPlanejamentoFerias.Concluida) &&
                         fv.SolicitaAdiantamentoDecimoTerceiro);
                     
                     if (feriasComAdiantamento.Any())
@@ -168,7 +175,9 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                     f.FuncionarioId == func.Id &&
                     f.DataInicio.Month == proximoMes &&
                     f.DataInicio.Year == proximoAno &&
-                    f.Status != StatusPlanejamentoFerias.Cancelada &&
+                    (f.Status == StatusPlanejamentoFerias.Aprovada ||
+                     f.Status == StatusPlanejamentoFerias.Iniciada ||
+                     f.Status == StatusPlanejamentoFerias.Concluida) &&
                     (f.TipoParcelamento == TipoParcelamentoFerias.Total ||
                      f.TipoParcelamento == TipoParcelamentoFerias.Primeira));
 
@@ -183,7 +192,9 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                 // Verificar se o funcionário está de férias NESTE mês (CLT Art. 130/143)
                 var feriasMesAtual = await _feriasRepo.FindAsync(f =>
                     f.FuncionarioId == func.Id &&
-                    f.Status != StatusPlanejamentoFerias.Cancelada &&
+                    (f.Status == StatusPlanejamentoFerias.Aprovada ||
+                     f.Status == StatusPlanejamentoFerias.Iniciada ||
+                     f.Status == StatusPlanejamentoFerias.Concluida) &&
                     f.DataInicio <= ultimoDiaMes &&
                     f.DataInicio.AddDays(f.DiasFerias - f.DiasAbono - 1) >= primeiroDiaMes);
                 
@@ -254,6 +265,24 @@ public class FolhaPagamentoService : IFolhaPagamentoService
                     folhaExistente.ValorAdicionalNoturno = valorAdicionalNoturno;
                 }
                 
+                if (folhaExistente.Status == StatusFolha.Fechada)
+                {
+                    string descricaoConta = folhaExistente.Tipo switch
+                    {
+                        TipoFolha.Adiantamento13 => $"Adiantamento 13º Salário {folhaExistente.AnoReferencia} - {func?.Nome}",
+                        TipoFolha.DecimoTerceiro => $"13º Salário Final {folhaExistente.AnoReferencia} - {func?.Nome}",
+                        _ => $"Folha Pagamento {folhaExistente.MesReferencia:D2}/{folhaExistente.AnoReferencia} - {func?.Nome}"
+                    };
+
+                    var contasPagar = await _contaPagarRepo.FindAsync(cp => cp.Descricao == descricaoConta && cp.Status == StatusContaPagar.Pendente);
+                    var contaPagar = contasPagar.FirstOrDefault();
+                    if (contaPagar != null)
+                    {
+                        contaPagar.Valor = liquido;
+                        await _contaPagarRepo.UpdateAsync(contaPagar);
+                    }
+                }
+                
                 await _folhaRepo.UpdateAsync(folhaExistente);
                 folhasGeradas.Add(folhaExistente);
             }
@@ -299,7 +328,9 @@ public class FolhaPagamentoService : IFolhaPagamentoService
         var ferias = await _feriasRepo.FindAsync(f =>
             f.DataInicio.Month == proximoMes &&
             f.DataInicio.Year == proximoAno &&
-            f.Status != StatusPlanejamentoFerias.Cancelada &&
+            (f.Status == StatusPlanejamentoFerias.Aprovada ||
+             f.Status == StatusPlanejamentoFerias.Iniciada ||
+             f.Status == StatusPlanejamentoFerias.Concluida) &&
             (f.TipoParcelamento == TipoParcelamentoFerias.Total ||
              f.TipoParcelamento == TipoParcelamentoFerias.Primeira));
 
@@ -364,7 +395,9 @@ public class FolhaPagamentoService : IFolhaPagamentoService
 
         var feriasMesAtual = await _feriasRepo.FindAsync(f =>
             f.FuncionarioId == folha.FuncionarioId &&
-            f.Status != StatusPlanejamentoFerias.Cancelada &&
+            (f.Status == StatusPlanejamentoFerias.Aprovada ||
+             f.Status == StatusPlanejamentoFerias.Iniciada ||
+             f.Status == StatusPlanejamentoFerias.Concluida) &&
             f.DataInicio <= ultimoDiaMes &&
             f.DataInicio.AddDays(f.DiasFerias - f.DiasAbono - 1) >= primeiroDiaMes);
         
@@ -779,5 +812,37 @@ public class FolhaPagamentoService : IFolhaPagamentoService
         return feriados.Any(f => f.mes == data.Month && f.dia == data.Day);
     }
 
+    public async Task<FolhaPagamento> PagarFolhaAsync(Guid folhaId)
+    {
+        var folha = await _folhaRepo.GetByIdAsync(folhaId);
+        if (folha == null)
+            throw new Exception("Folha de pagamento não encontrada.");
 
+        if (folha.Status != StatusFolha.Fechada)
+            throw new Exception("Apenas folhas fechadas e não pagas podem ser pagas.");
+
+        var func = await _funcRepo.GetByIdAsync(folha.FuncionarioId);
+
+        string descricao = folha.Tipo switch
+        {
+            TipoFolha.Adiantamento13 => $"Adiantamento 13º Salário {folha.AnoReferencia} - {func?.Nome}",
+            TipoFolha.DecimoTerceiro => $"13º Salário Final {folha.AnoReferencia} - {func?.Nome}",
+            _ => $"Folha Pagamento {folha.MesReferencia:D2}/{folha.AnoReferencia} - {func?.Nome}"
+        };
+
+        var contasPagar = await _contaPagarRepo.FindAsync(cp => 
+            cp.Descricao == descricao && 
+            cp.Status == StatusContaPagar.Pendente);
+
+        var contaPagar = contasPagar.FirstOrDefault();
+        if (contaPagar == null)
+            throw new Exception("A conta a pagar pendente correspondente a esta folha não foi encontrada.");
+
+        await _financeiroService.BaixarContaPagarAsync(contaPagar.Id);
+
+        folha.Status = StatusFolha.Paga;
+        await _folhaRepo.UpdateAsync(folha);
+
+        return folha;
+    }
 }

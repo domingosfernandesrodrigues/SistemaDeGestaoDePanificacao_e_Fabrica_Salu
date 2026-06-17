@@ -113,6 +113,21 @@ public class FolhaPagamentoController : ControllerBase
         }
     }
 
+    [HttpPost("{id}/pagar")]
+    [Authorize(Roles = "Admin,Gestor")]
+    public async Task<IActionResult> Pagar(Guid id)
+    {
+        try
+        {
+            var folha = await _folhaService.PagarFolhaAsync(id);
+            return Ok(folha);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
     [HttpGet("{id}/contracheque")]
     public async Task<IActionResult> GerarContracheque(Guid id, [FromServices] SGPF.Domain.Interfaces.IRepository<SGPF.Domain.Entities.Funcionario> funcRepo)
     {

@@ -17,6 +17,7 @@ public interface IPlanejamentoFeriasService
 
     Task<PlanejamentoFeriasDto> UpdateAsync(Guid id, AtualizarPlanejamentoFeriasRequest request);
     Task CancelAsync(Guid id, string? motivo);
+    Task ApproveAsync(Guid id);
 }
 
 // ─── DTOs ────────────────────────────────────────────────────────────────────

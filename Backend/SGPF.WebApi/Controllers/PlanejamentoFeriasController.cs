@@ -109,6 +109,21 @@ public class PlanejamentoFeriasController : ControllerBase
             return BadRequest(new { message = ex.Message });
         }
     }
+
+    /// <summary>Aprova um planejamento de férias.</summary>
+    [HttpPost("{id:guid}/aprovar")]
+    public async Task<IActionResult> Aprovar(Guid id)
+    {
+        try
+        {
+            await _service.ApproveAsync(id);
+            return Ok(new { message = "Planejamento de férias aprovado com sucesso." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }
 
 public record CancelarRequest(string? Motivo);

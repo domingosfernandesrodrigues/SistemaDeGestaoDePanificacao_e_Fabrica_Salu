@@ -8,4 +8,5 @@ public interface IFolhaPagamentoService
     Task<FolhaPagamento> FecharFolhaAsync(Guid folhaId);
     Task<byte[]> GerarContrachequePdfAsync(Guid folhaId);
     Task<int> ContarFeriasProximoMesAsync(int mesAtual, int anoAtual);
+    Task<FolhaPagamento> PagarFolhaAsync(Guid folhaId);
 }

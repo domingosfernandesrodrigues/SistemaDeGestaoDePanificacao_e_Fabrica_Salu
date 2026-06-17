@@ -209,4 +209,32 @@ public class PlanejamentoFeriasControllerTests : IDisposable
         updated!.Status.Should().Be(StatusPlanejamentoFerias.Cancelada);
         updated.MotivoCancelamento.Should().Be("Mudança de planos");
     }
+
+    [Fact]
+    public async Task Aprovar_ShouldMarkStatusAsAprovada()
+    {
+        // Arrange
+        var p = new PlanejamentoFerias
+        {
+            FuncionarioId = _funcionario.Id,
+            DataInicio = DateTime.Today.AddDays(40),
+            DataFim = DateTime.Today.AddDays(70),
+            DiasFerias = 30,
+            Status = StatusPlanejamentoFerias.Planejada,
+            DataCriacao = DateTime.Now
+        };
+        _context.PlanejamentosFerias.Add(p);
+        await _context.SaveChangesAsync();
+
+        // Act
+        var result = await _controller.Aprovar(p.Id);
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.ToString().Should().Contain("aprovado com sucesso");
+
+        var updated = await _repository.GetByIdAsync(p.Id);
+        updated!.Status.Should().Be(StatusPlanejamentoFerias.Aprovada);
+        updated.DataAprovacao.Should().NotBeNull();
+    }
 }

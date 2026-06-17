@@ -50,9 +50,12 @@ public class FolhaPagamentoControllerTests : IDisposable
 
         QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
 
+        var financeiroServiceMock = new Moq.Mock<SGPF.Application.Services.IFinanceiroService>();
+
         _service = new FolhaPagamentoService(
             _repository, _funcRepo, _pontoRepo, _contaPagarRepo,
-            _afastamentoRepo, _agendaRepo, _empresaRepo, _feriasRepo
+            _afastamentoRepo, _agendaRepo, _empresaRepo, _feriasRepo,
+            financeiroServiceMock.Object
         );
 
         _controller = new FolhaPagamentoController(_service, _repository);

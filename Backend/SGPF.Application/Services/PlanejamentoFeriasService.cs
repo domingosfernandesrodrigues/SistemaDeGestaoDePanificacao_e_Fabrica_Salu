@@ -62,7 +62,9 @@ public class PlanejamentoFeriasService : IPlanejamentoFeriasService
         var planejamentos = await _repo.FindAsync(p =>
             p.DataInicio.Month == mes &&
             p.DataInicio.Year == ano &&
-            p.Status != StatusPlanejamentoFerias.Cancelada);
+            (p.Status == StatusPlanejamentoFerias.Aprovada ||
+             p.Status == StatusPlanejamentoFerias.Iniciada ||
+             p.Status == StatusPlanejamentoFerias.Concluida));
 
         var funcionarios = await _funcRepo.GetAllAsync();
         return planejamentos
@@ -250,6 +252,23 @@ public class PlanejamentoFeriasService : IPlanejamentoFeriasService
         p.Status = StatusPlanejamentoFerias.Cancelada;
         p.DataCancelamento = DateTime.Now;
         p.MotivoCancelamento = motivo;
+
+        await _repo.UpdateAsync(p);
+    }
+
+    public async Task ApproveAsync(Guid id)
+    {
+        var p = await _repo.GetByIdAsync(id)
+            ?? throw new InvalidOperationException("Planejamento não encontrado.");
+
+        if (p.Status != StatusPlanejamentoFerias.Planejada)
+            throw new InvalidOperationException("Apenas planejamentos aguardando aprovação podem ser aprovados.");
+
+        var func = await _funcRepo.GetByIdAsync(p.FuncionarioId)
+            ?? throw new InvalidOperationException("Funcionário não encontrado.");
+
+        p.Status = StatusPlanejamentoFerias.Aprovada;
+        p.DataAprovacao = DateTime.Now;
 
         await _repo.UpdateAsync(p);
     }

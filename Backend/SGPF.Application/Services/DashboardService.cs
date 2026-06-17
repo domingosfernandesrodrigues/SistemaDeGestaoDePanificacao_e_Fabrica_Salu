@@ -306,7 +306,8 @@ public class DashboardService : IDashboardService
         var despesas = (await _contaPagarRepo.FindAsync(d => 
             (d.DataVencimento ?? d.DataEmissao).Year == year && 
             (month == 0 || (d.DataVencimento ?? d.DataEmissao).Month == month) && 
-            (!day.HasValue || (d.DataVencimento ?? d.DataEmissao).Day == day.Value), 
+            (!day.HasValue || (d.DataVencimento ?? d.DataEmissao).Day == day.Value) &&
+            d.Categoria != "Folha de Pagamento", 
             asNoTracking: true)).ToList();
 
         var queryFolhas = await _folhaRepo.FindAsync(f => 
@@ -320,10 +321,17 @@ public class DashboardService : IDashboardService
         data.Expenses.TotalOvertime = 0;
         data.Expenses.TotalExpenses = despesas.Sum(d => d.Valor) + data.Expenses.TotalPayroll;
         
-        data.Expenses.ByCategory = despesas
+        var categoryList = despesas
             .GroupBy(d => d.Categoria)
             .Select(g => new MetricItem { Label = g.Key ?? "Geral", Value = g.Sum(d => d.Valor) })
             .ToList();
+
+        if (data.Expenses.TotalPayroll > 0)
+        {
+            categoryList.Add(new MetricItem { Label = "Folha de Pagamento", Value = data.Expenses.TotalPayroll });
+        }
+
+        data.Expenses.ByCategory = categoryList;
 
         // --- TROCAS E AVARIAS ---
         var queryTrocas = await _trocaRepo.FindAsync(t => 
