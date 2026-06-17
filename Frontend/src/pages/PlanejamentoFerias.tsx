@@ -155,6 +155,16 @@ export function PlanejamentoFerias() {
     onError: (err: any) => alert(err.response?.data?.message || 'Erro ao cancelar.'),
   });
 
+  const mutationApprove = useMutation({
+    mutationFn: (id: string) => api.post(`/planejamento-ferias/${id}/aprovar`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['planejamento-ferias'] });
+      queryClient.invalidateQueries({ queryKey: ['folhas-pagamento'] });
+      alert('Planejamento de férias aprovado com sucesso!');
+    },
+    onError: (err: any) => alert(err.response?.data?.message || 'Erro ao aprovar planejamento.'),
+  });
+
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
   const handleOpenCreate = () => {
@@ -358,6 +368,20 @@ export function PlanejamentoFerias() {
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-2">
+                      {p.status === 0 && (
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Deseja realmente aprovar as férias de ${p.funcionarioNome}?`)) {
+                              mutationApprove.mutate(p.id);
+                            }
+                          }}
+                          className="h-8 w-8 flex items-center justify-center bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-lg border border-emerald-200 transition-all disabled:opacity-50"
+                          title="Aprovar Férias"
+                          disabled={mutationApprove.isPending}
+                        >
+                          {mutationApprove.isPending ? <Loader2 size={15} className="animate-spin" /> : <CheckCircle size={15} />}
+                        </button>
+                      )}
                       {p.status <= 1 && (
                         <>
                           <button
@@ -413,6 +437,19 @@ export function PlanejamentoFerias() {
                   <p className="font-black text-emerald-600">{fmt.format(p.valorTotalBruto)}</p>
                 </div>
               </div>
+              {p.status === 0 && (
+                <Button 
+                  className="w-full h-9 text-xs bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-1 disabled:opacity-50"
+                  onClick={() => {
+                    if (window.confirm(`Deseja realmente aprovar as férias de ${p.funcionarioNome}?`)) {
+                      mutationApprove.mutate(p.id);
+                    }
+                  }}
+                  disabled={mutationApprove.isPending}
+                >
+                  {mutationApprove.isPending ? <Loader2 size={14} className="animate-spin" /> : <CheckCircle size={14} />} Aprovar Férias
+                </Button>
+              )}
               {p.status <= 1 && (
                 <div className="flex gap-2">
                   <Button variant="secondary" className="flex-1 h-9 text-xs border border-slate-200 flex items-center justify-center gap-1" onClick={() => handleOpenEdit(p)}>

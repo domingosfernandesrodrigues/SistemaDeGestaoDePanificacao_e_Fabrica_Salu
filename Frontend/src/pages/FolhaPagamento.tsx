@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button } from '../components/ui/Button';
-import { Calculator, Download, CheckCircle, Loader2, Filter, ChevronLeft, ChevronRight, User, Calendar, Sun } from 'lucide-react';
+import { Calculator, Download, CheckCircle, Loader2, Filter, ChevronLeft, ChevronRight, User, Calendar, Sun, DollarSign } from 'lucide-react';
 import api from '../services/api';
 
 export function FolhaPagamento() {
@@ -61,6 +61,17 @@ export function FolhaPagamento() {
     },
   });
 
+  const mutationPay = useMutation({
+    mutationFn: (id: string) => api.post(`/folha-pagamento/${id}/pagar`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['folhas-pagamento'] });
+      queryClient.invalidateQueries({ queryKey: ['resumo-financeiro'] });
+      queryClient.invalidateQueries({ queryKey: ['contas-bancarias'] });
+      alert('Folha paga com sucesso e integrada ao fluxo de caixa!');
+    },
+    onError: (err: any) => alert(err.response?.data?.message || 'Erro ao pagar folha')
+  });
+
   // Rastreia quais IDs estão sendo baixados para impedir cliques duplos
   const [downloadingIds, setDownloadingIds] = useState<Set<string>>(new Set());
 
@@ -110,7 +121,7 @@ export function FolhaPagamento() {
   const folhasFiltradas = (folhas || [])
     .filter(f => {
       // Filtro por Aba (Suporta número ou string vinda do DTO)
-      const statusAlvo = abaAtiva === 'abertas' ? [0, 'Aberta'] : [1, 'Fechada'];
+      const statusAlvo = abaAtiva === 'abertas' ? [0, 'Aberta'] : [1, 'Fechada', 2, 'Paga'];
       if (!statusAlvo.includes(f.status)) return false;
 
       if (filtroFuncionario && f.funcionarioNome !== filtroFuncionario) return false;
@@ -321,9 +332,11 @@ export function FolhaPagamento() {
                   </td>
                   <td className="px-4 py-3 text-center">
                     <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-tighter ${
-                      folha.status === 0 ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
+                      folha.status === 0 ? 'bg-amber-100 text-amber-700' :
+                      (folha.status === 2 || folha.status === 'Paga') ? 'bg-emerald-100 text-emerald-700' :
+                      'bg-slate-100 text-slate-700'
                     }`}>
-                      {folha.status === 0 ? 'Aberta' : 'Fechada'}
+                      {folha.status === 0 ? 'Aberta' : (folha.status === 2 || folha.status === 'Paga') ? 'Paga' : 'Fechada'}
                     </span>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
@@ -344,6 +357,20 @@ export function FolhaPagamento() {
                           disabled={mutationClose.isPending}
                         >
                           {mutationClose.isPending ? <Loader2 className="animate-spin" size={20} /> : <CheckCircle size={20} />}
+                        </button>
+                      )}
+                      {(folha.status === 1 || folha.status === 'Fechada') && (
+                        <button 
+                          className="h-9 w-9 flex items-center justify-center bg-emerald-600 text-white hover:bg-emerald-700 rounded-lg shadow-sm transition-all disabled:opacity-50" 
+                          title="Pagar Folha (Baixar no Financeiro)"
+                          onClick={() => {
+                            if (window.confirm(`Deseja realmente pagar a folha de ${folha.funcionarioNome} no valor de ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.salarioLiquido)}?`)) {
+                              mutationPay.mutate(folha.id);
+                            }
+                          }}
+                          disabled={mutationPay.isPending}
+                        >
+                          {mutationPay.isPending ? <Loader2 className="animate-spin" size={18} /> : <DollarSign size={18} />}
                         </button>
                       )}
                     </div>
@@ -374,9 +401,11 @@ export function FolhaPagamento() {
                        'Mensal'}
                     </span>
                     <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                      folha.status === 0 ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800'
+                      folha.status === 0 ? 'bg-amber-100 text-amber-800' :
+                      (folha.status === 2 || folha.status === 'Paga') ? 'bg-emerald-100 text-emerald-800' :
+                      'bg-slate-100 text-slate-800'
                     }`}>
-                      {folha.status === 0 ? 'Aberta' : 'Fechada'}
+                      {folha.status === 0 ? 'Aberta' : (folha.status === 2 || folha.status === 'Paga') ? 'Paga' : 'Fechada'}
                     </span>
                   </div>
                 </div>
@@ -412,6 +441,20 @@ export function FolhaPagamento() {
                   >
                     {mutationClose.isPending ? <Loader2 className="animate-spin" size={16} /> : <CheckCircle size={16} />}
                     Fechar Folha
+                  </Button>
+                )}
+                {(folha.status === 1 || folha.status === 'Fechada') && (
+                  <Button 
+                    className="flex-1 h-10 bg-emerald-600 text-white hover:bg-emerald-700 flex items-center justify-center gap-2 text-xs"
+                    onClick={() => {
+                      if (window.confirm(`Deseja realmente pagar a folha de ${folha.funcionarioNome} no valor de ${new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(folha.salarioLiquido)}?`)) {
+                        mutationPay.mutate(folha.id);
+                      }
+                    }}
+                    disabled={mutationPay.isPending}
+                  >
+                    {mutationPay.isPending ? <Loader2 className="animate-spin" size={16} /> : <DollarSign size={16} />}
+                    Pagar Folha
                   </Button>
                 )}
               </div>
@@ -457,6 +500,15 @@ export function FolhaPagamento() {
           <Filter size={16} className="mt-0.5 shrink-0" />
           <p>
             As folhas listadas acima estão em processamento. Ao clicar em <strong>"Fechar"</strong>, o status mudará para fechada e você poderá consultá-la permanentemente na aba de <strong>Histórico</strong>.
+          </p>
+        </div>
+      )}
+
+      {abaAtiva === 'fechadas' && (
+        <div className="p-4 bg-slate-50 text-slate-700 rounded-lg border border-slate-200 text-xs flex items-start gap-3">
+          <Filter size={16} className="mt-0.5 shrink-0" />
+          <p>
+            As folhas fechadas pendentes de pagamento podem ser recalculadas clicando no botão <strong>"Processar"</strong> acima (as atualizações serão refletidas nas Contas a Pagar correspondentes). Use o botão de <strong>"Pagar Folha"</strong> para baixá-las no fluxo financeiro.
           </p>
         </div>
       )}
