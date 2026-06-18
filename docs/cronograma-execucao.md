@@ -54,9 +54,18 @@ Este documento define a sequência lógica de desenvolvimento do Sistema de Gest
 ---
 
 ## 📊 Status de Progresso Geral
-- **Fase Atual:** Manutenção Evolutiva e Refinamentos de Fluxo Financeiro ✅
+- **Fase Atual:** Manutenção Evolutiva, Conversão de Unidades e Refinamentos de Fluxo Financeiro ✅
 - **Progresso Total:** 100% — Todos os módulos implementados + suíte de testes completa (Backend, Frontend e E2E)
-- **Última Atualização:** 16/06/2026
+- **Última Atualização:** 18/06/2026
+
+### 🛠️ Refinamentos de Engenharia de Fábrica e Logística Reversa (18/Jun/2026):
+- **Conversão Dinâmica de Unidades de Medida (Ficha Técnica & OP):**
+  - Adicionado o campo `UnidadeMedida` às tabelas de ingredientes de Ficha Técnica (`FichaTecnicaInsumos`) e insumos de Ordens de Produção (`OrdemProducaoInsumos`) via migrações dinâmicas no startup (`DbPatchesInitializer.cs`).
+  - Implementação da classe de domínio `UnitConverter.cs` (no backend) e de utilitários no frontend (`FichaTecnica.tsx`) para conversão de Massa (`Kg` <-> `g`) e Volume (`L` <-> `ml`).
+  - **Validação de Estoque com Conversão de Unidade:** Ao criar ou editar OPs, o sistema converte a unidade especificada na receita do insumo para a unidade base de estoque física do produto antes de validar a suficiência do estoque projetado.
+  - **Fallback no Fechamento de OP:** Se o fechamento de uma OP for submetido sem insumos consumidos detalhados, o sistema adota automaticamente as quantidades planejadas para evitar custos de produção zerados e furos de inventário.
+- **Filtro de Produtos na Logística Reversa (Trocas & Avarias):**
+  - No frontend (`Logistica.tsx`), a busca de produtos para registro de trocas ou avarias passou a filtrar estritamente por itens do tipo `1` (Produto Acabado / Fabricado), bloqueando a seleção de insumos cruas no fluxo comercial de devoluções.
 
 ### 🛠️ Refinamentos Financeiros — Sincronização de Despesas (16/Jun/2026):
 - **Fluxo de Confirmação de Pagamento no Controle de Despesas:** O formulário de Despesas passou a adotar o mesmo fluxo de pagamento do módulo de Alimentação:

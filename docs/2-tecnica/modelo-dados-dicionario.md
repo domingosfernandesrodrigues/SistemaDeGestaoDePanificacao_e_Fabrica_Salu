@@ -10,8 +10,9 @@
 ## Módulo: Fábrica e Estoque (Fase 2)
 - `Produtos`: Id, Nome, SKU, Tipo (MateriaPrima, ProdutoAcabado, Revenda), PrecoCusto, PrecoVenda, QuantidadeEstoque, ControleEstoqueInicial (BIT), Ativo.
 - `FichasTecnicas`: Id, ProdutoAcabadoId, RendimentoKg, CustoTotalCalculado.
-- `FichasTecnicas_Itens`: Id, FichaTecnicaId, InsumoId, Quantidade.
+- `FichaTecnicaInsumos` (Itens da Ficha): Id, FichaTecnicaId, InsumoId, QuantidadeNecessaria (DECIMAL), PerdaPercentual (DECIMAL), UnidadeMedida (NVARCHAR).
 - `OrdensProducao`: Id, ProdutoId, QuantidadePlanejada, QuantidadeRealizada, Status (Aberta/EmAndamento/Finalizada/Cancelada), DataInicio, DataFinalizacao, CustoTotalCalculado.
+- `OrdemProducaoInsumos` (Insumos da OP): Id, OrdemProducaoId, InsumoId, QuantidadePlanejada (DECIMAL), QuantidadeConsumida (DECIMAL), UnidadeMedida (NVARCHAR).
 - `MovimentacoesEstoque`: Id, ProdutoId, Quantidade, Tipo (Entrada/Saida/Reserva/Avaria), DataMovimentacao, Origem, Observacao.
 - `HistoricoPrecosProdutos`: Id, ProdutoId, PrecoAntigo, PrecoNovo, Tipo (Custo/Venda), DataAlteracao, Origem.
 

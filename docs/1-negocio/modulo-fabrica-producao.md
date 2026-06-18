@@ -11,6 +11,15 @@ A Ficha Técnica é o "DNA" do produto. Ela define a composição exata de cada 
 - **Perda Percentual:** Margem de segurança para desperdícios inerentes ao processo produtivo.
 - **Cálculo de Custo:** `Custo Unitário = Σ (Preço do Insumo * Quantidade com Perda) / Rendimento Base`.
 
+### 1.1 Conversão Dinâmica de Unidades de Medida (UoM)
+Para dar maior flexibilidade no cadastro de receitas, o sistema suporta o uso de sub-unidades nas Fichas Técnicas.
+- **Unidades Compatíveis:**
+  - **Massa:** Conversões bidirecionais entre `Kg` e `g` (fator `1000`).
+  - **Volume:** Conversões bidirecionais entre `L` e `ml` (fator `1000`).
+  - **Unidade:** Medida discreta `Un` (sem conversão de escala).
+- **Conversão Automática de Estoque:** Ao planejar uma OP, o sistema converte a quantidade do insumo da unidade da receita (ex: `g` ou `ml`) para a unidade base de estoque (ex: `Kg` ou `L`) usando a classe utilitária `UnitConverter`. Isso impede erros de cálculo de preço de custo e falsas sinalizações de estoque insuficiente.
+- **Simulação em Tempo Real:** No frontend, o custo estimado da Ficha Técnica é calculado em tempo real convertendo as quantidades digitadas na unidade da receita para a unidade base do insumo cadastrada.
+
 ## 2. Ordem de Produção (OP)
 Gerencia o fluxo de trabalho na linha de produção.
 
@@ -24,6 +33,7 @@ Gerencia o fluxo de trabalho na linha de produção.
     - Efetiva a baixa física definitiva dos insumos que estavam reservados.
     - Registra a entrada física do produto acabado no estoque.
     - Consolida o custo real da produção.
+    - **Prevenção de Custos Zerados (Fallback):** Caso a lista de insumos consumidos reais seja submetida vazia ou nula pelo operador na tela de finalização, o backend automaticamente preenche o consumo real igualando-o ao planejado, garantindo que o custo de produção do lote não zere e ocorra a devida movimentação de inventário.
 
 ## 3. Gestão de Insumos e Produtos
 - **Insumos (Tipo 0):** Somente itens marcados como Tipo 0 podem ser usados como ingredientes.

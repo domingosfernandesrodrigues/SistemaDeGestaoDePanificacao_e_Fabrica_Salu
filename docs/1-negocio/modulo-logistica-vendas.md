@@ -57,6 +57,7 @@
 - **Responsabilidade:** Registro obrigatório ou automático do motorista que realizou a coleta para rastreabilidade de campo.
 - **Regra de Negócio:** Entrada do item avariado (perda) e saída imediata de um novo.
 - **Financeiro:** A troca não gera nova cobrança, mas deve abater o lucro no relatório de DRE.
+- **Filtro Restrito de Tipo:** As opções de produtos para trocas ou avarias são filtradas no frontend para exibir apenas produtos do tipo `1` (Produto Acabado / Fabricado). Isso impede que matérias-primas e insumos (que não possuem fluxo de devolução do cliente) sejam selecionados acidentalmente.
 
 ## 6. Gestão de Frota
 - **Manutenção:** Registro de manutenções Corretivas, Preventivas e Preditivas.
