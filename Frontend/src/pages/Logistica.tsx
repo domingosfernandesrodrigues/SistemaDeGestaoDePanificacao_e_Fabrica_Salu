@@ -970,7 +970,7 @@ export function Trocas() {
             className="w-full h-10 px-3 rounded-lg border border-slate-200 text-sm focus:ring-2 focus:ring-indigo-500 outline-none"
           >
             <option value="">Todos os Produtos</option>
-            {produtos?.filter(p => p.tipo !== 0).map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
+            {produtos?.filter(p => Number(p.tipo) === 1).map(p => <option key={p.id} value={p.id}>{p.nome}</option>)}
           </select>
         </div>
         {(filterData || filterCliente || filterProduto || filterAno) && (
@@ -1088,9 +1088,9 @@ export function Trocas() {
                 label="Produto"
                 required
                 placeholder="Pesquise o produto..."
-                options={produtos?.filter(p => p.tipo !== 0).map(p => ({
+                options={produtos?.filter(p => Number(p.tipo) === 1).map(p => ({
                   value: p.id,
-                  label: `${Number(p.tipo) === 1 ? '🍞' : '📦'} ${p.nome} (${p.unidadeMedida}) - Saldo: ${p.quantidadeEstoque}`
+                  label: `🍞 ${p.nome} (${p.unidadeMedida}) - Saldo: ${p.quantidadeEstoque}`
                 })) || []}
                 value={field.value}
                 onChange={field.onChange}

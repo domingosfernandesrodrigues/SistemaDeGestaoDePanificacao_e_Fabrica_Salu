@@ -11,8 +11,34 @@ interface InsumoItem {
   insumoId: string;
   quantidadeNecessaria: number;
   perdaPercentual: number;
+  unidadeMedida: string;
   insumo?: any;
 }
+
+const getCompatibleUnits = (baseUnit: string) => {
+  if (!baseUnit) return ['Un'];
+  const u = baseUnit.toLowerCase();
+  if (u === 'kg' || u === 'g') return ['Kg', 'g'];
+  if (u === 'l' || u === 'ml') return ['L', 'ml'];
+  return [baseUnit];
+};
+
+const convertUnit = (qty: number, from: string, to: string): number => {
+  if (!from || !to) return qty;
+  const f = from.trim().toLowerCase();
+  const t = to.trim().toLowerCase();
+  if (f === t) return qty;
+
+  // Conversões de Massa (Kg <-> g)
+  if (f === 'kg' && t === 'g') return qty * 1000;
+  if (f === 'g' && t === 'kg') return qty * 0.001;
+
+  // Conversões de Volume (L <-> ml)
+  if (f === 'l' && t === 'ml') return qty * 1000;
+  if (f === 'ml' && t === 'l') return qty * 0.001;
+
+  return qty;
+};
 
 export function FichaTecnica() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,7 +81,7 @@ export function FichaTecnica() {
   };
 
   const addItem = () => {
-    setItems([...items, { insumoId: '', quantidadeNecessaria: 0, perdaPercentual: 0 }]);
+    setItems([...items, { insumoId: '', quantidadeNecessaria: 0, perdaPercentual: 0, unidadeMedida: 'Un' }]);
   };
 
   const removeItem = (index: number) => {
@@ -76,7 +102,8 @@ export function FichaTecnica() {
     setItems(rawInsumos.map((i: any) => ({
       insumoId: i.insumoId || i.InsumoId,
       quantidadeNecessaria: i.quantidadeNecessaria || i.QuantidadeNecessaria || 0,
-      perdaPercentual: i.perdaPercentual || i.PerdaPercentual || 0
+      perdaPercentual: i.perdaPercentual || i.PerdaPercentual || 0,
+      unidadeMedida: i.unidadeMedida || i.UnidadeMedida || i.insumo?.unidadeMedida || i.Insumo?.UnidadeMedida || 'Un'
     })));
     setIsModalOpen(true);
   };
@@ -123,7 +150,12 @@ export function FichaTecnica() {
             const preco = ins?.precoCusto || ins?.PrecoCusto || 0;
             const qtd = i.quantidadeNecessaria || i.QuantidadeNecessaria || 0;
             const perda = i.perdaPercentual || i.PerdaPercentual || 0;
-            const qtdComPerda = qtd * (1 + (perda / 100));
+            
+            const recipeUnit = i.unidadeMedida || i.UnidadeMedida || ins?.unidadeMedida || ins?.UnidadeMedida || 'Un';
+            const baseUnit = ins?.unidadeMedida || ins?.UnidadeMedida || 'Un';
+            const convertedQtd = convertUnit(qtd, recipeUnit, baseUnit);
+            
+            const qtdComPerda = convertedQtd * (1 + (perda / 100));
             return acc + (qtdComPerda * preco);
           }, 0);
 
@@ -151,7 +183,7 @@ export function FichaTecnica() {
                         <div key={i.id || i.Id} className="flex justify-between text-sm">
                           <span className="text-slate-600 truncate mr-2">{ins?.nome || ins?.Nome}</span>
                           <span className="font-medium text-slate-800 whitespace-nowrap">
-                            {i.quantidadeNecessaria || i.QuantidadeNecessaria} {ins?.unidadeMedida || ins?.UnidadeMedida}
+                            {i.quantidadeNecessaria || i.QuantidadeNecessaria} {i.unidadeMedida || i.UnidadeMedida || ins?.unidadeMedida || ins?.UnidadeMedida}
                           </span>
                         </div>
                       );
@@ -234,18 +266,41 @@ export function FichaTecnica() {
                         label: `${i.nome || i.Nome} (${i.unidadeMedida || i.UnidadeMedida})` 
                       }))}
                       value={item.insumoId}
-                      onChange={(val) => updateItem(index, 'insumoId', val)}
+                      onChange={(val) => {
+                        const selectedInsumo = insumosDisponiveis.find(ins => (ins.id || ins.Id) === val);
+                        const baseUnit = selectedInsumo?.unidadeMedida || selectedInsumo?.UnidadeMedida || 'Un';
+                        updateItem(index, 'insumoId', val);
+                        updateItem(index, 'unidadeMedida', baseUnit);
+                      }}
                     />
                   </div>
                   <div className="col-span-5 sm:col-span-3 space-y-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase">Qtd <span className="text-red-500">*</span></label>
-                    <input 
-                      type="number" 
-                      step="any"
-                      value={item.quantidadeNecessaria === 0 ? '' : item.quantidadeNecessaria} 
-                      onChange={(e) => updateItem(index, 'quantidadeNecessaria', e.target.value === '' ? 0 : Number(e.target.value))}
-                      className="w-full h-9 px-2 rounded-md border border-slate-200 text-xs text-center focus:ring-2 focus:ring-indigo-500 outline-none"
-                    />
+                    <div className="flex gap-1">
+                      <input 
+                        type="number" 
+                        step="any"
+                        value={item.quantidadeNecessaria === 0 ? '' : item.quantidadeNecessaria} 
+                        onChange={(e) => updateItem(index, 'quantidadeNecessaria', e.target.value === '' ? 0 : Number(e.target.value))}
+                        className="w-full h-9 px-2 rounded-md border border-slate-200 text-xs text-center focus:ring-2 focus:ring-indigo-500 outline-none"
+                      />
+                      {(() => {
+                        const selectedInsumo = insumosDisponiveis.find(ins => (ins.id || ins.Id) === item.insumoId);
+                        const baseUnit = selectedInsumo?.unidadeMedida || selectedInsumo?.UnidadeMedida || 'Un';
+                        const allowedUnits = getCompatibleUnits(baseUnit);
+                        return (
+                          <select
+                            value={item.unidadeMedida || baseUnit}
+                            onChange={(e) => updateItem(index, 'unidadeMedida', e.target.value)}
+                            className="h-9 px-1 rounded-md border border-slate-200 text-[10px] bg-white focus:ring-2 focus:ring-indigo-500 outline-none"
+                          >
+                            {allowedUnits.map(unit => (
+                              <option key={unit} value={unit}>{unit}</option>
+                            ))}
+                          </select>
+                        );
+                      })()}
+                    </div>
                   </div>
                   <div className="col-span-5 sm:col-span-3 space-y-1">
                     <label className="text-[10px] font-bold text-slate-400 uppercase">Perda %</label>

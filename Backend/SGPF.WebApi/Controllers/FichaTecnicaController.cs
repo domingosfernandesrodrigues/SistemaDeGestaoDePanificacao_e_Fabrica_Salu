@@ -71,7 +71,8 @@ public class FichaTecnicaController : ControllerBase
                         FichaTecnicaId = existingFicha.Id,
                         InsumoId = item.InsumoId,
                         QuantidadeNecessaria = item.QuantidadeNecessaria,
-                        PerdaPercentual = item.PerdaPercentual
+                        PerdaPercentual = item.PerdaPercentual,
+                        UnidadeMedida = item.UnidadeMedida
                     });
                 }
                 

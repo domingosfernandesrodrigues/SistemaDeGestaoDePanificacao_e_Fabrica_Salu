@@ -52,4 +52,7 @@ public class OrdemProducaoInsumo
     
     public decimal QuantidadePlanejada { get; set; } // Baseada na OP * BOM
     public decimal QuantidadeConsumida { get; set; } // Real consumido
+
+    // Unidade de medida usada para apontamento no frontend
+    public string UnidadeMedida { get; set; } = string.Empty;
 }

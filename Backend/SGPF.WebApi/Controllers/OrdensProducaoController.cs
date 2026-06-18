@@ -66,11 +66,13 @@ public class OrdensProducaoController : ControllerBase
 
             foreach (var insumoFicha in ficha.Insumos)
             {
-                var quantidadeNecessariaComPerda = insumoFicha.QuantidadeNecessaria * (1 + insumoFicha.PerdaPercentual / 100);
-                var quantidadePlanejada = quantidadeNecessariaComPerda * multiplicador;
-
                 var insumo = await _context.Produtos.FindAsync(insumoFicha.InsumoId);
                 if (insumo == null) return BadRequest(new { message = $"Insumo de ID {insumoFicha.InsumoId} não encontrado." });
+
+                // Converter quantidade necessária para a unidade base do insumo
+                var qtyInBaseUnit = UnitConverter.Convert(insumoFicha.QuantidadeNecessaria, insumoFicha.UnidadeMedida, insumo.UnidadeMedida);
+                var quantidadeNecessariaComPerda = qtyInBaseUnit * (1 + insumoFicha.PerdaPercentual / 100);
+                var quantidadePlanejada = quantidadeNecessariaComPerda * multiplicador;
 
                 // Calcular o consumo em outras OPs Planejadas
                 var consumidoEmOutrasPlanejadas = await _context.OrdemProducaoInsumos
@@ -81,14 +83,15 @@ public class OrdensProducaoController : ControllerBase
 
                 if (disponivelProjetado < quantidadePlanejada)
                 {
-                    return BadRequest(new { message = $"Estoque insuficiente de insumos para planejamento. O insumo '{insumo.Nome}' necessita de {quantidadePlanejada:N2}, mas possui apenas {disponivelProjetado:N2} disponível projetado (Estoque físico: {insumo.QuantidadeEstoque:N2}, comprometido em outras OPs Planejadas: {consumidoEmOutrasPlanejadas:N2})." });
+                    return BadRequest(new { message = $"Estoque insuficiente de insumos para planejamento. O insumo '{insumo.Nome}' necessita de {quantidadePlanejada:N2} {insumo.UnidadeMedida}, mas possui apenas {disponivelProjetado:N2} disponível projetado (Estoque físico: {insumo.QuantidadeEstoque:N2}, comprometido em outras OPs Planejadas: {consumidoEmOutrasPlanejadas:N2})." });
                 }
 
                 insumosNovos.Add(new OrdemProducaoInsumo
                 {
                     InsumoId = insumoFicha.InsumoId,
                     QuantidadePlanejada = quantidadePlanejada,
-                    QuantidadeConsumida = 0
+                    QuantidadeConsumida = 0,
+                    UnidadeMedida = insumoFicha.UnidadeMedida
                 });
             }
         }
@@ -141,6 +144,18 @@ public class OrdensProducaoController : ControllerBase
             var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId)) return Unauthorized();
 
+            // Se vier vazio, populamos com o planejado para não zerar os custos nem ignorar a saída de estoque
+            if (insumosConsumidos == null || !insumosConsumidos.Any())
+            {
+                insumosConsumidos = await _context.OrdemProducaoInsumos
+                    .Where(opi => opi.OrdemProducaoId == id)
+                    .ToListAsync();
+                foreach (var item in insumosConsumidos)
+                {
+                    item.QuantidadeConsumida = item.QuantidadePlanejada;
+                }
+            }
+
             await _opService.FinishOPAsync(id, insumosConsumidos, userId);
             
             // Recarregar com Includes
@@ -182,11 +197,13 @@ public class OrdensProducaoController : ControllerBase
 
             foreach (var insumoFicha in ficha.Insumos)
             {
-                var quantidadeNecessariaComPerda = insumoFicha.QuantidadeNecessaria * (1 + insumoFicha.PerdaPercentual / 100);
-                var quantidadePlanejada = quantidadeNecessariaComPerda * multiplicador;
-
                 var insumo = await _context.Produtos.FindAsync(insumoFicha.InsumoId);
                 if (insumo == null) return BadRequest(new { message = $"Insumo de ID {insumoFicha.InsumoId} não encontrado." });
+
+                // Converter quantidade necessária para a unidade base do insumo
+                var qtyInBaseUnit = UnitConverter.Convert(insumoFicha.QuantidadeNecessaria, insumoFicha.UnidadeMedida, insumo.UnidadeMedida);
+                var quantidadeNecessariaComPerda = qtyInBaseUnit * (1 + insumoFicha.PerdaPercentual / 100);
+                var quantidadePlanejada = quantidadeNecessariaComPerda * multiplicador;
 
                 // Calcular o consumo em outras OPs Planejadas (excluindo a OP atual)
                 var consumidoEmOutrasPlanejadas = await _context.OrdemProducaoInsumos
@@ -197,7 +214,7 @@ public class OrdensProducaoController : ControllerBase
 
                 if (disponivelProjetado < quantidadePlanejada)
                 {
-                    return BadRequest(new { message = $"Estoque insuficiente de insumos para planejamento. O insumo '{insumo.Nome}' necessita de {quantidadePlanejada:N2}, mas possui apenas {disponivelProjetado:N2} disponível projetado (Estoque físico: {insumo.QuantidadeEstoque:N2}, comprometido em outras OPs Planejadas: {consumidoEmOutrasPlanejadas:N2})." });
+                    return BadRequest(new { message = $"Estoque insuficiente de insumos para planejamento. O insumo '{insumo.Nome}' necessita de {quantidadePlanejada:N2} {insumo.UnidadeMedida}, mas possui apenas {disponivelProjetado:N2} disponível projetado (Estoque físico: {insumo.QuantidadeEstoque:N2}, comprometido em outras OPs Planejadas: {consumidoEmOutrasPlanejadas:N2})." });
                 }
 
                 insumosNovos.Add(new OrdemProducaoInsumo
@@ -205,7 +222,8 @@ public class OrdensProducaoController : ControllerBase
                     OrdemProducaoId = op.Id,
                     InsumoId = insumoFicha.InsumoId,
                     QuantidadePlanejada = quantidadePlanejada,
-                    QuantidadeConsumida = 0
+                    QuantidadeConsumida = 0,
+                    UnidadeMedida = insumoFicha.UnidadeMedida
                 });
             }
 

@@ -52,6 +52,10 @@ public static class DbPatchesInitializer
             try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Empresas') AND name = 'BancoConta') BEGIN ALTER TABLE Empresas DROP COLUMN BancoConta; END"); } catch {}
             try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('Empresas') AND name = 'GatewayToken') BEGIN ALTER TABLE Empresas DROP COLUMN GatewayToken; END"); } catch {}
 
+            // Patches Ficha Técnica e Ordem Produção (Unidades de Medida)
+            try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('FichaTecnicaInsumos') AND name = 'UnidadeMedida') BEGIN ALTER TABLE FichaTecnicaInsumos ADD UnidadeMedida NVARCHAR(50) NOT NULL DEFAULT ''; END"); } catch {}
+            try { await context.Database.ExecuteSqlRawAsync("IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('OrdemProducaoInsumos') AND name = 'UnidadeMedida') BEGIN ALTER TABLE OrdemProducaoInsumos ADD UnidadeMedida NVARCHAR(50) NOT NULL DEFAULT ''; END"); } catch {}
+
             // Ajuste de Precisão das Colunas para decimal(18,2) nas Tabelas Existentes
             try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('CompraItems') AND name = 'Quantidade') BEGIN ALTER TABLE CompraItems ALTER COLUMN Quantidade DECIMAL(18,2) NOT NULL; END"); } catch {}
             try { await context.Database.ExecuteSqlRawAsync("IF EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID('CompraItems') AND name = 'PrecoUnitario') BEGIN ALTER TABLE CompraItems ALTER COLUMN PrecoUnitario DECIMAL(18,2) NOT NULL; END"); } catch {}

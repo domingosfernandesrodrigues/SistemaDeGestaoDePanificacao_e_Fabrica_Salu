@@ -29,5 +29,8 @@ public class FichaTecnicaInsumo
     public decimal QuantidadeNecessaria { get; set; }
     
     // Margem de perda ao longo da produção (ex: 5%)
-    public decimal PerdaPercentual { get; set; } 
+    public decimal PerdaPercentual { get; set; }
+
+    // Unidade de medida usada na receita (ex: g, ml, Kg, L)
+    public string UnidadeMedida { get; set; } = string.Empty; 
 }
