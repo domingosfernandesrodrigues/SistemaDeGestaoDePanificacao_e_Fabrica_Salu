@@ -14,6 +14,7 @@ interface SearchableSelectProps {
   label?: string;
   error?: string;
   required?: boolean;
+  disabled?: boolean;
 }
 
 export function SearchableSelect({ 
@@ -23,7 +24,8 @@ export function SearchableSelect({
   placeholder = "Selecione...", 
   label, 
   error,
-  required
+  required,
+  disabled
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
@@ -57,9 +59,10 @@ export function SearchableSelect({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
+        disabled={disabled}
         className={`w-full h-10 px-3 flex items-center justify-between rounded-lg border bg-bg-card text-sm transition-all focus:ring-2 focus:ring-ember outline-none ${
           error ? 'border-red-500' : 'border-border-subtle'
-        } ${isOpen ? 'ring-2 ring-ember border-ember' : ''}`}
+        } ${isOpen ? 'ring-2 ring-ember border-ember' : ''} ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
       >
         <span className={`${selectedOption ? 'text-text-main font-medium' : 'text-text-dim'} text-left flex-1 break-words line-clamp-2 leading-tight`}>
           {selectedOption ? selectedOption.label : placeholder}

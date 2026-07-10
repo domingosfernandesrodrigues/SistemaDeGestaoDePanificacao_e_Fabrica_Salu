@@ -46,7 +46,7 @@ export function Produtos() {
   const queryClient = useQueryClient();
   
   const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<ProdutoForm>({
-    resolver: zodResolver(produtoSchema),
+    resolver: zodResolver(produtoSchema) as any,
     defaultValues: { tipo: 1, unidadeMedida: 'Un', precoCusto: 0, precoVenda: 0, quantidadeEstoque: 0, ativo: true }
   });
 
@@ -302,7 +302,7 @@ export function Produtos() {
         onClose={handleCloseModal} 
         title={editId ? "Editar Produto" : "Cadastrar Novo Produto"}
       >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
           <Input 
             label="Nome do Produto" 
             required

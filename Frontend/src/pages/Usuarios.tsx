@@ -37,7 +37,7 @@ export default function Usuarios() {
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<UsuarioForm>({
-    resolver: zodResolver(usuarioSchema),
+    resolver: zodResolver(usuarioSchema) as any,
     defaultValues: { ativo: true }
   });
 
@@ -281,7 +281,7 @@ export default function Usuarios() {
       </div>
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal} title={editId ? 'Editar Usuário' : 'Novo Usuário'}>
-        <form onSubmit={handleSubmit((data) => mutation.mutate(data))} className="space-y-4">
+        <form onSubmit={handleSubmit((data) => mutation.mutate(data as any))} className="space-y-4">
           
           <div className="flex items-center justify-between bg-slate-50 p-3 rounded-lg border border-slate-100 mb-4">
             <div>

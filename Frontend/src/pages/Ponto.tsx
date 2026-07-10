@@ -97,7 +97,7 @@ export function Ponto() {
 
   const handleRegistrarPonto = async () => {
     const isPrimeiraEntrada = registros?.length === 0;
-    let coords = { latitude: null, longitude: null };
+    let coords: { latitude: number | null; longitude: number | null } = { latitude: null, longitude: null };
 
     if (isPrimeiraEntrada) {
       setIsObtendoLocalizacao(true);

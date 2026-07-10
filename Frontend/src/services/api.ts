@@ -1,7 +1,11 @@
 import axios from 'axios';
 
+const isDevelopment = import.meta.env.DEV;
+
 const api = axios.create({
-  baseURL: 'http://localhost:5137/api/v1', // Using HTTP to avoid SSL issues locally
+  baseURL: isDevelopment 
+    ? 'http://localhost:5137/api/v1' 
+    : `http://${window.location.hostname}:5000/api/v1`,
   headers: {
     'Content-Type': 'application/json',
   },

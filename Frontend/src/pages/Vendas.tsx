@@ -1,4 +1,5 @@
-import { useState, TouchEvent } from 'react';
+import { useState } from 'react';
+import type { TouchEvent } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm, useFieldArray, Controller } from 'react-hook-form';
 import { z } from 'zod';
@@ -182,7 +183,7 @@ export function Vendas() {
   const queryClient = useQueryClient();
 
   const { register, control, handleSubmit, reset, watch, setValue, formState: { errors } } = useForm<PedidoForm>({
-    resolver: zodResolver(pedidoSchema),
+    resolver: zodResolver(pedidoSchema) as any,
     defaultValues: { itens: [{ produtoId: '', quantidade: 1, desconto: 0 }] }
   });
 
@@ -764,7 +765,7 @@ export function Vendas() {
         onClose={() => setIsModalOpen(false)} 
         title="Novo Pedido de Venda"
       >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Controller
               control={control}
@@ -775,7 +776,7 @@ export function Vendas() {
                   required
                   placeholder="Pesquise o cliente..."
                   options={clientes?.filter(c => !isCliente || c.id === userClienteId).map(c => ({ value: c.id, label: c.nomeFantasia })) || []}
-                  value={isCliente ? userClienteId : field.value}
+                  value={(isCliente ? userClienteId : field.value) || ''}
                   onChange={field.onChange}
                   error={errors.clienteId?.message}
                   disabled={isCliente}
@@ -820,10 +821,9 @@ export function Vendas() {
               <label className="text-sm font-medium text-slate-700">Itens do Pedido</label>
               <Button 
                 type="button" 
-                size="sm" 
                 variant="secondary"
                 onClick={() => append({ produtoId: '', quantidade: 1, desconto: 0 })}
-                className="text-xs flex items-center gap-1"
+                className="text-xs h-8 px-3 flex items-center gap-1"
               >
                 <Plus size={14} /> Adicionar Item
               </Button>
@@ -850,7 +850,6 @@ export function Vendas() {
                           <SearchableSelect
                             label="Produto / Descrição"
                             required
-                            placeholder="Selecione..."
                             options={produtos?.filter(p => p.ativo !== false && Number(p.tipo) !== 0).map(p => ({ 
                               value: p.id, 
                               label: `${Number(p.tipo) === 1 ? '🍞' : '📦'} ${p.nome} (${p.unidadeMedida}) - Saldo: ${p.quantidadeEstoque}` 
@@ -1057,7 +1056,6 @@ export function Vendas() {
                             </div>
                             
                             <Button 
-                              size="sm" 
                               className="w-full bg-[#32BCAD] hover:bg-[#2aa89b] text-white flex items-center justify-center gap-1.5 py-2.5 rounded-lg font-bold shadow-sm mt-2 transition-colors border-0"
                               onClick={() => {
                                 navigator.clipboard.writeText(pixQrCodeDinamico);

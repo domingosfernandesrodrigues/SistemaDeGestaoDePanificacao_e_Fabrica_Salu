@@ -44,7 +44,7 @@ export function OrdensProducao() {
   const queryClient = useQueryClient();
 
   const { register, handleSubmit, reset, setValue, control, watch, formState: { errors } } = useForm<OpForm>({
-    resolver: zodResolver(opSchema)
+    resolver: zodResolver(opSchema) as any
   });
 
   const { data: ops, isLoading: loadingOps } = useQuery<OP[]>({
@@ -313,7 +313,7 @@ export function OrdensProducao() {
         onClose={handleCloseModal} 
         title={editId ? "Editar Planejamento da OP" : "Abrir Ordem de Produção"}
       >
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-4">
           <Controller
             control={control}
             name="produtoId"
