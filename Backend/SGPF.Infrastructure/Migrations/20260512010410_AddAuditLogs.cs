@@ -11,7 +11,6 @@ namespace SGPF.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            /*
             migrationBuilder.AddColumn<string>(
                 name: "BoletoCodigoBarras",
                 table: "PedidosVenda",
@@ -67,9 +66,7 @@ namespace SGPF.Infrastructure.Migrations
                 table: "Empresas",
                 type: "nvarchar(max)",
                 nullable: true);
-            */
 
-            /*
             migrationBuilder.CreateTable(
                 name: "AuditLogs",
                 columns: table => new
@@ -110,7 +107,6 @@ namespace SGPF.Infrastructure.Migrations
                 {
                     table.PrimaryKey("PK_ContasBancarias", x => x.Id);
                 });
-            */
         }
 
         /// <inheritdoc />
